@@ -61,6 +61,10 @@ class LeeCarterSVD:
         k = self.kt.sample_paths(h, n, rng)                        # [n, h]
         return np.exp(self.alpha[None, None, :] + k[:, :, None] * self.beta[None, None, :])
 
+    def fitted_mx(self) -> np.ndarray:
+        """In-sample fitted m_x surface exp(alpha_x + beta_x kappa_t), [n_ages, n_years]."""
+        return np.exp(self.alpha[:, None] + np.outer(self.beta, self.kappa))
+
 
 class PoissonLeeCarter:
     """Brouhns, Denuit & Vermunt (2002): D_xt ~ Poisson(E_xt * exp(a_x + b_x k_t)).
@@ -101,6 +105,10 @@ class PoissonLeeCarter:
     def sample_mx(self, h: int, n: int, rng: np.random.Generator) -> np.ndarray:
         k = self.kt.sample_paths(h, n, rng)
         return np.exp(self.alpha[None, None, :] + k[:, :, None] * self.beta[None, None, :])
+
+    def fitted_mx(self) -> np.ndarray:
+        """In-sample fitted m_x surface exp(alpha_x + beta_x kappa_t), [n_ages, n_years]."""
+        return np.exp(self.alpha[:, None] + np.outer(self.beta, self.kappa))
 
     def sample_deaths(self, E_future: np.ndarray, h: int, n: int,
                       rng: np.random.Generator) -> np.ndarray:
