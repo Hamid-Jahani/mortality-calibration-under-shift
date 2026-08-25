@@ -1,0 +1,188 @@
+% =============================================================================
+% Do Mortality Prediction Intervals Survive a Pandemic?
+% A Pre-Registered Calibration Audit of Ten Forecasting Families and Seven
+% Uncertainty Mechanisms Across the COVID-19 Break
+%
+% Draft skeleton, pre-results. Build with `make` (latexmk -pdf) from paper/.
+%
+% CLASS NOTE. Target venues are ASTIN Bulletin and Annals of Actuarial Science
+% (Cambridge University Press). Cambridge's own journal classes are not freely
+% redistributable, so this draft uses the standard `article' class at 11pt with
+% natbib author-year citations, which is what CUP accepts for submission in any
+% case. Swapping to the CUP template at submission is a preamble-only change.
+% =============================================================================
+\documentclass[11pt,a4paper]{article}
+
+% --- engine-conditional font setup -------------------------------------------
+% pdfTeX (latexmk -pdf, the intended route) gets T1/utf8/lmodern/microtype.
+% XeTeX/LuaTeX (the tectonic fallback in the Makefile) skip the pdfTeX-only
+% packages. Sources are kept ASCII-only so both routes render identically.
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{lmodern}
+  \usepackage{microtype}
+\fi
+
+\usepackage[a4paper,margin=2.5cm,marginparwidth=2.0cm,marginparsep=0.35cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{threeparttable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage[authoryear,round]{natbib}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+
+\graphicspath{{figures/}}
+\setlist{nosep}
+\captionsetup{font=small,labelfont=bf,width=0.92\textwidth}
+
+% --- \todo: red inline marker + red margin note, numbered ----------------------
+% \todo{...}       body text only (uses \marginpar; illegal inside floats,
+%                  captions, footnotes, headings)
+% \todoinline{...} same marker without the margin note; safe anywhere
+\newcounter{todocount}
+\newcommand{\todoinline}[1]{%
+  \stepcounter{todocount}%
+  \textcolor{red}{\textbf{[TODO~\thetodocount: #1]}}}
+\newcommand{\todo}[1]{%
+  \todoinline{#1}%
+  \marginpar{\color{red}\scriptsize\raggedright\textbf{TODO~\thetodocount.} #1}}
+
+% --- \inputtable{name}: pull a generated fragment, or a placeholder --------------
+% Tables are written by scripts/analyze.py (see tables/README.md). A missing
+% fragment renders as a placeholder so the draft always compiles.
+\newcommand{\inputtable}[1]{%
+  \IfFileExists{tables/#1.tex}%
+    {\input{tables/#1}}%
+    {\todoinline{table \texttt{#1} is produced by \texttt{scripts/analyze.py} from \texttt{results/*.parquet}; not yet generated}}}
+
+% --- notation ------------------------------------------------------------------
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\ind}{\mathbb{1}}
+\newcommand{\CRPS}{\operatorname{CRPS}}
+\newcommand{\LS}{\operatorname{LS}}
+\newcommand{\IS}{\operatorname{IS}}
+\newcommand{\RMSE}{\operatorname{RMSE}}
+\newcommand{\MAE}{\operatorname{MAE}}
+\newcommand{\PIT}{\operatorname{PIT}}
+\newcommand{\annuity}{\ddot{a}_{65}}
+\newcommand{\Hone}{\textbf{H1}}
+\newcommand{\Htwo}{\textbf{H2}}
+\newcommand{\Hthree}{\textbf{H3}}
+\newcommand{\Hfour}{\textbf{H4}}
+\newcommand{\Hfive}{\textbf{H5}}
+\newcommand{\pkg}[1]{\texttt{#1}}
+
+\theoremstyle{definition}
+\newtheorem{hypothesis}{Hypothesis}
+
+\title{Do Mortality Prediction Intervals Survive a Pandemic?\\[0.4em]
+  \large A Pre-Registered Calibration Audit of Ten Forecasting Families and
+  Seven Uncertainty Mechanisms Across the COVID-19 Break}
+\author{Hamid Jahani\thanks{Affiliation to be determined.}}
+\date{Draft of \today{} --- pre-results skeleton; no empirical numbers yet}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Annuity and pension valuations price the \emph{spread} of a mortality
+forecast, not only its centre: reserves, risk margins and longevity capital
+all rest on the claim that a nominal 95\% prediction interval contains the
+realised outcome about 95\% of the time. Stochastic mortality models have
+produced such intervals since \citet{lee1992modeling}, and neural extensions
+of Lee--Carter now produce them too, but whether any of these intervals hold
+their nominal coverage when the mortality surface breaks has never been
+tested on real data. The COVID-19 years supply the first sustained break in
+modern single-age mortality data, and the June 2026 vintage of the Human
+Mortality Database is the first with final annual data through 2024 for
+twenty populations. We pre-register a calibration audit across that break.
+Ten forecasting families (Lee--Carter, Poisson Lee--Carter, CBD, an
+age--period--cohort model, a sparse VAR, a multi-output Gaussian process, and
+four neural architectures) are crossed with seven uncertainty mechanisms
+(model-native, Poisson bootstrap, deep ensembles, Monte Carlo dropout, split
+conformal, EnbPI and a joint-path copula conformal band), giving fifty
+admissible cells. Every cell emits predictive samples through one interface
+and is scored by one code path: proper scores (CRPS, Poisson log score),
+interval scores, marginal and joint-path coverage, randomised PIT, a
+Murphy calibration--resolution decomposition, and the propagation of interval
+error into life expectancy and annuity factors. Three regimes separate
+ordinary forecast error from break-induced failure: a stable expanding-origin
+control, the COVID break (train to 2019, test 2020--2024), and a placebo break
+around 1914--1922. The crossed design lets a coverage failure be attributed to
+the architecture or to the uncertainty machinery attached to it, a separation
+no previous mortality study makes. The audit protocol---a synthetic-truth
+validated harness, oracle parity with \pkg{StMoMo}, a pre-registration hash
+committed before the first fit, and cluster-bootstrap forecast-comparison
+inference that respects the single common shock---is itself the reusable
+contribution. This draft is the pre-results skeleton: hypotheses, data,
+design and metrics are fixed; all result tables are placeholders.
+\end{abstract}
+
+\noindent\textbf{Keywords:} mortality forecasting; longevity risk;
+calibration; prediction intervals; proper scoring rules; conformal
+prediction; COVID-19; Lee--Carter; neural networks; pre-registration.
+
+\vspace{0.5em}
+\noindent\textbf{Pre-registration.} \texttt{PREREGISTRATION.md}, committed
+2026-08-25 before any model was fit to real data. SHA-256:\\
+\texttt{\small bbbe3860a5446d063e186e56555afa893b07c36cf15a990d07567471affe50be}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-data}
+\input{sections/04-design}
+\input{sections/05-metrics}
+\input{sections/06-results}
+\input{sections/07-actuarial-impact}
+\input{sections/08-discussion}
+\input{sections/09-conclusion}
+
+\section*{Reproducibility statement}
+Code, the pre-registration document, the data manifest
+(\texttt{data/MANIFEST.sha256}) and the \pkg{StMoMo} oracle dump are in the
+project repository \todoinline{public URL at submission}. HMD data are not
+redistributed; the manifest pins the vintage so any table can be tied to the
+exact input files. Seeds are recorded per grid cell and per ensemble member.
+
+\appendix
+\section{Secondary tables}
+\label{app:secondary}
+
+\subsection{Proper scores for conformal cells}
+Conformal wrappers emit intervals, not distributions; the harness draws
+uniformly inside each interval so that the single sample interface is
+preserved. CRPS, log score and PIT for these cells are therefore reported
+here, flagged, and never ranked against distributional mechanisms
+(Section~\ref{sec:design-mechanisms}).
+\begin{table}[htbp]\centering
+\caption{Flagged proper scores for the three conformal mechanisms.}
+\label{tab:conformal-secondary}
+\inputtable{tab-conformal-secondary}
+\end{table}
+
+\subsection{Robustness}
+Pre-registered secondary runs: the shift regime with 2024 dropped
+(provisional-revision sensitivity), with the age cap lowered from 99 to 90,
+with USA and CHL dropped, and split into register-based versus census-based
+populations; the placebo regime without GBR\_SCO, on the neutral stratum
+only, and with Denmark's 1921--1922 removed (Addendum~1).
+\begin{table}[htbp]\centering
+\caption{Sensitivity of the headline coverage contrasts to the pre-specified
+data sensitivities: 2024 dropped, age cap 90, USA and CHL dropped,
+register versus census exposures; placebo without GBR\_SCO, neutral stratum
+only, DNK without 1921--1922.}
+\label{tab:robustness}
+\inputtable{tab-robustness}
+\end{table}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

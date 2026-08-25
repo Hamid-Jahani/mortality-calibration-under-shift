@@ -1,0 +1,108 @@
+\section{Discussion}
+\label{sec:discussion}
+
+The limitations below are pre-committed: they were written before any
+result was read, so that none can be selected after the fact to excuse a
+finding or to inflate one.
+
+\subsection{The effective sample size is one}
+
+Every shift-regime number in this paper is a statement about one pandemic
+observed in twenty places. Clustering by population and imposing the null
+in the bootstrap make the standard errors honest \emph{given the event}; they
+do not make the event a sample of events. The audit therefore answers
+``did these intervals survive this break?'' and, through the placebo,
+``does the pattern resemble the previous break?''---not ``will these
+intervals survive the next break?''. A reader who wants the last question
+answered wants a different study, one that we cannot run until there is a
+next break.
+
+\subsection{The grid is ragged, so claims are contrasts}
+
+Ten families by seven mechanisms is seventy cells on paper and fifty in
+fact. Main effects over a ragged grid confound the factor with the pattern
+of admissibility, so no main effect is reported; every claim is a contrast
+within a sub-grid whose composition is stated. This costs generality: a
+finding that conformal wrapping changes coverage for classical families
+says nothing about neural families unless the neural sub-grid shows it
+too, and we will not average across the two.
+
+\subsection{Conformal cells carry secondary proper scores}
+
+A conformal band is an interval, not a distribution. Drawing uniformly
+inside it keeps the single interface honest for coverage, width and
+interval score, but the CRPS, log score and PIT of those draws describe a
+placeholder density. They are reported in Appendix~\ref{app:secondary},
+flagged, and not ranked. Any reader who compares a conformal cell's CRPS
+with a native cell's CRPS is comparing a convention with a forecast.
+Conformal predictive systems that output a full calibrated distribution
+would remove this limitation and are noted as future work.
+
+\subsection{2024 may be revised}
+
+HMD does not flag provisional years; it re-issues whole series at each
+release, so the 2024 values are final only in the sense that this release
+contains them. The shift regime's $h=5$ results rest on 2024, and two of the
+twenty populations (USA, CHL) carry census-based exposures that HMD
+documents as pending revision. The pre-registered robustness run drops 2024;
+Addendum~1 adds runs that drop USA and CHL and that contrast register-based
+with census-based populations. If the $h=5$ and $h\le4$ results disagree,
+the $h\le4$ result is the one to trust and the $h=5$ result is reported as
+provisional; if a later vintage appears before submission, the shift regime
+is re-run on it and any change in the headline coverage is reported as a
+vintage-revision effect.
+
+\subsection{SVD Lee--Carter is over-dispersed by construction}
+
+Validation gate~1 found that the classical two-stage SVD Lee--Carter
+produces intervals slightly wider than nominal on data simulated from a
+Poisson Lee--Carter process, because the SVD estimate of $\kappa_t$ absorbs
+observation noise that then inflates the random-walk innovation variance.
+This is a property of the method that \citet{girosi2007understanding}
+would predict, not a harness artefact, and it has a direct consequence for
+reading the results: an SVD-LC row that appears better calibrated than
+Poisson-LC in the stable regime may be so partly because it is vaguer, and
+the interval score and Murphy resolution term---not coverage---are the
+columns that tell the two apart.
+
+\subsection{Other limitations}
+
+\begin{itemize}
+\item \emph{Exchangeability is violated by design.} Conformal calibration
+  residuals come from pre-cutoff years, and the test years are precisely
+  the years chosen to differ from them. \citet{barber2023conformal} bound the
+  resulting coverage gap; we measure it rather than assume it away. The
+  conformal arms are audited, not endorsed.
+\item \emph{Neural families are budget-limited.} Ensembles of ten over
+  thirteen origins, twenty populations and two sexes fix the hyperparameter
+  search to what fits the GPU budget; the inner time split is small (five
+  years). A better-tuned network might do better on point accuracy; whether
+  it would be better calibrated is exactly what is not known.
+\item \emph{Data quality in the placebo window.} Military deaths are
+  reconstructed in the belligerent series and excluded in the civilian-only
+  one. Placebo results are descriptive, are reported pooled and by the
+  pre-specified strata, and the neutral register-based stratum carries the
+  1918-versus-2020 comparison.
+\item \emph{Single-age granularity.} Modelling ages $0$--$99$ singly keeps
+  the old-age cells noisy in small populations; the age-cap-90 robustness
+  run tests whether \Hfour\ is an artefact of that noise.
+\item \emph{Rounding of deaths.} The log-score convention rounds fractional
+  deaths; the CRPS-on-counts sensitivity exists to show that nothing turns
+  on it.
+\item \emph{One code path, one author.} A single evaluation module is a
+  strength for consistency and a weakness for independent verification; the
+  synthetic-truth gate and the \pkg{StMoMo} oracle are the checks, and the
+  code is public.
+\end{itemize}
+
+\subsection{What this paper does not do}
+
+It does not propose a model, a repair, or a recommendation about which
+family to use. If the audit finds that a mechanism restores coverage at the
+break, that is a finding about the mechanism to be stated as a contrast; it
+is not a method contribution and will not be presented as one. If the audit
+finds that nothing holds nominal coverage, that is the finding, and the
+actuarial reading in Section~\ref{sec:actuarial} is its consequence.
+Explainability of the neural families---which features drive their
+forecasts and whether the explanations are stable across the break---is a
+separate question deferred to a companion paper that reuses these fits.

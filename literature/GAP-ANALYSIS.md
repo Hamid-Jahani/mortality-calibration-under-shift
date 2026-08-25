@@ -27,7 +27,7 @@ Across ~20 mortality-model papers in the library:
 
 **Richman & Wüthrich (2021)**, the multi-population neural Lee–Carter that everything cites — term counts across the full text: `MSE` ×28, `mean squared error` ×3, `out-of-sample` ×11. `coverage` **0**. `CRPS` **0**. `log score` **0**. The model is fit to every country in HMD and evaluated purely on point error.
 
-**Scognamiglio (2021)**, **Nigri et al. (2019)** (both the RNN paper and the Deep-Learning-Integrated-LC paper) — identical profile. Zero probabilistic metrics.
+**Scognamiglio (2021)**, **Nigri et al. (2019)** (the Deep-Learning-Integrated-LC paper) and **Petneházi & Gáll (2019)** (the "can RNNs beat Lee–Carter?" paper — misfiled here earlier as Nigri) — identical profile. Zero probabilistic metrics.
 
 **Miyata & Matsuyama (2022)** is the sharpest case. The abstract sells "the ability to forecast with confidence intervals." Sections 6.4 and Figures 7–8 plot 97.5% confidence intervals for the latent factor and for mortality at ages 30–80. Then Table 3, the only comparison against Lee–Carter, is **MSE**. The paper draws the intervals and never once checks whether observed mortality falls inside them.
 
@@ -35,7 +35,7 @@ Across ~20 mortality-model papers in the library:
 
 ## 3. Where coverage IS reported, it is reported wrongly
 
-**Levantesi et al. (2021)** — the single neural-LC paper that computes coverage. They use PICP (interval coverage probability) and MPIW (mean interval width) as **two separate indicators**, never combined into a width-penalised criterion. The consequence, in their own words:
+**Marino, Levantesi & Nigri (2021)** (arXiv author order; cited as "Levantesi et al." elsewhere in these notes) — the single neural-LC paper that computes coverage. They use PICP (interval coverage probability) and MPIW (mean interval width) as **two separate indicators**, never combined into a width-penalised criterion. The consequence, in their own words:
 
 > *"the LSTM offers always a greater probability coverage, in most cases due to the PI width"*
 > *"The most virtuous example concerns the Australian males … the simultaneous presence of a total coverage of the future kt realizations and a proper PI width"*

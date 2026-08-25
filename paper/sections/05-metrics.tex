@@ -1,0 +1,218 @@
+\section{Metrics}
+\label{sec:metrics}
+
+\subsection{Notation}
+
+Fix a population, a sex and an origin $T$. For age $x$ and horizon $h$ the
+target on the rate scale is $y_{x,h} = \log m_{x,T+h}$ and on the count scale
+it is the observed death count $D_{x,T+h}$ with known exposure $E_{x,T+h}$.
+A cell of the grid supplies $n$ predictive sample paths
+$z^{(j)}_{x,h}=\log m^{(j)}_{x,T+h}$, $j=1,\dots,n$, jointly over $(x,h)$;
+$\hat F_{x,h}$ denotes the empirical predictive distribution of
+$\{z^{(j)}_{x,h}\}_j$ and $\hat F^{-1}_{x,h}(p)$ its empirical quantile.
+All scores are negatively oriented: smaller is better. Averages over cells
+are denoted by an overbar; averaging is always within population--sex
+first, then across populations, so that a large population cannot dominate
+a small one and so that the cluster structure of Section~\ref{sec:metrics-inference}
+is preserved.
+
+\subsection{Point accuracy}
+
+\begin{equation}
+  \RMSE = \Big(\overline{(\hat y_{x,h}-y_{x,h})^2}\Big)^{1/2},\qquad
+  \MAE = \overline{|\hat y_{x,h}-y_{x,h}|},\qquad
+  \hat y_{x,h} = \hat F^{-1}_{x,h}(\tfrac12),
+\end{equation}
+together with the error in period life expectancy at birth,
+$\hat e_0 - e_0$, computed from the median path. These are the metrics the
+literature reports; \Hone\ is the claim that ranking by them is not ranking
+by a proper score.
+
+\subsection{Continuous ranked probability score}
+
+For a predictive distribution $F$ and outcome $y$,
+\begin{equation}
+  \CRPS(F,y) = \int_{-\infty}^{\infty}\big(F(u)-\ind\{u\ge y\}\big)^2\,du
+  = \E_F|Z-y| - \tfrac12\,\E_F|Z-Z'|,
+\end{equation}
+with $Z,Z'\sim F$ independent \citep{gneiting2007strictly}. From samples we
+use the plug-in estimator with sorted samples $z_{(1)}\le\dots\le z_{(n)}$,
+\begin{equation}
+  \widehat{\CRPS} = \frac1n\sum_{j=1}^{n}|z^{(j)}-y|
+  - \frac{1}{n^2}\sum_{j=1}^{n}\big(2j-n-1\big)\,z_{(j)},
+  \label{eq:crps-sample}
+\end{equation}
+which is the $O(n\log n)$ form of the second term. CRPS is computed on the
+log-rate scale, $y=y_{x,h}$, for every cell, and on the count scale as a
+registered sensitivity (Section~\ref{sec:metrics-logscore}). It is strictly
+proper and reduces to MAE for a point forecast, which is what makes the
+RMSE-versus-CRPS ranking comparison of \Hone\ well posed.
+
+\subsection{Poisson log score and the rounding convention}
+\label{sec:metrics-logscore}
+
+Each sample path implies a Poisson mean $\lambda^{(j)}_{x,h} =
+E_{x,T+h}\,m^{(j)}_{x,T+h}$ for the death count, so the predictive count
+distribution is the equal-weight mixture
+$p(d)=\frac1n\sum_j \mathrm{Poisson}(d;\lambda^{(j)}_{x,h})$. The log score is
+\begin{equation}
+  \LS = -\log\Big(\frac1n\sum_{j=1}^{n}\mathrm{Poisson}\big(\tilde D_{x,T+h};\lambda^{(j)}_{x,h}\big)\Big),
+  \qquad \tilde D = \big\lfloor D+\tfrac12\big\rfloor,
+\end{equation}
+evaluated by log-sum-exp. Because HMD deaths are fractional
+(Section~\ref{sec:data}), the score is defined at the nearest integer;
+the sensitivity is the CRPS of the mixture count distribution against the
+unrounded $D$, which is well defined for any real $D$. Both conventions were
+fixed before estimation.
+
+\subsection{Interval score and coverage}
+
+For the central $(1-\alpha)$ interval $[l,u] =
+[\hat F^{-1}(\alpha/2),\hat F^{-1}(1-\alpha/2)]$ the interval (Winkler) score
+is
+\begin{equation}
+  \IS_\alpha(l,u;y) = (u-l) + \frac{2}{\alpha}(l-y)\,\ind\{y<l\}
+  + \frac{2}{\alpha}(y-u)\,\ind\{y>u\},
+  \label{eq:winkler}
+\end{equation}
+\citep{winkler1972decision,gneiting2007strictly}, reported at $\alpha\in\{0.5,0.2,0.05\}$.
+It is the width-penalised criterion whose absence from the mortality
+literature Section~\ref{sec:intro} documents: an interval wide enough to
+cover everything has coverage one and an interval score equal to its width.
+Alongside it we always report the pair (empirical coverage, mean width),
+never coverage alone.
+
+\subsection{Marginal and joint path coverage}
+\label{sec:metrics-coverage}
+
+\emph{Marginal} coverage is the pointwise hit rate,
+\begin{equation}
+  C^{\mathrm{marg}}_{1-\alpha}(h) = \overline{\ind\{\,l_{x,h}\le y_{x,h}\le u_{x,h}\,\}},
+\end{equation}
+averaged over ages and populations for each horizon $h$, and pooled over
+$h$ for a single number. It is the quantity every mortality paper that
+reports coverage reports.
+
+\emph{Joint path} coverage asks whether the whole trajectory of a unit
+(one population--sex--age) lies inside its bands:
+\begin{equation}
+  C^{\mathrm{joint}}_{1-\alpha} = \overline{\prod_{h=1}^{H}\ind\{\,l_{x,h}\le y_{x,h}\le u_{x,h}\,\}},
+  \qquad H=5 \text{ (shift, stable)},\ H=9 \text{ (placebo)}.
+\end{equation}
+A path counts as covered only if every horizon is inside its band. This is
+the object an annuity valuation actually depends on, because a liability is
+a functional of the path of future mortality, not of one year of it. For
+pointwise bands at level $1-\alpha$, joint coverage is bounded above by
+marginal coverage and, if horizons were independent, would equal
+$(1-\alpha)^H$; the strong horizon dependence of random-walk paths puts it
+between the two. Only the copula conformal mechanism targets the joint level
+by construction. \Hthree\ is the registered claim that the gap
+$C^{\mathrm{marg}}-C^{\mathrm{joint}}$ is material for every family, tested
+as a paired difference over units.
+
+\subsection{Randomised probability integral transform}
+
+A forecaster is probabilistically calibrated if $F(Y)$ is uniform
+\citep{gneiting2007probabilistic,dawid1984present}. Because the predictive is
+an empirical distribution of $n$ samples and the target may tie with them,
+we use the randomised PIT of \citet{czado2009predictive},
+\begin{equation}
+  u_{x,h} = \frac{\#\{j: z^{(j)}_{x,h} < y_{x,h}\} + V\,\big(\#\{j: z^{(j)}_{x,h}=y_{x,h}\}+1\big)}{n+1},
+  \qquad V\sim\mathrm{Uniform}(0,1),
+\end{equation}
+which is exactly uniform under the null for any finite $n$. We report the
+ten-bin histogram, the Kolmogorov--Smirnov distance from uniformity, and the
+shape---U (over-confident), hump (under-confident), slope (biased). Because
+PIT values within a population--sex--origin are strongly dependent, the
+formal test is a cluster-bootstrap test of the pooled histogram
+(Section~\ref{sec:metrics-inference}), not a cell-level KS $p$-value.
+
+\subsection{Calibration by age}
+
+All coverage and PIT statistics are additionally computed within the age
+bands $0$--$24$, $25$--$64$ and $65$--$99$ and as single-age curves.
+\Hfour\ compares the $65$--$99$ and $25$--$64$ bands in the shift regime.
+
+\subsection{Murphy decomposition}
+
+For a proper score $S$ the mean score decomposes as
+\begin{equation}
+  \overline{S} = \mathrm{UNC} - \mathrm{RES} + \mathrm{MCB},
+\end{equation}
+uncertainty of the outcome minus resolution of the forecasts plus
+miscalibration \citep{murphy1973new,pohle2020murphy}. It separates
+\emph{why} a forecaster scores badly: a well-calibrated but vague
+forecaster has low RES; a sharp but wrong one has high MCB. We compute it
+for the interval score and for the Brier scores of the exceedance events
+$\ind\{Y\le \hat F^{-1}(p)\}$ at $p\in\{0.025,0.25,0.5,0.75,0.975\}$, with
+the recalibrated forecast estimated by isotonic regression
+\citep{dimitriadis2021stable}. \todo{estimator not yet implemented in the
+harness; confirm the isotonic (CORP) choice or a binned alternative before
+the first real-data run}
+
+\subsection{Actuarial functionals}
+\label{sec:metrics-actuarial}
+
+Each sample path's rate vector $m^{(j)}_{\cdot,T+h}$ is converted to a period
+life table by the conventions of Section~\ref{sec:data}, giving samples of
+\begin{equation}
+  e^{(j)}_x = \frac{T^{(j)}_x}{l^{(j)}_x},\qquad
+  \annuity^{(j)} = \sum_{t\ge0} v^{t}\,{}_t p^{(j)}_{65},\quad v=\frac{1}{1.02},
+\end{equation}
+where ${}_t p_{65}=l_{65+t}/l_{65}$ from the sample's own table treated as
+static, i.e.\ the annuity-due factor at 2\% on the period table of year
+$T+h$ \citep{dickson2020actuarial}. The realised values are computed from the
+observed $m_{x,T+h}$ by the same routine, so that any life-table
+approximation cancels in the comparison. For $e_0$, $e_{65}$ and $\annuity$
+we report the interval error, the empirical coverage of the central 95\%
+interval and its width, in each regime; \Hfive\ compares the shift and
+stable departures from nominal. We also report the 99.5\% upper quantile of
+$\annuity$ from each cell as the longevity tail an internal model would
+carry. \todo{the 99.5\% tail quantile is descriptive and not part of a
+registered hypothesis; say so in the table note}
+
+\subsection{Forecast-comparison inference}
+\label{sec:metrics-inference}
+
+\paragraph{Effective sample size.} The shift regime contains one common
+shock. Within a population, ages and horizons share the same realised
+pandemic; across populations, the shock itself is shared. Treating cells as
+independent would produce standard errors that are wrong by orders of
+magnitude. Population is therefore the cluster ($G=20$ in the shift and
+stable regimes, $G=11$ in the placebo), and every test resamples clusters.
+Even so, $p$-values in the shift regime are statements about differences
+between forecasters \emph{given this event}, not about future pandemics;
+that is what an event study can deliver, and the placebo regime is the
+second event that makes a cross-event comparison possible.
+
+\paragraph{Diebold--Mariano with a wild cluster bootstrap.} For forecasters
+$A$ and $B$ with per-unit losses $L_{A,i}$, $L_{B,i}$ (CRPS per horizon per
+population--sex--age), the differential $d_i = L_{A,i}-L_{B,i}$ has mean
+$\bar d$ and cluster-robust variance
+\begin{equation}
+  \widehat{\mathrm{Var}}(\bar d) = \frac{G}{G-1}\,\frac{1}{N^2}\sum_{g=1}^{G}
+  \Big(\sum_{i\in g}(d_i-\bar d)\Big)^2,
+\end{equation}
+giving the statistic $t=\bar d/\widehat{\mathrm{se}}$
+\citep{diebold1995comparing}. Its null distribution is obtained by the wild
+cluster bootstrap of \citet{cameron2008bootstrap} with the null imposed:
+residuals $d_i-\bar d$ are multiplied by a cluster-level weight $w_g$ drawn
+from the six-point distribution of \citet{webb2023reworking}, which has
+enough distinct sign patterns at $G=20$ where Rademacher weights do not
+\citep{mackinnon2017wild}; $B=4999$ replications. Negative $\bar d$ favours
+$A$.
+
+\paragraph{Model confidence set.} Following \citet{hansen2011model}, the MCS
+at confidence $1-\alpha=0.90$ is built by the $T_{\max}$ statistic and the
+$e_{\max}$ elimination rule, with the bootstrap distribution of the
+statistic obtained by resampling \emph{populations} as blocks---the analogue
+of their stationary block bootstrap for our panel. The MCS is reported for
+CRPS on log rates in each regime, over the distributional cells of the grid.
+
+\paragraph{Hypothesis tests.} \Hone\ is assessed by the Spearman correlation
+of RMSE and CRPS rankings and the count of top-3 inversions, with a
+cluster-bootstrap interval for the correlation. \Htwo, \Hfour\ and \Hfive\
+are paired contrasts of coverage (shift minus stable; ages 65--99 minus
+25--64) tested by the wild cluster bootstrap above applied to the coverage
+indicators. \Hthree\ is the paired difference of marginal and joint
+coverage over units, clustered by population.

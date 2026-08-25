@@ -1,0 +1,196 @@
+\section{Related work}
+\label{sec:related}
+
+\subsection{Stochastic mortality models and the Cairns--Blake--Dowd programme}
+
+\citet{lee1992modeling} model the log central death rate as
+$\log m_{x,t} = \alpha_x + \beta_x \kappa_t$, estimate the bilinear term by
+singular value decomposition and extrapolate $\kappa_t$ by a random walk with
+drift; the prediction intervals for $\kappa_t$, and hence for life
+expectancy, come with the model. \citet{girosi2007understanding} show that
+the method is a multivariate random walk with drift on the vector of log
+rates with a fixed age profile, so that all of its forecast uncertainty is
+$\kappa_t$ uncertainty scaled by $\beta_x$, and that forecast age profiles
+become non-smooth; both points matter for reading a Lee--Carter interval.
+\citet{brouhns2002poisson} replace the least-squares fit by a Poisson
+likelihood with the exposure as offset, the error law appropriate to death
+counts, and \citet{brouhns2005bootstrapping} add a semiparametric bootstrap
+that carries parameter uncertainty into the projection. Coherent
+multi-population variants follow \citet{li2005coherent}, and
+\citet{li2017coherent} replace the factor structure by a sparse vector
+autoregression on log rates.
+
+\citet{cairns2006two} introduce the two-factor CBD model for post-60
+mortality with explicit parameter uncertainty; \citet{renshaw2006cohort} add
+a cohort term to Lee--Carter. \citet{cairns2009quantitative} compare eight
+such models (M1--M8) on England and Wales and United States data by
+Bayesian information criterion, robustness to the fitting period and
+biological reasonableness; \citet{cairns2011mortality} take six of them
+forward as \emph{density} forecasters and judge their fan charts ex ante;
+\citet{dowd2010evaluating} test the residuals of the same six for goodness
+of fit; and \citet{dowd2010backtesting} set out a backtesting framework for
+their multi-period-ahead density forecasts, applied ex post to English and
+Welsh males. \todo{VERIFY against Dowd et al.\ (2010b) once read: the exact
+backtests used (probability-integral or hit-rate based), the horizons, and
+the finding that parameter-uncertainty-inclusive densities are ``more
+plausible''; adjust the novelty claim in Section~\ref{sec:intro}
+accordingly} Later members of the programme include the Bayesian
+two-population model of \citet{cairns2011bayesian}, the general procedure
+for model construction of \citet{hunt2014general} and the CBDX workhorse of
+\citet{dowd2020cbdx}. \citet{booth2008mortality} review the wider field.
+The \pkg{StMoMo} package \citep{villegas2018stmomo} implements the family in
+a common generalised-linear framework and is the numerical oracle for the
+classical arms of this study.
+
+Two features of this programme frame ours. It established that stochastic
+mortality models are to be judged as density forecasters, not point
+forecasters. And its evaluation, apart from \citet{dowd2010backtesting}, was
+in-sample or ex ante, on one or two populations, before neural models
+existed and before any break in the modern data.
+
+\subsection{Neural extensions of Lee--Carter}
+
+\citet{hainaut2018neural} is an early neural analyser of mortality surfaces.
+\citet{richman2021neural} embed country and sex into a network that
+generalises the Lee--Carter structure to all HMD populations at once (train
+1950--1999, test 2000--2016) and evaluate on mean squared error.
+\citet{nigri2019deep} replace the random walk on $\kappa_t$ by an LSTM;
+\citet{petnehazi2019mortality} ask whether recurrent networks beat
+Lee--Carter, by point error. \citet{perla2021time} show that a shallow
+convolutional network can be read as a generalisation of Lee--Carter and
+that it transfers from the HMD to the United States Mortality Database.
+\citet{scognamiglio2022calibrating} fit Lee--Carter and Poisson Lee--Carter
+jointly across populations with a network that replicates their structure.
+\citet{marino2021deepening} deepen Lee--Carter and add interval estimation
+for the future $\kappa_t$; \citet{miyata2022extending} replace the two-stage
+procedure by a variational autoencoder fit in one stage and obtain intervals
+without MCMC; \citet{schnurch2022point} is the one neural mortality paper
+whose title promises interval forecasts. \todo{Schn\"urch and Korn (2022) not
+yet read; describe their interval construction and any coverage evidence
+here} Adjacent non-neural machine-learning comparators are the
+gradient-boosted multi-population model of \citet{miao2025gradient}, the
+tree-based analysis of \citet{deprez2017machine}, the pension-fund
+application of \citet{demelo2025actuarial}, and the Markov-switching
+Bayesian VAR on an age-partitioned Lee--Carter of \citet{fu2025applying},
+which is a Bayesian rather than a neural route to uncertainty under
+structural change.
+
+The evaluation profile of this lineage is documented in
+Section~\ref{sec:intro}: point accuracy throughout; intervals plotted where
+they exist; coverage computed once, without a sharpness penalty; proper
+scores never. The four neural families in our grid
+(Section~\ref{sec:design-families}) are drawn from it.
+
+\subsection{Bayesian and Gaussian-process mortality models}
+
+\citet{ludkovski2018gaussian} model mortality surfaces by Gaussian-process
+regression; \citet{huynh2021multi} extend this to multi-output GPs over many
+HMD populations and, alone in our library, evaluate by CRPS as the score is
+meant to be used. \citet{barigou2023bayesian} average Bayesian mortality
+models by leave-future-out validation with the expected log predictive
+density and CRPS; \citet{liu2020bayesian} fit a Bayesian Poisson log-normal
+model with regularised time structure. These are the models whose predictive
+distributions are honest by construction, and their evaluation practice is
+the one we adopt for every family; a multi-output GP is one of the ten
+families audited.
+
+\subsection{COVID-era mortality modelling}
+
+The pandemic literature in actuarial science is about \emph{estimation with}
+the pandemic years, not \emph{evaluation across} them.
+\citet{cairns2020impact} frame COVID-19 deaths as accelerated deaths with
+implications for higher-age mortality; \citet{robben2022assessing} quantify
+what one pandemic data point does to the calibration and projections of a
+stochastic multi-population model; \citet{goes2023bayesian} extend
+Lee--Carter with a vanishing jump so that pandemic years neither dominate the
+trend nor have to be deleted; \citet{robben2024catastrophe} add catastrophe
+risk to a multi-population model; \citet{vanberkum2022estimating} extend the
+Li--Lee model to measure the impact on granular data;
+\citet{nalmpatian2023advanced} combine generalised additive models with
+machine learning to estimate the trend deviation; and
+\citet{robben2025granular} model epidemic and temperature shocks by regime
+switching. \citet{barigou2023bayesian}, as noted, simulate a pandemic
+perturbation because real post-shock data did not yet exist. None of these
+papers evaluates prediction intervals that were fit before 2020 against what
+happened in 2020--2024. That is the gap this audit fills, and the papers
+above are what a modeller would reach for afterwards to repair a failure we
+document; repairing it is not our contribution.
+
+\subsection{Proper scoring rules, calibration and sharpness}
+
+A scoring rule is proper if the expected score is optimised by the true
+distribution and strictly proper if uniquely so; the logarithmic score and
+the continuous ranked probability score are the two canonical examples
+\citep{gneiting2007strictly}, and the interval (Winkler) score is the proper
+score for a central prediction interval \citep{winkler1972decision}.
+\citet{gneiting2007probabilistic} set out the paradigm that the present audit
+adopts wholesale---maximise sharpness subject to calibration---together
+with the probability integral transform (PIT) as the diagnostic of
+probabilistic calibration, following the prequential principle of
+\citet{dawid1984present}. \citet{czado2009predictive} give the randomised
+PIT for count data, which we need because deaths are counts and predictive
+samples tie. The decomposition of a proper score into uncertainty,
+resolution and miscalibration goes back to \citet{murphy1973new};
+\citet{pohle2020murphy} generalises it to all forecast types and
+\citet{dimitriadis2021stable} give a stable estimator via isotonic
+recalibration. \citet{dawid2014theory} survey the theory; \citet{yanagisawa2023proper}
+extend proper scoring to survival-time distributions, which is the natural
+target when the object of interest is a lifetime rather than a rate.
+
+\subsection{Conformal prediction}
+
+Conformal prediction \citep{vovk2005algorithmic} produces prediction sets
+with finite-sample marginal coverage under exchangeability of the calibration
+and test residuals; split conformal \citep{lei2018distribution} makes it
+cheap for any black-box regressor, and conformalised quantile regression
+\citep{romano2019conformalized} makes the sets adaptive. Its relevance to a
+time series is the question of what happens when exchangeability fails.
+\citet{tibshirani2019conformal} reweight under covariate shift;
+\citet{barber2023conformal} bound the coverage gap of weighted conformal
+sets by a total-variation distance between calibration and test
+distributions---a bound that a structural break is designed to make large.
+\citet{xu2021conformal} propose ensemble batch prediction intervals (EnbPI)
+for dynamic time series without exchangeability; \citet{gibbs2021adaptive}
+adapt the miscoverage level online under distribution shift, and
+\citet{gibbs2024conformal} extend this to arbitrary shifts. For multi-step
+forecasts, where the object of interest is the whole path,
+\citet{sun2024copula} calibrate a joint band through a copula of the
+per-horizon scores; related constructions are the copula-based multi-target
+sets of \citet{messoudi2021copula}, the multi-horizon bands of
+\citet{stankeviciute2021conformal} and the functional bands of
+\citet{diquigiovanni2022conformal}. \citet{sun2025conformal} address change
+points directly. \citet{angelopoulos2023gentle} is the standard primer.
+
+We found no application of conformal prediction to mortality forecasting.
+Three conformal mechanisms enter our grid as \emph{audited arms}, on the
+same footing as the native and ensemble mechanisms; we make no claim that
+they fix anything, and we deliberately do not invoke the finite-sample
+guarantee under a break, for exactly the reason \citet{barber2023conformal}
+give.
+
+\subsection{Uncertainty mechanisms for neural networks}
+
+Deep ensembles \citep{lakshminarayanan2017simple} estimate predictive
+uncertainty from the disagreement of independently initialised networks;
+Monte Carlo dropout \citep{gal2016dropout} reads dropout at prediction time
+as approximate Bayesian inference. Both capture variability that the
+training data can reveal; neither is designed to anticipate a regime the
+training data never contained. Whether that matters for coverage at a break
+is one of the questions the crossed design answers.
+
+\subsection{Forecast-comparison inference}
+
+\citet{diebold1995comparing} test equal predictive accuracy on a
+loss-differential series; \citet{hansen2011model} construct the model
+confidence set, the set of models not significantly outperformed at a given
+confidence level; \citet{shang2018model} apply the latter to age-specific
+mortality (Japanese national and prefectural data, retirement ages), the one
+prior use we found in this setting. Because our shift regime is a single
+common shock observed in twenty correlated populations, ordinary
+Diebold--Mariano standard errors overstate the information available; we
+cluster by population and use the wild cluster bootstrap of
+\citet{cameron2008bootstrap} with the six-point weights of
+\citet{webb2023reworking}, which \citet{mackinnon2017wild} show remain
+reliable at the small number of clusters we have. Rolling-origin evaluation
+follows \citet{tashman2000out}; pre-registration follows the practice
+advocated by \citet{nosek2018preregistration}.

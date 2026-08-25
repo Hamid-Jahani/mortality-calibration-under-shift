@@ -1,0 +1,252 @@
+\section{Study design}
+\label{sec:design}
+
+\subsection{Pre-registration}
+
+The design was written down, committed and hash-stamped on 2026-08-25,
+before any model was fit to real HMD data; its SHA-256 digest is
+\begin{center}
+\small\texttt{bbbe3860a5446d063e186e56555afa893b07c36cf15a990d07567471affe50be}
+\end{center}
+The registration fixes the analytic choices: regimes and their exact years,
+population lists, the model families and mechanisms, the admissible grid,
+every metric and its convention, the inference procedure, the validation
+gates, and the five hypotheses. It does not, and could not, hide the outcome
+of 2020--2024 from us; pre-registration here protects against analytic
+flexibility, not against hypothesis surprise. One ordering deviation is
+recorded honestly: the registration was frozen before
+\citet{dowd2010backtesting} had been read. Nothing in the frozen design
+depends on that paper's content; what it can change is the framing of
+novelty in the text, which is not frozen. One addendum has been registered
+(Addendum~1, 2026-08-26, still before any real-data fit): it adds the
+placebo strata and the denominator sensitivities described in
+Section~\ref{sec:data}, and changes nothing in the hypotheses, populations,
+splits, horizons, metrics or inference plan. \todo{cite the commit hash of
+Addendum~1} Every subsequent deviation is reported as a deviation in
+Section~\ref{sec:design-deviations}.
+
+\subsection{Three regimes}
+\label{sec:design-regimes}
+
+\begin{table}[htbp]\centering
+\caption{The three pre-registered evaluation regimes.}
+\label{tab:regimes}
+\small
+\begin{tabular}{@{}lllcc@{}}
+\toprule
+Regime & Training years & Test years & $h$ & Populations \\
+\midrule
+Stable (control) & $\le T$, $T=1990,1992,\dots,2014$ & $T{+}1,\dots,T{+}5$ ($\le 2019$) & $1$--$5$ & 20 \\
+Shift (primary)  & $\le 2019$ & 2020--2024 & $1$--$5$ & 20 \\
+Placebo break    & $\le 1913$ & 1914--1922 & $1$--$9$ & 11 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The \emph{stable} regime measures calibration where nothing breaks; it is
+the reference level against which \Htwo\ and \Hfive\ are stated. The
+\emph{shift} regime is the audit. The \emph{placebo} regime is a second
+event---the First World War and the 1918 influenza pandemic---with a longer
+horizon, used descriptively: a side-by-side of 1914--1922 and 2020--2024
+coverage answers ``is this just COVID?'' without a transfer regression.
+Every window is expanding-origin; training always uses all years up to the
+origin from the population's own first year. A random split is never used
+anywhere, because mortality panels leak trivially under random splitting:
+adjacent ages and years are near-duplicates.
+
+\subsection{Model families}
+\label{sec:design-families}
+
+Ten families, chosen to span the classical, statistical-learning and neural
+lineages of Section~\ref{sec:related}. Each is specified by its reference
+paper; the repository documents any deviation.
+
+\begin{enumerate}
+\item \textbf{Lee--Carter (SVD).} $\log m_{x,t}=\alpha_x+\beta_x\kappa_t$,
+  SVD fit with $\sum_x\beta_x=1$, $\sum_t\kappa_t=0$; random walk with drift
+  on $\kappa_t$ including drift-estimation uncertainty
+  \citep{lee1992modeling}.
+\item \textbf{Poisson Lee--Carter.} Same structure, Poisson likelihood with
+  log-exposure offset, fit by Newton's method \citep{brouhns2002poisson}.
+\item \textbf{CBD (M5).} $\operatorname{logit} q_{x,t} = \kappa^{(1)}_t +
+  \kappa^{(2)}_t (x-\bar x)$ on ages 55--99, bivariate random walk with drift
+  \citep{cairns2006two}.
+\item \textbf{APC / Renshaw--Haberman (M2-A).} Lee--Carter with a cohort term
+  $\gamma_{t-x}$ under the identifiability constraints of
+  \citet{cairns2009quantitative}; ARIMA projection of the cohort index.
+  \citep{renshaw2006cohort}.
+\item \textbf{Sparse VAR.} Banded vector autoregression on log-rate
+  improvements with a penalised fit \citep{li2017coherent}.
+\item \textbf{Multi-output Gaussian process.} GP regression over (age, year)
+  with a shared-across-populations kernel structure
+  \citep{huynh2021multi}. \todo{final kernel and inducing-point choices;
+  document exclusion if the GPU budget forbids}
+\item \textbf{Neural-LC.} Country and sex embeddings feeding a network that
+  generalises the Lee--Carter surface \citep{richman2021neural}.
+\item \textbf{Shallow CNN-LC.} Convolutional generalisation of Lee--Carter
+  \citep{perla2021time}.
+\item \textbf{LSTM-on-$\kappa_t$.} Lee--Carter age structure with a recurrent
+  network in place of the random walk \citep{nigri2019deep}.
+\item \textbf{Distributional Poisson/NB head.} A network whose output layer
+  parameterises a Poisson or negative-binomial count distribution for
+  $D_{x,t}$ given $\log E_{x,t}$; the only neural family with a model-native
+  predictive distribution.
+\end{enumerate}
+
+Hyperparameters of the neural families are tuned on an inner \emph{time}
+split---the final five pre-cutoff years of each training window---never on a
+test year and never on a random subset.
+
+\subsection{Uncertainty mechanisms}
+\label{sec:design-mechanisms}
+
+Seven mechanisms, each a way of turning a fitted family into predictive
+samples.
+
+\begin{enumerate}
+\item \textbf{Model-native.} The predictive distribution the reference paper
+  itself supplies: random-walk innovation and drift uncertainty for
+  Lee--Carter-type models, the GP posterior, the count distribution of the
+  distributional head.
+\item \textbf{Semiparametric Poisson bootstrap.} Refit the family $B$ times to
+  pseudo-deaths $D^{(b)}\sim\mathrm{Poisson}(E\hat m)$ and pool the refits'
+  native samples \citep{brouhns2005bootstrapping}; adds parameter uncertainty
+  the native mechanism conditions away.
+\item \textbf{Deep ensemble.} $M=10$ independently seeded trainings, samples
+  pooled with equal weight \citep{lakshminarayanan2017simple}.
+\item \textbf{Monte Carlo dropout.} Dropout active at prediction time,
+  stochastic forward passes as samples \citep{gal2016dropout}.
+\item \textbf{Split conformal.} Absolute-residual conformal intervals on the
+  log-rate scale \citep{lei2018distribution}, Mondrian-stratified by age
+  band ($0$--$24$, $25$--$64$, $65$--$99$) and by horizon
+  \citep{vovk2005algorithmic}.
+\item \textbf{EnbPI.} Ensemble batch prediction intervals adapted from the
+  online original to annual multi-step forecasting \citep{xu2021conformal};
+  the adaptation is documented in the repository.
+\item \textbf{Copula / joint-path conformal.} A simultaneous band over
+  horizons from a scaled sup-norm nonconformity score
+  \citep{diquigiovanni2022conformal}, in the spirit of
+  \citet{sun2024copula} and \citet{messoudi2021copula}; the only mechanism
+  whose band is calibrated to be joint over $h=1,\dots,H$.
+\end{enumerate}
+
+Two disciplines apply to every conformal arm. The calibration residuals are
+drawn only from years at or before the training cutoff, on an inner time
+split in which the calibration years are later than the years the base fit
+is trained on; no mechanism sees a test year. And a conformal wrapper yields
+an interval, not a distribution: to preserve the single sample interface the
+harness draws uniformly inside each cell's interval, independently across
+cells. That convention keeps coverage, width and interval score exact at the
+construction level, but it makes CRPS, log score and PIT for conformal cells
+a placeholder rather than a distributional claim. Those scores are computed,
+flagged, and reported only in Appendix~\ref{app:secondary}; they are never
+ranked against distributional mechanisms.
+
+\subsection{The crossed grid}
+\label{sec:design-grid}
+
+Not every family admits every mechanism. Deterministic classical fits have
+no seed variance, so ensembles and dropout are undefined for them; the GP
+posterior already integrates parameter uncertainty, so a bootstrap would be
+redundant; and neural networks have no closed-form native predictive except
+through the distributional head. Table~\ref{tab:grid} enumerates the
+admissible cells: 50 primary and a handful of secondary ones. The three
+conformal columns are wrappers around the same underlying fits as the native
+and ensemble columns, not refits, so the expensive axis is neural families
+$\times$ ensemble members $\times$ expanding origins.
+
+\begin{table}[htbp]\centering
+\caption{Admissible model-family $\times$ uncertainty-mechanism grid, transcribed
+from the pre-registration.}
+\label{tab:grid}
+\inputtable{tab-grid}
+\end{table}
+
+Because the grid is ragged, no claim in this paper is a full-factorial main
+effect. Every comparison is a \emph{contrast within an admissible sub-grid},
+and the pre-registration names the contrasts that carry the hypotheses:
+conformal versus native within the classical families; ensemble versus
+dropout within the neural families; bootstrap versus native within the
+classical families; and joint-path conformal versus split conformal across
+all families.
+
+\subsection{One interface, one scoring path}
+\label{sec:design-interface}
+
+Every family--mechanism cell implements the same two calls,
+\[
+  \texttt{fit}(D, E) \quad\text{and}\quad
+  \texttt{sample\_mx}(h, n, \text{rng}) \;\to\; [n, h, n_{\text{ages}}],
+\]
+returning $n$ pathwise trajectories of $m_{x,T+1},\dots,m_{x,T+h}$. Point
+forecasts, intervals, proper scores, PIT values, joint path coverage and the
+life-table functionals are all computed from these samples by one evaluation
+module. No model has a bespoke metric implementation, so no model can be
+accidentally flattered by one. The point forecast for RMSE and MAE is the
+pointwise median of the log-rate samples. \todo{unify the point functional
+for $e_0$ (currently the sample mean) with the median used for log rates}
+
+\subsection{Seeds}
+
+The global seed is 20260825. Each cell derives its own generator from a seed
+sequence over (global seed, origin, population, sex, family, mechanism);
+ensemble member $j$ uses global seed plus $j$. Every seed is written to the
+results file alongside the metrics.
+
+\subsection{Validation gates}
+\label{sec:design-gates}
+
+Three gates had to pass before any real-data result could be read. All three
+have passed.
+
+\paragraph{Gate 1: synthetic truth.} Data are simulated from a known Poisson
+Lee--Carter process (40 ages, 60 training years, horizons $1$--$10$,
+exposures $10^5$, thirty independent worlds, 1{,}500 predictive samples
+each). The correctly specified Poisson Lee--Carter must attain nominal
+95\% coverage within Monte Carlo tolerance and a near-uniform PIT histogram;
+the harness must also detect an injected break as under-coverage. It does
+both. If this gate had failed, every coverage number on real data would have
+been measuring a bug. One documented finding from the gate: the two-stage
+SVD Lee--Carter is mildly \emph{over}-dispersed on Poisson data, because the
+SVD $\kappa_t$ carries observation noise into the random-walk innovation
+variance; its intervals are slightly wide and its PIT centre-heavy. This is
+a property of the method, not of the harness, and it is carried into the
+interpretation of the SVD-LC rows.
+
+\paragraph{Gate 2: oracle parity.} The Python Poisson Lee--Carter must match
+R \pkg{StMoMo} (version 0.4.1 under R~4.6.1) on a shared subset. On Swedish
+males, 1950--2000, ages $0$--$99$, the two fits have identical Poisson
+log-likelihood and a maximum relative difference in $\beta_x$ of
+$2.4\times10^{-14}$ when the Newton iteration is run to its cap.
+\todo{quote the $\alpha_x$ and $\kappa_t$ relative differences from the
+parity script} The \pkg{StMoMo} parameter dump is
+tracked in the repository so the check can be re-run without R.
+
+\paragraph{Gate 3: life-table parity.} Our period life table on HMD's
+published $m_x$ reproduces HMD's published $e_0$ and $e_{65}$ within
+0.15~years at spot checks (Section~\ref{sec:data}).
+
+\subsection{Inference plan}
+
+The shift regime is one event. Twenty populations experienced one common
+shock, so the effective number of independent observations of ``what a
+pandemic does to an interval'' is nearer one than twenty, and nearer one
+than the thousands of cells in the panel. Inference is therefore framed as
+an event study: population is the cluster, every test resamples clusters
+rather than cells, PIT is pooled within cluster before it is compared
+across clusters, and the placebo regime is treated as a second event rather
+than as more draws from the same one. The procedures are defined in
+Section~\ref{sec:metrics-inference}.
+
+\subsection{Deviations from the pre-registration}
+\label{sec:design-deviations}
+
+\begin{itemize}
+\item Ordering: \citet{dowd2010backtesting} read after the registration was
+  frozen (above).
+\item Addendum~1 (2026-08-26): pre-specified placebo strata and shift-regime
+  denominator sensitivities. Not a deviation---nothing frozen changed---but
+  recorded here so the ledger is complete.
+\item \todo{append every subsequent deviation here with its date and reason;
+  an empty list at submission is a claim, not a default}
+\end{itemize}
