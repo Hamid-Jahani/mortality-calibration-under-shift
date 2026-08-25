@@ -1,0 +1,220 @@
+\section{Introduction}
+\label{sec:intro}
+
+\subsection{Longevity risk is priced off the interval}
+
+A life annuity is a bet on a distribution. The best-estimate reserve of an
+annuity book is a functional of the central mortality projection, but
+everything that sits on top of it---the risk margin, the longevity component
+of solvency capital, the price at which a longevity swap or a bulk annuity
+transfer clears---is a functional of the projection's \emph{spread}. Under
+the Solvency~II standard formula the longevity stress is a permanent
+20\% fall in mortality rates \citep{eiopa2015delegated}; under an internal
+model it is the 99.5\% one-year quantile of the change in own funds, which a
+stochastic mortality model must supply from its own predictive distribution.
+Either way the quantity carried on the balance sheet is a tail of a forecast
+distribution, and its adequacy rests on one property: that a nominal 95\%
+interval actually contains the realised outcome about 95\% of the time. An
+interval that is too narrow under-reserves; one that is too wide over-prices
+the hedge. Neither error is visible in a point-accuracy comparison.
+
+Stochastic mortality models have produced intervals from the start.
+\citet{lee1992modeling} forecast the period index $\kappa_t$ by a random walk
+with drift and reported prediction intervals for life expectancy; the
+Cairns--Blake--Dowd programme built a family of models expressly to generate
+density forecasts \citep{cairns2006two,cairns2009quantitative,cairns2011mortality};
+the actuarial toolkit \pkg{StMoMo} \citep{villegas2018stmomo} exposes bootstrap
+and simulation intervals for all of them. The neural extensions of
+Lee--Carter that followed
+\citep{richman2021neural,nigri2019deep,perla2021time,scognamiglio2022calibrating}
+improved point accuracy across many populations, and several now emit
+intervals of their own
+\citep{marino2021deepening,miyata2022extending,schnurch2022point}. Whether
+those intervals are \emph{calibrated} is a separate question from whether
+they exist, and it is the question that decides what they are worth to an
+actuary.
+
+\subsection{The break that makes the question answerable}
+
+Calibration is testable only where the truth is eventually observed, and the
+test is informative only where the truth is allowed to surprise the model.
+From the mid-1950s until 2019 the mortality surfaces of the high-income
+populations in the Human Mortality Database (HMD) improved smoothly enough
+that almost any trend extrapolation looked calibrated in sample. The years
+2020--2024 broke that surface: period life expectancy fell in 2020 and 2021
+in most HMD countries \citep{aburto2022quantifying}
+\todo{verify magnitude and country coverage against Aburto et al.\ (2022)
+before quoting any figure}, and the subsequent recovery was uneven by country
+and by age. Any prediction interval constructed from data ending in 2019 was,
+for the first time in the modern record, put to a genuine out-of-sample test
+by reality.
+
+The result of that test has not been scored. The closest study,
+\citet{barigou2023bayesian}, has an exemplary evaluation
+design---leave-future-out validation, log score and CRPS---but its pandemic
+analysis is a simulation: French male deaths perturbed by ``two years of
+excess mortality followed by one year of lower mortality'', because in 2021
+real post-shock data did not exist. They exist now. The HMD vintage of
+15~June~2026 (Methods Protocol v6) is the first with final single-age data
+through 2024 for twenty populations. This paper uses it.
+
+\subsection{What the literature measures}
+
+We searched the full text of the mortality-forecasting library assembled for
+this study (about twenty modelling papers; the term counts and quotations are
+recorded in the project repository) for what each paper actually reports.
+The counts below are over that library; where wider reading changed them,
+the correction is stated.
+
+\begin{itemize}
+\item \emph{Point accuracy is the default and often the only metric.}
+  \citet{richman2021neural}, the multi-population neural Lee--Carter that
+  later work builds on, is fit to every HMD country and evaluated on mean
+  squared error alone: the term ``MSE'' appears twenty-eight times in the
+  full text; ``coverage'', ``CRPS'' and ``log score'' appear zero times.
+  \citet{scognamiglio2022calibrating}, \citet{nigri2019deep},
+  \citet{petnehazi2019mortality} and \citet{perla2021time} have the same
+  profile.
+\item \emph{Intervals are drawn but not checked.} \citet{miyata2022extending}
+  advertise ``the ability to forecast with confidence intervals'', plot
+  97.5\% intervals for the latent factor and for mortality at ages 30--80
+  (their Section~6.4 and Figures~7--8), and then compare against Lee--Carter
+  by MSE only (their Table~3). The paper never asks whether observed
+  mortality falls inside the intervals it draws. The same authors note, of
+  \citet{schnurch2022point}, that the intervals there are ``not based on the
+  endogenous randomness \ldots\ but on the exogenous randomness driven by the
+  random seed for the NN'': variance across seeds, which measures nothing
+  about predictive coverage.
+  \todo{Schn\"urch and Korn (2022) not yet read; confirm this characterisation
+  and whether they tabulate coverage}
+\item \emph{Where coverage is reported, it is reported without a sharpness
+  penalty.} \citet{marino2021deepening} is, to our knowledge, the one neural
+  Lee--Carter paper that computes interval coverage. It reports the
+  prediction-interval coverage probability (PICP) and the mean interval width
+  (MPIW) as two separate indicators and treats $\mathrm{PICP}=1$ as the best
+  outcome: the LSTM ``offers always a greater probability coverage, in most
+  cases due to the PI width''. An interval wide enough to contain everything
+  scores~$1$; without a width-penalised criterion, ``wider'' and ``better''
+  are indistinguishable. Buried in the same paper, and not followed up, is
+  the observation that the classical ARIMA intervals attain empirical
+  coverage ``around 50\%'' and, for Spanish males, ``stable around
+  33\%''---nominal 95\% Lee--Carter intervals covering a third to a half of
+  realisations. The test window (2001--2018, three countries) contains no
+  structural break. The most recent competitor, the gradient-boosted
+  multi-population model of \citet{miao2025gradient}, repeats the pattern one
+  level up: marginal coverages of 90\%, 94\% and 96\% against a nominal 95\%
+  are reported and the closest is declared ``the most properly calibrated'',
+  again with no proper score and no width penalty alongside.
+\item \emph{Ex-post density evaluation exists, but predates both neural
+  models and the break.} \citet{cairns2011mortality} assess the density
+  forecasts of six stochastic models \emph{ex ante}, by the biological
+  reasonableness of their fan charts; there is no PIT, no coverage
+  computation, no proper score and no held-out evaluation.
+  \citet{dowd2010backtesting} do backtest multi-period-ahead density
+  forecasts ex post, for six classical models on English and Welsh males.
+  \todo{VERIFY against Dowd et al.\ (2010b) once read: which backtests, whether
+  hit rates or PIT values are tabulated, horizons, ages, and the verdict}
+  That work is the direct ancestor of the present audit; it is confined to
+  one population, to models with native intervals, and to a period without a
+  break.
+\item \emph{Absent from mortality forecasting, so far as we can find:} PIT or
+  rank histograms; conformal prediction; joint (path) coverage over horizons;
+  and, with the single exception of \citet{shang2018model}, formal
+  forecast-comparison testing (Diebold--Mariano, model confidence sets).
+  \todo{Crossref/Scholar search for ``conformal'' + ``mortality'' before
+  submission; the library sweep was arXiv-biased}
+\end{itemize}
+
+The principle that the literature's coverage practice violates is old and
+precise: a probabilistic forecaster should \emph{maximise the sharpness of
+the predictive distributions subject to calibration}
+\citep{gneiting2007probabilistic}. Coverage without width is not
+calibration; width without coverage is not sharpness; and neither is a
+proper score \citep{gneiting2007strictly}. The audit below scores every
+forecast by both, and by the proper scores that combine them.
+
+\subsection{This study}
+
+The question is whether the prediction intervals of stochastic,
+machine-learning and neural mortality forecasting models attain their
+nominal coverage when the evaluation window crosses the COVID-19 break, and
+whether the answer depends on the model family, on the uncertainty
+mechanism, or on both. The last clause is the design. Existing comparisons
+vary the model and inherit whatever uncertainty machinery each model happens
+to ship with, so a coverage failure cannot be attributed: is the
+architecture wrong about the future, or is the interval construction wrong
+about the architecture? We treat \emph{model family} and \emph{uncertainty
+mechanism} as separate crossed factors---ten families, seven mechanisms,
+fifty admissible cells---so that the same architecture is audited under
+several mechanisms and the same mechanism across several architectures.
+That separation is what makes this a study rather than a bake-off.
+
+Three regimes separate ordinary forecast error from break-induced failure: a
+\emph{stable} control (expanding origins 1990--2014, every test year before
+2020); the \emph{shift} regime (train to 2019, test 2020--2024); and a
+\emph{placebo} break (train to 1913, test 1914--1922, spanning the First
+World War and the 1918 influenza pandemic) that asks whether whatever we
+find is specific to COVID-19 or is simply what intervals do at any break.
+
+Five hypotheses were fixed and hash-stamped before any model touched real
+data. They are reproduced verbatim from the pre-registration.
+
+\begin{hypothesis}[H1]
+Model rankings by RMSE and by CRPS disagree (rank correlation $<1$; at least
+one top-3 inversion) in the shift regime.
+\end{hypothesis}
+\begin{hypothesis}[H2]
+Nominal 95\% intervals under-cover in the shift regime for every model
+family; the shortfall exceeds the stable-regime shortfall.
+\end{hypothesis}
+\begin{hypothesis}[H3]
+Joint path coverage over $h = 1,\dots,5$ is materially below marginal
+coverage at the same nominal level for every family (reported gap; test:
+paired difference $>0$).
+\end{hypothesis}
+\begin{hypothesis}[H4]
+Coverage failure is non-uniform in age: shift-regime coverage at ages 65--99
+is lower than at ages 25--64 for every family.
+\end{hypothesis}
+\begin{hypothesis}[H5]
+Interval miscalibration propagates to derived quantities: empirical coverage
+of 95\% intervals for $e_{65}$ and annuity factor $\annuity$ (2\%) departs
+from nominal by more than the corresponding stable-regime departure.
+\end{hypothesis}
+
+No directional claim is registered about neural-versus-classical ordering;
+the crossed design estimates it.
+
+\subsection{Contributions}
+
+This paper proposes no new mortality model. Its contributions are:
+\begin{enumerate}
+\item \emph{The audit.} The first evaluation of probabilistic mortality
+  forecasts---classical, neural and conformal---against realised 2020--2024
+  mortality across twenty populations, with every interval constructed
+  strictly from pre-2020 data.
+\item \emph{The crossed design.} Model family and uncertainty mechanism as
+  separate factors, so that a coverage failure can be attributed to the
+  architecture, to the mechanism, or to their interaction. Claims are stated
+  as contrasts within admissible sub-grids, never as main effects over a
+  ragged grid.
+\item \emph{Resolution of the failure.} By horizon (marginal versus joint
+  path coverage, \Hthree), by age (\Hfour) and in economic terms (life
+  expectancy and annuity-factor intervals, \Hfive), with the 1914--1922
+  placebo as a second event.
+\item \emph{The protocol.} A pre-registered, synthetic-truth-validated,
+  oracle-parity-checked evaluation harness in which every model emits
+  predictive samples through one interface and is scored through one code
+  path, with cluster-bootstrap forecast-comparison inference that respects
+  the fact that a pandemic is one shock, not twenty. The harness is reusable
+  for any future break.
+\end{enumerate}
+
+Section~\ref{sec:related} places the audit in the literature.
+Section~\ref{sec:data} describes the data and the conventions that make
+Poisson scoring of fractional deaths well defined. Section~\ref{sec:design}
+sets out the regimes, the grid, the interface and the validation gates.
+Section~\ref{sec:metrics} defines every metric. Sections~\ref{sec:results}
+and~\ref{sec:actuarial} are the results and their actuarial reading; both
+are placeholders in this draft. Section~\ref{sec:discussion} pre-commits the
+limitations and Section~\ref{sec:conclusion} concludes.

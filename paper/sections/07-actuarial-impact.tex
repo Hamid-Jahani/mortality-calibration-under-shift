@@ -1,0 +1,53 @@
+\section{Actuarial impact}
+\label{sec:actuarial}
+
+\noindent\textit{Skeleton; all tables are placeholders.}
+
+\subsection{H5: propagation into life expectancy and annuity factors}
+
+\begin{table}[htbp]\centering
+\caption{Coverage of nominal 95\% intervals, interval width and error for
+$e_0$, $e_{65}$ and $\annuity$ at 2\%, by family and mechanism, stable versus
+shift regime.}
+\label{tab:h5-actuarial}
+\inputtable{tab-h5-actuarial}
+\end{table}
+
+The table will show whether an interval failure on the rate surface
+survives aggregation into the quantities that are actually valued---or
+whether the life-table integration averages it away. Both outcomes are
+informative: the first says the reserve is wrong, the second says the
+audit's headline is a statement about rates rather than about liabilities.
+\todo{result pending}
+
+\subsection{Reading the failure in balance-sheet terms}
+
+For an annuity-due of one per annum at age 65, the interval on $\annuity$
+translates directly into an interval on the best-estimate liability of a
+unit annuitant. A nominal 95\% interval that covers the realised
+$\annuity$ in materially fewer than 95\% of population--years is, in
+Solvency~II language, an internal model whose longevity distribution is
+too narrow; the size of the shortfall in the 97.5\% quantile of $\annuity$
+is the amount by which the implied capital at that level is understated.
+We report this quantity as a proportion of the central $\annuity$ so that
+it is portable across populations and interest-rate assumptions.
+\todo{decide whether to present a worked example on a hypothetical
+portfolio; if so, no figures until the H5 table exists}
+
+\subsection{The longevity tail}
+
+The 99.5\% upper quantile of the predictive distribution of $\annuity$ is
+the one-year longevity tail an internal model would carry. We report it
+alongside the realised $\annuity$ for each cell; the fraction of cells in
+which the realised value exceeds the model's own 99.5\% quantile is the
+empirical frequency of a nominally once-in-200-year event, and is the
+quantity the pandemic years let us observe for the first time.
+\todo{descriptive; not a registered hypothesis, label as such}
+
+\subsection{Twin crises in economic terms}
+
+The placebo regime supplies the same functionals for 1914--1922. A
+side-by-side of the $e_{65}$ and $\annuity$ interval shortfalls across the
+two events asks whether the economic size of a break-induced interval
+failure is stable across a century, or whether the pandemic years are
+distinctive. \todo{result pending; gated on the placebo data-quality check}

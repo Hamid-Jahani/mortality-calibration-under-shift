@@ -1,0 +1,29 @@
+% Static transcription of docs/GRID.md (2026-08-25). Not generated.
+% check = primary cell (run and reported); (s) = secondary (run if time, appendix);
+% -- = inadmissible (mechanism undefined for that family).
+\begin{threeparttable}\small\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{@{}lccccccc@{}}
+\toprule
+Family $\backslash$ Mechanism & native & P-boot & ensemble & MC-drop & split & EnbPI & copula \\
+\midrule
+Lee--Carter (SVD)          & $\checkmark$ & $\checkmark$ & --  & --  & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+Poisson Lee--Carter        & $\checkmark$ & $\checkmark$ & --  & --  & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+CBD (M5)                   & $\checkmark$ & $\checkmark$ & --  & --  & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+APC / RH (M2-A)            & $\checkmark$ & $\checkmark$ & --  & --  & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+sparse VAR                 & $\checkmark$ & $\checkmark$ & --  & --  & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+multi-output GP            & $\checkmark$ & --  & (s) & --  & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+neural-LC (R--W)           & --  & (s) & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+shallow CNN-LC             & --  & (s) & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+LSTM-on-$\kappa_t$         & --  & (s) & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+distributional NB head     & $\checkmark$ & --  & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}\footnotesize
+\item $\checkmark$ primary cell (50 in total); (s) secondary, appendix only; -- inadmissible.
+Deterministic classical fits have no seed variance (no ensemble or dropout);
+the GP posterior already integrates parameter uncertainty (bootstrap
+redundant); neural networks have no closed-form native predictive except
+through the distributional-head family. The three conformal columns wrap the
+same underlying fits as the native and ensemble columns.
+\end{tablenotes}
+\end{threeparttable}

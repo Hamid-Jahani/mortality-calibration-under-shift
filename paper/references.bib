@@ -1,0 +1,915 @@
+% =============================================================================
+% references.bib -- Do Mortality Prediction Intervals Survive a Pandemic?
+%
+% Sources: literature/INDEX.md, literature/TRIAGE.md, literature/GET-THESE.md,
+% literature/MISSING.md and the first pages of the PDFs on disk. Every entry
+% flagged "% TODO" has at least one field that could not be verified from a
+% document in the library; verify against Crossref before submission.
+% ASCII only: diacritics are TeX-escaped so both pdfTeX and XeTeX render them.
+% =============================================================================
+
+% --------------------------------------------------------------------------
+% A. Classical stochastic mortality models and the CBD programme
+% --------------------------------------------------------------------------
+
+@article{lee1992modeling,
+  author  = {Lee, Ronald D. and Carter, Lawrence R.},
+  title   = {Modeling and forecasting {U.S.} mortality},
+  journal = {Journal of the American Statistical Association},
+  year    = {1992},
+  volume  = {87},
+  number  = {419},
+  pages   = {659--671},
+  doi     = {10.1080/01621459.1992.10475265}
+}
+
+@techreport{girosi2007understanding,
+  author      = {Girosi, Federico and King, Gary},
+  title       = {Understanding the {Lee}--{Carter} mortality forecasting method},
+  institution = {Harvard University and RAND Corporation},
+  year        = {2007},
+  type        = {Working paper},
+  note        = {Version of 14 September 2007. Companion to Girosi and King, \emph{Demographic Forecasting}, Princeton University Press, 2008}
+}
+
+@article{brouhns2002poisson,
+  author  = {Brouhns, Natacha and Denuit, Michel and Vermunt, Jeroen K.},
+  title   = {A {Poisson} log-bilinear regression approach to the construction of projected lifetables},
+  journal = {Insurance: Mathematics and Economics},
+  year    = {2002},
+  volume  = {31},
+  number  = {3},
+  pages   = {373--393},
+  doi     = {10.1016/S0167-6687(02)00185-3}
+}
+
+@article{brouhns2005bootstrapping,
+  author  = {Brouhns, Natacha and Denuit, Michel and Van Keilegom, Ingrid},
+  title   = {Bootstrapping the {Poisson} log-bilinear model for mortality forecasting},
+  journal = {Scandinavian Actuarial Journal},
+  year    = {2005},
+  volume  = {2005},
+  number  = {3},
+  pages   = {212--224},
+  doi     = {10.1080/03461230510009754}
+}
+
+@article{cairns2006two,
+  author  = {Cairns, Andrew J. G. and Blake, David and Dowd, Kevin},
+  title   = {A two-factor model for stochastic mortality with parameter uncertainty: theory and calibration},
+  journal = {Journal of Risk and Insurance},
+  year    = {2006},
+  volume  = {73},
+  number  = {4},
+  pages   = {687--718},
+  doi     = {10.1111/j.1539-6975.2006.00195.x}
+}
+
+@article{renshaw2006cohort,
+  author  = {Renshaw, Arthur E. and Haberman, Steven},
+  title   = {A cohort-based extension to the {Lee}--{Carter} model for mortality reduction factors},
+  journal = {Insurance: Mathematics and Economics},
+  year    = {2006},
+  volume  = {38},
+  number  = {3},
+  pages   = {556--570},
+  doi     = {10.1016/j.insmatheco.2005.12.001}
+}
+
+@article{cairns2009quantitative,
+  author  = {Cairns, Andrew J. G. and Blake, David and Dowd, Kevin and Coughlan, Guy D. and Epstein, David and Ong, Alen and Balevich, Igor},
+  title   = {A quantitative comparison of stochastic mortality models using data from {England} and {Wales} and the {United States}},
+  journal = {North American Actuarial Journal},
+  year    = {2009},
+  volume  = {13},
+  number  = {1},
+  pages   = {1--35},
+  doi     = {10.1080/10920277.2009.10597538}
+}
+
+@article{dowd2010evaluating,
+  author  = {Dowd, Kevin and Cairns, Andrew J. G. and Blake, David and Coughlan, Guy D. and Epstein, David and Khalaf-Allah, Marwa},
+  title   = {Evaluating the goodness of fit of stochastic mortality models},
+  journal = {Insurance: Mathematics and Economics},
+  year    = {2010},
+  volume  = {47},
+  number  = {3},
+  pages   = {255--265},
+  doi     = {10.1016/j.insmatheco.2010.06.006},
+  note    = {Not yet obtained; cited from the DOI record}
+}
+
+@article{dowd2010backtesting,
+  author  = {Dowd, Kevin and Cairns, Andrew J. G. and Blake, David and Coughlan, Guy D. and Epstein, David and Khalaf-Allah, Marwa},
+  title   = {Backtesting stochastic mortality models: an ex post evaluation of multiperiod-ahead density forecasts},
+  journal = {North American Actuarial Journal},
+  year    = {2010},
+  volume  = {14},
+  number  = {3},
+  pages   = {281--298},
+  doi     = {10.1080/10920277.2010.10597592},
+  note    = {Pensions Institute discussion paper PI-0803 (2008) on file; journal version to be read before the related-work paragraph is finalised}
+}
+
+@article{cairns2011mortality,
+  author  = {Cairns, Andrew J. G. and Blake, David and Dowd, Kevin and Coughlan, Guy D. and Epstein, David and Khalaf-Allah, Marwa},
+  title   = {Mortality density forecasts: an analysis of six stochastic mortality models},
+  journal = {Insurance: Mathematics and Economics},
+  year    = {2011},
+  volume  = {48},
+  number  = {3},
+  pages   = {355--367},
+  doi     = {10.1016/j.insmatheco.2010.12.005}
+}
+
+@article{cairns2011bayesian,
+  author  = {Cairns, Andrew J. G. and Blake, David and Dowd, Kevin and Coughlan, Guy D. and Khalaf-Allah, Marwa},
+  title   = {Bayesian stochastic mortality modelling for two populations},
+  journal = {ASTIN Bulletin},
+  year    = {2011},
+  volume  = {41},
+  number  = {1},
+  pages   = {29--59},
+  doi     = {10.2143/AST.41.1.2084385},
+  note    = {Pensions Institute discussion paper PI-1001 (2010) on file}
+}
+
+@article{hunt2014general,
+  author  = {Hunt, Andrew and Blake, David},
+  title   = {A general procedure for constructing mortality models},
+  journal = {North American Actuarial Journal},
+  year    = {2014},
+  volume  = {18},
+  number  = {1},
+  pages   = {116--138},
+  doi     = {10.1080/10920277.2013.852963}
+}
+
+% TODO verify volume/pages/DOI; preprint on file says "to appear in AAS", 5 January 2020
+@article{dowd2020cbdx,
+  author  = {Dowd, Kevin and Cairns, Andrew J. G. and Blake, David},
+  title   = {{CBDX}: a workhorse mortality model from the {Cairns}--{Blake}--{Dowd} family},
+  journal = {Annals of Actuarial Science},
+  year    = {2020},
+  volume  = {14},
+  number  = {2},
+  pages   = {445--460},
+  doi     = {10.1017/S1748499520000159}
+}
+
+@article{cairns2016phantoms,
+  author  = {Cairns, Andrew J. G. and Blake, David and Dowd, Kevin and Kessler, Amy R.},
+  title   = {Phantoms never die: living with unreliable population data},
+  journal = {Journal of the Royal Statistical Society: Series A},
+  year    = {2016},
+  volume  = {179},
+  number  = {4},
+  pages   = {975--1005},
+  doi     = {10.1111/rssa.12159}
+}
+
+@article{li2005coherent,
+  author  = {Li, Nan and Lee, Ronald},
+  title   = {Coherent mortality forecasts for a group of populations: an extension of the {Lee}--{Carter} method},
+  journal = {Demography},
+  year    = {2005},
+  volume  = {42},
+  number  = {3},
+  pages   = {575--594},
+  doi     = {10.1353/dem.2005.0021}
+}
+
+% TODO two DOIs appear in the repository notes (asb.2017.15 and asb.2017.3); confirm. Paper not obtained (Cambridge paywall)
+@article{li2017coherent,
+  author  = {Li, Hong and Lu, Yang},
+  title   = {Coherent forecasting of mortality rates: a sparse vector-autoregression approach},
+  journal = {ASTIN Bulletin},
+  year    = {2017},
+  volume  = {47},
+  number  = {2},
+  pages   = {563--600},
+  doi     = {10.1017/asb.2017.15}
+}
+
+@article{booth2008mortality,
+  author  = {Booth, Heather and Tickle, Leonie},
+  title   = {Mortality modelling and forecasting: a review of methods},
+  journal = {Annals of Actuarial Science},
+  year    = {2008},
+  volume  = {3},
+  number  = {1--2},
+  pages   = {3--43},
+  doi     = {10.1017/S1748499500000440}
+}
+
+@article{villegas2018stmomo,
+  author  = {Villegas, Andr{\'e}s M. and Kaishev, Vladimir K. and Millossovich, Pietro},
+  title   = {{StMoMo}: an {R} package for stochastic mortality modeling},
+  journal = {Journal of Statistical Software},
+  year    = {2018},
+  volume  = {84},
+  number  = {3},
+  pages   = {1--38},
+  doi     = {10.18637/jss.v084.i03}
+}
+
+% --------------------------------------------------------------------------
+% B. Neural and machine-learning extensions of Lee--Carter
+% --------------------------------------------------------------------------
+
+% TODO not in the library; verify pages/DOI
+@article{hainaut2018neural,
+  author  = {Hainaut, Donatien},
+  title   = {A neural-network analyzer for mortality forecast},
+  journal = {ASTIN Bulletin},
+  year    = {2018},
+  volume  = {48},
+  number  = {2},
+  pages   = {481--508},
+  doi     = {10.1017/asb.2017.45}
+}
+
+@article{richman2021neural,
+  author  = {Richman, Ronald and W{\"u}thrich, Mario V.},
+  title   = {A neural network extension of the {Lee}--{Carter} model to multiple populations},
+  journal = {Annals of Actuarial Science},
+  year    = {2021},
+  volume  = {15},
+  number  = {2},
+  pages   = {346--366},
+  doi     = {10.1017/S1748499519000071},
+  note    = {Preprint version of 22 October 2018 on file}
+}
+
+@article{nigri2019deep,
+  author  = {Nigri, Andrea and Levantesi, Susanna and Marino, Mario and Scognamiglio, Salvatore and Perla, Francesca},
+  title   = {A deep learning integrated {Lee}--{Carter} model},
+  journal = {Risks},
+  year    = {2019},
+  volume  = {7},
+  number  = {1},
+  pages   = {33},
+  doi     = {10.3390/risks7010033}
+}
+
+@misc{petnehazi2019mortality,
+  author        = {Petneh{\'a}zi, G{\'a}bor and G{\'a}ll, J{\'o}zsef},
+  title         = {Mortality rate forecasting: can recurrent neural networks beat the {Lee}--{Carter} model?},
+  year          = {2019},
+  howpublished  = {arXiv:1909.05501},
+  note          = {Filed in the library as Nigri et al.\ (2019); the authors are Petneh{\'a}zi and G{\'a}ll}
+}
+
+@article{perla2021time,
+  author  = {Perla, Francesca and Richman, Ronald and Scognamiglio, Salvatore and W{\"u}thrich, Mario V.},
+  title   = {Time-series forecasting of mortality rates using deep learning},
+  journal = {Scandinavian Actuarial Journal},
+  year    = {2021},
+  volume  = {2021},
+  number  = {7},
+  pages   = {572--598},
+  doi     = {10.1080/03461238.2020.1867232},
+  note    = {SSRN 3595426; preprint of 6 May 2020 on file}
+}
+
+% TODO verify pages/DOI of the journal version; arXiv version (2021) on file
+@article{scognamiglio2022calibrating,
+  author  = {Scognamiglio, Salvatore},
+  title   = {Calibrating the {Lee}--{Carter} and the {Poisson} {Lee}--{Carter} models via neural networks},
+  journal = {ASTIN Bulletin},
+  year    = {2022},
+  volume  = {52},
+  number  = {2},
+  pages   = {519--561},
+  doi     = {10.1017/asb.2022.4},
+  note    = {arXiv:2106.12312}
+}
+
+% TODO a journal version appears to exist: Marino, Levantesi and Nigri (2023), "A neural approach to improve the Lee-Carter mortality density forecasts", North American Actuarial Journal 27(1). Confirm it is the same paper and cite it instead
+@misc{marino2021deepening,
+  author        = {Marino, Mario and Levantesi, Susanna and Nigri, Andrea},
+  title         = {Deepening {Lee}--{Carter} for longevity projections with uncertainty estimation},
+  year          = {2021},
+  howpublished  = {arXiv:2103.10535},
+  note          = {Referred to as ``Levantesi et al.\ (2021)'' in the project notes; the arXiv author order is Marino, Levantesi, Nigri}
+}
+
+% TODO verify volume/pages/DOI (open-access PDF on file lacks the header)
+@article{miyata2022extending,
+  author  = {Miyata, Akihiro and Matsuyama, Naoki},
+  title   = {Extending the {Lee}--{Carter} model with variational autoencoder: a fusion of neural network and {Bayesian} approach},
+  journal = {ASTIN Bulletin},
+  year    = {2022},
+  volume  = {52},
+  number  = {3},
+  pages   = {789--812},
+  doi     = {10.1017/asb.2022.15}
+}
+
+@article{schnurch2022point,
+  author  = {Schn{\"u}rch, Simon and Korn, Ralf},
+  title   = {Point and interval forecasts of death rates using neural networks},
+  journal = {ASTIN Bulletin},
+  year    = {2022},
+  volume  = {52},
+  number  = {1},
+  pages   = {283--329},
+  doi     = {10.1017/asb.2021.34},
+  note    = {SSRN 3796051. Not yet read; cited from the DOI record and from the characterisation in Miyata and Matsuyama (2022)}
+}
+
+@misc{miao2025gradient,
+  author        = {Miao, Ziting and Li, Han and Chen, Yuyu},
+  title         = {Gradient boosted multi-population mortality modelling with high-frequency data},
+  year          = {2025},
+  howpublished  = {arXiv:2507.09983}
+}
+
+@article{fu2025applying,
+  author  = {Fu, Wanying and Droms, Sean and Brewer, Patrick and Smith, Barry R.},
+  title   = {Applying {Markov}-switching {Bayesian} vector autoregression to an age-partitioned {Lee}--{Carter} mortality model},
+  journal = {European Actuarial Journal},
+  year    = {2025},
+  volume  = {15},
+  pages   = {417--443},
+  doi     = {10.1007/s13385-025-00415-w}
+}
+
+@misc{demelo2025actuarial,
+  author        = {de Melo, Eduardo Fraga L. and Graziadei, Helton and Targino, Rodrigo},
+  title         = {Actuarial learning for pension fund mortality forecasting},
+  year          = {2025},
+  howpublished  = {arXiv:2504.05881}
+}
+
+% TODO verify journal fields; arXiv version on file
+@article{deprez2017machine,
+  author  = {Deprez, Philippe and Shevchenko, Pavel V. and W{\"u}thrich, Mario V.},
+  title   = {Machine learning techniques for mortality modeling},
+  journal = {European Actuarial Journal},
+  year    = {2017},
+  volume  = {7},
+  number  = {2},
+  pages   = {337--352},
+  doi     = {10.1007/s13385-017-0152-4},
+  note    = {arXiv:1705.03396}
+}
+
+% --------------------------------------------------------------------------
+% C. Bayesian and Gaussian-process mortality models
+% --------------------------------------------------------------------------
+
+% TODO not in the library; verify pages/DOI
+@article{ludkovski2018gaussian,
+  author  = {Ludkovski, Mike and Risk, Jimmy and Zail, Howard},
+  title   = {Gaussian process models for mortality rates and improvement factors},
+  journal = {ASTIN Bulletin},
+  year    = {2018},
+  volume  = {48},
+  number  = {3},
+  pages   = {1307--1347},
+  doi     = {10.1017/asb.2018.24}
+}
+
+% TODO verify pages/DOI of the journal version
+@article{huynh2021multi,
+  author  = {Huynh, Nhan and Ludkovski, Mike},
+  title   = {Multi-output {Gaussian} processes for multi-population longevity modelling},
+  journal = {Annals of Actuarial Science},
+  year    = {2021},
+  volume  = {15},
+  number  = {2},
+  pages   = {318--345},
+  doi     = {10.1017/S1748499521000063},
+  note    = {arXiv:2003.02443}
+}
+
+% TODO verify pages/DOI of the journal version; arXiv v2 (2021) on file
+@article{barigou2023bayesian,
+  author  = {Barigou, Karim and Goffard, Pierre-Olivier and Loisel, St{\'e}phane and Salhi, Yahia},
+  title   = {Bayesian model averaging for mortality forecasting using leave-future-out validation},
+  journal = {International Journal of Forecasting},
+  year    = {2023},
+  volume  = {39},
+  number  = {2},
+  pages   = {674--690},
+  doi     = {10.1016/j.ijforecast.2022.01.011},
+  note    = {arXiv:2103.15434}
+}
+
+@misc{liu2020bayesian,
+  author        = {Liu, Zhen and Sun, Xiaoqian and Liu, Leping and Wang, Yu-Bo},
+  title         = {Bayesian {Poisson} log-normal model with regularized time structure for mortality projection of multi-population},
+  year          = {2020},
+  howpublished  = {arXiv:2010.04775}
+}
+
+% --------------------------------------------------------------------------
+% D. COVID-era mortality modelling
+% --------------------------------------------------------------------------
+
+% TODO not obtained; verify the discussion-paper number and author list
+@techreport{cairns2020impact,
+  author      = {Cairns, Andrew J. G. and Blake, David and Kessler, Amy R. and Kessler, Marsha},
+  title       = {The impact of {Covid}-19 on future higher-age mortality},
+  institution = {Pensions Institute, City, University of London},
+  year        = {2020},
+  type        = {Discussion Paper},
+  number      = {PI-2007}
+}
+
+@article{robben2022assessing,
+  author  = {Robben, Jens and Antonio, Katrien and Devriendt, Sander},
+  title   = {Assessing the impact of the {COVID}-19 shock on a stochastic multi-population mortality model},
+  journal = {Risks},
+  year    = {2022},
+  volume  = {10},
+  number  = {2},
+  pages   = {26},
+  doi     = {10.3390/risks10020026},
+  note    = {arXiv:2111.10164}
+}
+
+% TODO check for a journal version
+@misc{goes2023bayesian,
+  author        = {Goes, Julius and Barigou, Karim and Leucht, Anne},
+  title         = {Bayesian mortality modelling with pandemics: a vanishing jump approach},
+  year          = {2023},
+  howpublished  = {arXiv:2311.04920},
+  note          = {Version 2, August 2024}
+}
+
+% TODO check for a journal version (possibly Scandinavian Actuarial Journal, 2024)
+@misc{robben2024catastrophe,
+  author        = {Robben, Jens and Antonio, Katrien},
+  title         = {Catastrophe risk in a stochastic multi-population mortality model},
+  year          = {2023},
+  howpublished  = {arXiv:2306.15271},
+  note          = {Version 2, December 2023}
+}
+
+% TODO check for a journal version
+@misc{vanberkum2022estimating,
+  author        = {van Berkum, Frank and Melenberg, Bertrand and Vellekoop, Michel},
+  title         = {Estimating the impact of the {COVID}-19 pandemic using granular mortality data},
+  year          = {2022},
+  howpublished  = {arXiv:2209.06473}
+}
+
+@misc{nalmpatian2023advanced,
+  author        = {Nalmpatian, Asmik and Heumann, Christian and Pilz, Stefan},
+  title         = {Advanced techniques in mortality trend estimation: integrating generalized additive models and machine learning to evaluate the {COVID}-19 impact},
+  year          = {2023},
+  howpublished  = {arXiv:2311.15401}
+}
+
+@misc{robben2025granular,
+  author        = {Robben, Jens and Barigou, Karim and Kleinow, Torsten},
+  title         = {Granular mortality modeling with temperature and epidemic shocks: a three-state regime-switching approach},
+  year          = {2025},
+  howpublished  = {arXiv:2503.04568}
+}
+
+% TODO not in the library; verify author list and pages
+@article{aburto2022quantifying,
+  author  = {Aburto, Jos{\'e} Manuel and Sch{\"o}ley, Jonas and Kashnitsky, Ilya and Zhang, Luyin and Rahal, Charles and Missov, Trifon I. and Mills, Melinda C. and Dowd, Jennifer B. and Kashyap, Ridhi},
+  title   = {Quantifying impacts of the {COVID}-19 pandemic through life-expectancy losses: a population-level study of 29 countries},
+  journal = {International Journal of Epidemiology},
+  year    = {2022},
+  volume  = {51},
+  number  = {1},
+  pages   = {63--74},
+  doi     = {10.1093/ije/dyab207}
+}
+
+% --------------------------------------------------------------------------
+% E. Proper scoring rules, calibration, PIT, decompositions
+% --------------------------------------------------------------------------
+
+@article{gneiting2007strictly,
+  author  = {Gneiting, Tilmann and Raftery, Adrian E.},
+  title   = {Strictly proper scoring rules, prediction, and estimation},
+  journal = {Journal of the American Statistical Association},
+  year    = {2007},
+  volume  = {102},
+  number  = {477},
+  pages   = {359--378},
+  doi     = {10.1198/016214506000001437}
+}
+
+@article{gneiting2007probabilistic,
+  author  = {Gneiting, Tilmann and Balabdaoui, Fadoua and Raftery, Adrian E.},
+  title   = {Probabilistic forecasts, calibration and sharpness},
+  journal = {Journal of the Royal Statistical Society: Series B},
+  year    = {2007},
+  volume  = {69},
+  number  = {2},
+  pages   = {243--268},
+  doi     = {10.1111/j.1467-9868.2007.00587.x}
+}
+
+@article{winkler1972decision,
+  author  = {Winkler, Robert L.},
+  title   = {A decision-theoretic approach to interval estimation},
+  journal = {Journal of the American Statistical Association},
+  year    = {1972},
+  volume  = {67},
+  number  = {337},
+  pages   = {187--191},
+  doi     = {10.1080/01621459.1972.10481224}
+}
+
+@article{dawid1984present,
+  author  = {Dawid, A. Philip},
+  title   = {Present position and potential developments: some personal views. {Statistical} theory: the prequential approach},
+  journal = {Journal of the Royal Statistical Society: Series A},
+  year    = {1984},
+  volume  = {147},
+  number  = {2},
+  pages   = {278--292},
+  doi     = {10.2307/2981683}
+}
+
+@article{czado2009predictive,
+  author  = {Czado, Claudia and Gneiting, Tilmann and Held, Leonhard},
+  title   = {Predictive model assessment for count data},
+  journal = {Biometrics},
+  year    = {2009},
+  volume  = {65},
+  number  = {4},
+  pages   = {1254--1261},
+  doi     = {10.1111/j.1541-0420.2009.01191.x}
+}
+
+@article{murphy1973new,
+  author  = {Murphy, Allan H.},
+  title   = {A new vector partition of the probability score},
+  journal = {Journal of Applied Meteorology},
+  year    = {1973},
+  volume  = {12},
+  number  = {4},
+  pages   = {595--600},
+  doi     = {10.1175/1520-0450(1973)012<0595:ANVPOT>2.0.CO;2}
+}
+
+@misc{pohle2020murphy,
+  author        = {Pohle, Marc-Oliver},
+  title         = {The {Murphy} decomposition and the calibration-resolution principle: a new perspective on forecast evaluation},
+  year          = {2020},
+  howpublished  = {arXiv:2005.01835}
+}
+
+% TODO not in the library; verify
+@article{dimitriadis2021stable,
+  author  = {Dimitriadis, Timo and Gneiting, Tilmann and Jordan, Alexander I.},
+  title   = {Stable reliability diagrams for probabilistic classifiers},
+  journal = {Proceedings of the National Academy of Sciences},
+  year    = {2021},
+  volume  = {118},
+  number  = {8},
+  pages   = {e2016191118},
+  doi     = {10.1073/pnas.2016191118}
+}
+
+@article{dawid2014theory,
+  author  = {Dawid, A. Philip and Musio, Monica},
+  title   = {Theory and applications of proper scoring rules},
+  journal = {Metron},
+  year    = {2014},
+  volume  = {72},
+  number  = {2},
+  pages   = {169--183},
+  doi     = {10.1007/s40300-014-0039-y},
+  note    = {arXiv:1401.0398}
+}
+
+% TODO appears to have been published at ICML 2023 (PMLR 202); confirm and cite the proceedings
+@misc{yanagisawa2023proper,
+  author        = {Yanagisawa, Hiroki},
+  title         = {Proper scoring rules for survival analysis},
+  year          = {2023},
+  howpublished  = {arXiv:2305.00621}
+}
+
+% --------------------------------------------------------------------------
+% F. Conformal prediction
+% --------------------------------------------------------------------------
+
+@book{vovk2005algorithmic,
+  author    = {Vovk, Vladimir and Gammerman, Alexander and Shafer, Glenn},
+  title     = {Algorithmic Learning in a Random World},
+  publisher = {Springer},
+  address   = {New York},
+  year      = {2005},
+  doi       = {10.1007/b106715}
+}
+
+@article{lei2018distribution,
+  author  = {Lei, Jing and G'Sell, Max and Rinaldo, Alessandro and Tibshirani, Ryan J. and Wasserman, Larry},
+  title   = {Distribution-free predictive inference for regression},
+  journal = {Journal of the American Statistical Association},
+  year    = {2018},
+  volume  = {113},
+  number  = {523},
+  pages   = {1094--1111},
+  doi     = {10.1080/01621459.2017.1307116}
+}
+
+@inproceedings{romano2019conformalized,
+  author    = {Romano, Yaniv and Patterson, Evan and Cand{\`e}s, Emmanuel J.},
+  title     = {Conformalized quantile regression},
+  booktitle = {Advances in Neural Information Processing Systems 32},
+  year      = {2019},
+  note      = {arXiv:1905.03222}
+}
+
+@inproceedings{tibshirani2019conformal,
+  author    = {Tibshirani, Ryan J. and Barber, Rina Foygel and Cand{\`e}s, Emmanuel J. and Ramdas, Aaditya},
+  title     = {Conformal prediction under covariate shift},
+  booktitle = {Advances in Neural Information Processing Systems 32},
+  year      = {2019},
+  note      = {arXiv:1904.06019}
+}
+
+@article{barber2023conformal,
+  author  = {Barber, Rina Foygel and Cand{\`e}s, Emmanuel J. and Ramdas, Aaditya and Tibshirani, Ryan J.},
+  title   = {Conformal prediction beyond exchangeability},
+  journal = {Annals of Statistics},
+  year    = {2023},
+  volume  = {51},
+  number  = {2},
+  pages   = {816--845},
+  doi     = {10.1214/23-AOS2276},
+  note    = {arXiv:2202.13415}
+}
+
+@inproceedings{xu2021conformal,
+  author    = {Xu, Chen and Xie, Yao},
+  title     = {Conformal prediction interval for dynamic time-series},
+  booktitle = {Proceedings of the 38th International Conference on Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {139},
+  pages     = {11559--11569},
+  year      = {2021},
+  note      = {EnbPI. Extended version ``Conformal prediction for time series'', arXiv:2010.09107 (v15, 2023), on file}
+}
+
+@inproceedings{gibbs2021adaptive,
+  author    = {Gibbs, Isaac and Cand{\`e}s, Emmanuel J.},
+  title     = {Adaptive conformal inference under distribution shift},
+  booktitle = {Advances in Neural Information Processing Systems 34},
+  year      = {2021},
+  pages     = {1660--1672},
+  note      = {arXiv:2106.00170}
+}
+
+% TODO verify the JMLR article number
+@article{gibbs2024conformal,
+  author  = {Gibbs, Isaac and Cand{\`e}s, Emmanuel J.},
+  title   = {Conformal inference for online prediction with arbitrary distribution shifts},
+  journal = {Journal of Machine Learning Research},
+  year    = {2024},
+  volume  = {25},
+  number  = {162},
+  pages   = {1--36},
+  note    = {arXiv:2208.08401}
+}
+
+@inproceedings{sun2024copula,
+  author    = {Sun, Sophia and Yu, Rose},
+  title     = {Copula conformal prediction for multi-step time series prediction},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2024},
+  note      = {arXiv:2212.03281}
+}
+
+% TODO not in the library; verify
+@article{messoudi2021copula,
+  author  = {Messoudi, Soundouss and Destercke, S{\'e}bastien and Rousseau, Sylvain},
+  title   = {Copula-based conformal prediction for multi-target regression},
+  journal = {Pattern Recognition},
+  year    = {2021},
+  volume  = {120},
+  pages   = {108101},
+  doi     = {10.1016/j.patcog.2021.108101}
+}
+
+% TODO not in the library; verify pages
+@inproceedings{stankeviciute2021conformal,
+  author    = {Stankevi{\v{c}}i{\={u}}t{\.{e}}, Kamil{\.{e}} and Alaa, Ahmed M. and van der Schaar, Mihaela},
+  title     = {Conformal time-series forecasting},
+  booktitle = {Advances in Neural Information Processing Systems 34},
+  year      = {2021},
+  pages     = {6216--6228}
+}
+
+% TODO not in the library; verify
+@article{diquigiovanni2022conformal,
+  author  = {Diquigiovanni, Jacopo and Fontana, Matteo and Vantini, Simone},
+  title   = {Conformal prediction bands for multivariate functional data},
+  journal = {Journal of Multivariate Analysis},
+  year    = {2022},
+  volume  = {189},
+  pages   = {104879},
+  doi     = {10.1016/j.jmva.2021.104879}
+}
+
+@misc{sun2025conformal,
+  author        = {Sun, Sophia and Yu, Rose},
+  title         = {Conformal prediction for time-series forecasting with change points},
+  year          = {2025},
+  howpublished  = {arXiv:2509.02844}
+}
+
+@article{angelopoulos2023gentle,
+  author  = {Angelopoulos, Anastasios N. and Bates, Stephen},
+  title   = {Conformal prediction: a gentle introduction},
+  journal = {Foundations and Trends in Machine Learning},
+  year    = {2023},
+  volume  = {16},
+  number  = {4},
+  pages   = {494--591},
+  doi     = {10.1561/2200000101},
+  note    = {arXiv:2107.07511}
+}
+
+% --------------------------------------------------------------------------
+% G. Uncertainty mechanisms for neural networks
+% --------------------------------------------------------------------------
+
+@inproceedings{lakshminarayanan2017simple,
+  author    = {Lakshminarayanan, Balaji and Pritzel, Alexander and Blundell, Charles},
+  title     = {Simple and scalable predictive uncertainty estimation using deep ensembles},
+  booktitle = {Advances in Neural Information Processing Systems 30},
+  year      = {2017},
+  pages     = {6402--6413},
+  note      = {arXiv:1612.01474}
+}
+
+@inproceedings{gal2016dropout,
+  author    = {Gal, Yarin and Ghahramani, Zoubin},
+  title     = {Dropout as a {Bayesian} approximation: representing model uncertainty in deep learning},
+  booktitle = {Proceedings of the 33rd International Conference on Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {48},
+  pages     = {1050--1059},
+  year      = {2016}
+}
+
+% --------------------------------------------------------------------------
+% H. Forecast-comparison inference and evaluation design
+% --------------------------------------------------------------------------
+
+@article{diebold1995comparing,
+  author  = {Diebold, Francis X. and Mariano, Roberto S.},
+  title   = {Comparing predictive accuracy},
+  journal = {Journal of Business \& Economic Statistics},
+  year    = {1995},
+  volume  = {13},
+  number  = {3},
+  pages   = {253--263},
+  doi     = {10.1080/07350015.1995.10524599},
+  note    = {NBER Technical Working Paper 169 on file}
+}
+
+@article{hansen2011model,
+  author  = {Hansen, Peter R. and Lunde, Asger and Nason, James M.},
+  title   = {The model confidence set},
+  journal = {Econometrica},
+  year    = {2011},
+  volume  = {79},
+  number  = {2},
+  pages   = {453--497},
+  doi     = {10.3982/ECTA5771}
+}
+
+@article{shang2018model,
+  author  = {Shang, Han Lin and Haberman, Steven},
+  title   = {Model confidence sets and forecast combination: an application to age-specific mortality},
+  journal = {Genus},
+  year    = {2018},
+  volume  = {74},
+  pages   = {19},
+  doi     = {10.1186/s41118-018-0043-9},
+  note    = {arXiv:1809.10838}
+}
+
+@article{cameron2008bootstrap,
+  author  = {Cameron, A. Colin and Gelbach, Jonah B. and Miller, Douglas L.},
+  title   = {Bootstrap-based improvements for inference with clustered errors},
+  journal = {Review of Economics and Statistics},
+  year    = {2008},
+  volume  = {90},
+  number  = {3},
+  pages   = {414--427},
+  doi     = {10.1162/rest.90.3.414}
+}
+
+% TODO verify pages/DOI
+@article{webb2023reworking,
+  author  = {Webb, Matthew D.},
+  title   = {Reworking wild bootstrap-based inference for clustered errors},
+  journal = {Canadian Journal of Economics},
+  year    = {2023},
+  volume  = {56},
+  number  = {3},
+  pages   = {839--858},
+  doi     = {10.1111/caje.12661},
+  note    = {Circulated as Queen's Economics Department Working Paper 1315 (2014)}
+}
+
+@article{mackinnon2017wild,
+  author  = {MacKinnon, James G. and Webb, Matthew D.},
+  title   = {Wild bootstrap inference for wildly different cluster sizes},
+  journal = {Journal of Applied Econometrics},
+  year    = {2017},
+  volume  = {32},
+  number  = {2},
+  pages   = {233--254},
+  doi     = {10.1002/jae.2508}
+}
+
+@article{tashman2000out,
+  author  = {Tashman, Leonard J.},
+  title   = {Out-of-sample tests of forecasting accuracy: an analysis and review},
+  journal = {International Journal of Forecasting},
+  year    = {2000},
+  volume  = {16},
+  number  = {4},
+  pages   = {437--450},
+  doi     = {10.1016/S0169-2070(00)00065-0}
+}
+
+@article{nosek2018preregistration,
+  author  = {Nosek, Brian A. and Ebersole, Charles R. and DeHaven, Alexander C. and Mellor, David T.},
+  title   = {The preregistration revolution},
+  journal = {Proceedings of the National Academy of Sciences},
+  year    = {2018},
+  volume  = {115},
+  number  = {11},
+  pages   = {2600--2606},
+  doi     = {10.1073/pnas.1708274114}
+}
+
+% --------------------------------------------------------------------------
+% I. Data, life tables, regulation
+% --------------------------------------------------------------------------
+
+@misc{hmd2026,
+  author        = {{Human Mortality Database}},
+  title         = {Human {Mortality} {Database}},
+  year          = {2026},
+  howpublished  = {Max Planck Institute for Demographic Research (Germany), University of California, Berkeley (USA), and French Institute for Demographic Studies (France). \url{https://www.mortality.org}},
+  note          = {Bulk zipped data files, last modified 15 June 2026; Methods Protocol v6. Vintage pinned by \texttt{data/MANIFEST.sha256}}
+}
+
+% TODO confirm the revision date of the v6 protocol that governs the June 2026 vintage
+@techreport{wilmoth2021methods,
+  author      = {Wilmoth, John R. and Andreev, Kirill and Jdanov, Dmitri and Glei, Dana A. and Riffe, Tim},
+  title       = {Methods protocol for the {Human} {Mortality} {Database}, version 6},
+  institution = {University of California, Berkeley, and Max Planck Institute for Demographic Research},
+  year        = {2021},
+  note        = {With contributions of C.\ Boe, M.\ Bubenheim, D.\ Philipov, V.\ Shkolnikov, P.\ Vachon, C.\ Winant and M.\ Barbieri. \url{https://www.mortality.org/Data/Documentation}}
+}
+
+@article{andreev2015average,
+  author  = {Andreev, Evgeny M. and Kingkade, Ward W.},
+  title   = {Average age at death in infancy and infant mortality level: reconsidering the {Coale}--{Demeny} formulas at current levels of low mortality},
+  journal = {Demographic Research},
+  year    = {2015},
+  volume  = {33},
+  pages   = {363--390},
+  doi     = {10.4054/DemRes.2015.33.13}
+}
+
+@book{dickson2020actuarial,
+  author    = {Dickson, David C. M. and Hardy, Mary R. and Waters, Howard R.},
+  title     = {Actuarial Mathematics for Life Contingent Risks},
+  edition   = {3rd},
+  publisher = {Cambridge University Press},
+  address   = {Cambridge},
+  year      = {2020}
+}
+
+@misc{eiopa2015delegated,
+  author        = {{European Commission}},
+  title         = {Commission {Delegated} {Regulation} ({EU}) 2015/35 of 10 {October} 2014 supplementing {Directive} 2009/138/{EC} ({Solvency} {II})},
+  year          = {2015},
+  howpublished  = {Official Journal of the European Union, L 12, 17 January 2015},
+  note          = {Article 138: longevity risk sub-module, permanent 20\% decrease in mortality rates}
+}
+
+% --------------------------------------------------------------------------
+% J. Cited in the project notes but not (yet) in the text
+% --------------------------------------------------------------------------
+
+@article{tuljapurkar2000universal,
+  author  = {Tuljapurkar, Shripad and Li, Nan and Boe, Carl},
+  title   = {A universal pattern of mortality decline in the {G7} countries},
+  journal = {Nature},
+  year    = {2000},
+  volume  = {405},
+  pages   = {789--792},
+  doi     = {10.1038/35015561},
+  note    = {Not obtained; one motivating sentence only}
+}
