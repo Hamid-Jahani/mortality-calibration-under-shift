@@ -244,6 +244,23 @@ class RenshawHaberman:
                + self.b2 * g_cells)
         return np.exp(eta)
 
+    def fitted_mx(self) -> np.ndarray:
+        """In-sample fitted m_x surface exp(a_x + b_x k_t + b2 g_{t-x}), [n_ages, n_years].
+
+        Every cell reads the fitted cohort table ``gamma``: retained cohorts
+        carry their estimate; cohorts EXCLUDED from estimation (fewer than
+        ``min_cohort_obs`` cells, weight 0 in the fit) carry the imputed
+        linear-trend value (~0 under constraint 3). The surface is therefore
+        defined on the whole rectangle — the Poisson bootstrap wrapper needs
+        D_b ~ Poisson(E * fitted_mx) at every cell — but on excluded-cohort
+        cells it is the model's extrapolation, not a fit to those cells.
+        """
+        n_a, n_t = self.n_ages, self.n_years
+        cidx = np.arange(n_t)[None, :] - np.arange(n_a)[:, None] + (n_a - 1)
+        eta = (self.alpha[:, None] + np.outer(self.beta, self.kappa)
+               + self.b2 * self.gamma[cidx])
+        return np.exp(eta)
+
     def sample_deaths(self, E_future: np.ndarray, h: int, n: int,
                       rng: np.random.Generator) -> np.ndarray:
         """Full predictive death counts: Poisson noise on top of the paths."""
