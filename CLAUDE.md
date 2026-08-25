@@ -88,3 +88,25 @@ Watch: exposure conventions, age boundaries and the 110+ open group, cohort effe
 - User runs **caveman mode** (terse output, full technical substance) and **explanatory output style** (educational insights inline).
 - Do **not** spawn subagents or run Workflow orchestration unless the user explicitly asks.
 - Brainstorm → design approval → written spec → plan → implement. Do not jump to code.
+
+## Status after idea tournament (2026-08-25)
+
+Title locked by 15-agent tournament (evidence audit + 4 candidates + 3 adversarial judges):
+**"Do Mortality Prediction Intervals Survive a Pandemic? A Pre-Registered Calibration
+Audit of Ten Forecasting Families and Seven Uncertainty Mechanisms Across the COVID-19
+Break"** — audit at scale, conformal as UQ arms INSIDE the crossed grid, not a separate
+methods contribution. "Twin Crises" (does 1914-22 miscalibration predict 2020-24?)
+absorbed as an analysis section.
+
+- `PREREGISTRATION.md` committed, sha256 bbbe3860a5446d063e186e56555afa893b07c36cf15a990d07567471affe50be.
+- Shift regime: 20 populations final through 2024. Placebo: 11 populations (BEL excluded
+  — 555 missing rows 1914-18; FRACNP/GBRCENW excluded as overlapping variants).
+- Admissible grid: 50 primary cells, `docs/GRID.md`. Claims = contrasts within sub-grids.
+- Poisson log score convention: observed deaths rounded to nearest integer (Lexis-split
+  deaths are fractional); sensitivity via CRPS on counts.
+- Validation gate 1 (synthetic truth) PASSES. Known finding: two-stage SVD-LC is mildly
+  overdispersed in-DGP (SVD kappa carries observation noise into RWD sigma).
+- OPEN GATES before real-data results: R/StMoMo oracle parity (R install attempted via
+  winget); Dowd et al. 2010b + Schnürch-Korn 2022 must be read before related-work text
+  (SSRN links in literature/GET-THESE.md — browser only).
+- Inference plan: wild cluster bootstrap over populations (20 correlated clusters), MCS at 90%.
