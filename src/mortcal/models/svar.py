@@ -15,6 +15,7 @@ Study-wide interface (methodology rule 4):
 
     model.fit(D, E)                  # [n_ages, n_years] death counts & exposures
     model.sample_mx(h, n, rng)       # -> [n, h, n_ages] predictive m_x samples
+    model.fitted_mx()                # -> [n_ages, n_years] one-step-ahead fitted m_x
 
 Predictive uncertainty (MODEL-NATIVE mechanism) is simulated pathwise so joint
 path coverage is well-defined, and includes BOTH
@@ -74,6 +75,7 @@ class SparseVAR:
         nobs = Ynow.shape[1]                             # T-2 regression rows
 
         self.n_age = n_age
+        self._logm = logm.copy()                         # observed panel, for fitted_mx
         self.logm_last = logm[:, -1].copy()              # integration constant
         self.y_last = Y[:, -1].copy()                    # VAR state at the origin
         self.c_ = np.zeros(n_age)                        # intercepts (point)
@@ -159,4 +161,44 @@ class SparseVAR:
             y = c + self._banded_dot(B, y, self.W) + eps
             logm = logm + y                              # cumulative summation
             out[:, step, :] = logm
+        return np.exp(out)
+
+    # -------------------------------------------------------------- fitted
+    def fitted_mx(self, how: str = "one_step") -> np.ndarray:
+        """In-sample fitted m_x surface, [n_ages, n_years].
+
+        The VAR models IMPROVEMENTS, so a fitted LEVEL surface needs a
+        convention for where integration restarts. ``how`` selects it:
+
+        * ``"one_step"`` (default; what the Poisson bootstrap resamples from):
+          the standard VAR fitted value, the one-step-ahead conditional mean
+              log m_hat[t] = log m[t-1] + c + A y[t-1],
+          i.e. the OBSERVED lagged level plus the fitted improvement. It sits
+          one innovation from the data at every cell, so a pseudo-panel
+          D_b ~ Poisson(E * m_hat) retains the improvement variance from which
+          each refit estimates Sigma_hat.
+        * ``"cumulative"``: integrate the fitted improvements once from the
+          first observed years, log m_hat[t] = log m[1] + sum_{s<=t} yhat[s].
+          OLS-with-intercept residuals sum to zero, so this returns to the
+          observed level exactly at the last year, but in between it drifts
+          by the cumulated residuals (a random walk, sd ~ sqrt(t) * sigma):
+          smooth, far from the data mid-sample, and a pseudo-panel built on
+          it carries essentially NO improvement noise, which would collapse
+          the refits' innovation covariance. Diagnostic use only; no UQ
+          wrapper consumes it.
+
+        Years 0 and 1 have no fitted improvement under either convention (the
+        first improvement, year 0 -> 1, has no lag to regress on) and return
+        the OBSERVED rates.
+        """
+        logm = self._logm
+        Y = np.diff(logm, axis=1)                        # observed improvements [ages, T-1]
+        Yhat = self.c_[:, None] + self.A_ @ Y[:, :-1]    # fitted improvements, years 2..T-1
+        out = logm.copy()
+        if how == "one_step":
+            out[:, 2:] = logm[:, 1:-1] + Yhat
+        elif how == "cumulative":
+            out[:, 2:] = logm[:, [1]] + np.cumsum(Yhat, axis=1)
+        else:
+            raise ValueError(f"how must be 'one_step' or 'cumulative', got {how!r}")
         return np.exp(out)

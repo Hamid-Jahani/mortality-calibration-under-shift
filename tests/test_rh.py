@@ -9,6 +9,7 @@ import pytest
 
 from mortcal.eval import interval_coverage
 from mortcal.models.rh import RenshawHaberman
+from mortcal.uq.bootstrap import PoissonBootstrap
 
 N_AGES, T_TRAIN, H, N_SAMPLES, N_WORLDS = 30, 60, 5, 1000, 15
 B2 = 1.0 / N_AGES
@@ -123,3 +124,53 @@ def test_nominal_coverage_over_worlds():
     assert all(conv), f"fits failed to converge in {conv.count(False)} worlds"
     coverage = float(np.mean(covs))
     assert 0.88 <= coverage <= 0.99, f"nominal 95% attained {coverage:.3f}"
+
+
+# ---------------------------------------------------------------------------
+# fitted_mx contract (the Poisson-bootstrap hook)
+# ---------------------------------------------------------------------------
+
+def test_fitted_mx_surface_covers_excluded_cohorts_with_imputed_gamma():
+    """fitted_mx = exp(a + b k + b2 g_{t-x}) on the whole rectangle, finite and
+    positive. Cells of cohorts EXCLUDED from estimation (the sparse corner
+    diagonals, weight 0 in the fit) must read the IMPUTED gamma — the linear
+    trend of the retained cohorts — so the Poisson bootstrap can resample
+    every cell. Against observed rates the median relative error is < 5%."""
+    rng = np.random.default_rng(3)
+    (D, E), *_ = simulate_m2a(rng)
+    model = RenshawHaberman().fit(D, E)
+    assert model.converged
+    fm = model.fitted_mx()
+    assert fm.shape == (N_AGES, T_TRAIN)
+    assert np.all(np.isfinite(fm)) and np.all(fm > 0)
+
+    cidx = np.arange(T_TRAIN)[None, :] - np.arange(N_AGES)[:, None] + (N_AGES - 1)
+    eta = model.alpha[:, None] + np.outer(model.beta, model.kappa) + B2 * model.gamma[cidx]
+    np.testing.assert_allclose(fm, np.exp(eta), rtol=1e-12)
+
+    excluded = ~model.gamma_retained[cidx]
+    assert excluded.any(), "DGP has no sparse cohorts; the imputation path is untested"
+    ret, c = model.gamma_retained, model.cohort_index
+    tr1, tr0 = np.polyfit(c[ret], model.gamma[ret], 1)
+    g_imputed = tr0 + tr1 * c
+    eta_imp = (model.alpha[:, None] + np.outer(model.beta, model.kappa)
+               + B2 * g_imputed[cidx])
+    np.testing.assert_allclose(fm[excluded], np.exp(eta_imp)[excluded], rtol=1e-12)
+
+    rel = np.abs(fm - D / E) / (D / E)
+    assert np.median(rel) < 0.05, f"in-sample fit off: {np.median(rel):.3f}"
+
+
+def test_poisson_bootstrap_rh_end_to_end():
+    """PoissonBootstrap around RH: base fitted_mx resamplable at every cell,
+    every refit converges on its Poisson pseudo-panel, pooled paths have the
+    study-wide shape and are finite."""
+    rng = np.random.default_rng(11)
+    (D, E), *_ = simulate_m2a(rng)
+    wrap = PoissonBootstrap(RenshawHaberman, B=10, n_inner=2).fit(
+        D, E, rng=np.random.default_rng(12))
+    assert len(wrap.refits) == 10
+    assert all(r.converged for r in wrap.refits)
+    s = wrap.sample_mx(H, 23, np.random.default_rng(13))
+    assert s.shape == (23, H, N_AGES)
+    assert np.all(np.isfinite(s)) and np.all(s > 0)

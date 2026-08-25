@@ -7,15 +7,42 @@ modelling content:
   the UQ mechanisms in scope for the CPU sweep. Neural families, the GP, deep
   ensembles and MC dropout are deliberately absent (GPU budget, separate
   work); ``docs/GRID.md`` remains the authority on the full crossed design.
+* ``MODEL_KWARGS`` — per-family constructor arguments applied under EVERY
+  mechanism (currently only CBD's age restriction, ``age_min=55``), so the
+  family is the same object whichever mechanism wraps it.
 * ``run_cell`` — fit one (model, mechanism) cell on a training matrix pair and
   score its predictive samples against the observed test window through the
   single evaluation path (``mortcal.eval`` + ``mortcal.lifetable``,
-  methodology rule 4). Returns one flat dict of python scalars.
+  methodology rule 4). Returns one flat dict of python scalars (plus two
+  JSON-encoded vectors, see below).
 * ``run_regime`` — sweep a pre-registered :class:`mortcal.splits.Regime` (or a
   tuple of them, e.g. the STABLE expanding origins) over populations x sexes x
   models x mechanisms and write one parquet row per cell. Cells whose fit or
   scoring raises are recorded with the exception string in the ``error``
   column — a broken cell never kills the sweep.
+
+Columns emitted per cell (the analysis stage consumes these; nothing is
+refit downstream):
+
+===========================  ==================================================
+scalar means                 rmse_logmx, mae_logmx, crps_logmx, crps_counts,
+                             poisson_log_score, coverage_{50,80,95},
+                             winkler_{50,80,95}, joint_path_coverage_95,
+                             pit_ks_stat, n_cells, n_ages_scored
+calibration by age (H4)      coverage_{50,80,95}_band{0_24,25_64,65_99},
+                             pit_ks_band{0_24,25_64,65_99},
+                             cov95_by_age (JSON list, one entry per panel
+                             age = mean 95% hit indicator over horizons;
+                             null where the age is not scored)
+Murphy decomposition         murphy_{reliability,resolution,uncertainty,brier}
+                             on the 95% hit indicators;
+                             murphy_pit_{reliability,resolution,uncertainty}
+                             on the PIT values; pit_hist (JSON, 10 bins)
+per horizon (DM loss series) crps_h{k}, logscore_h{k}, coverage95_h{k},
+                             winkler95_h{k} for k = 1..h
+derived (H5)                 {e0,e65,ann65}_{point,q025,q975,obs,error}
+flags                        scores_secondary (bool)
+===========================  ==================================================
 
 Conformal cells and proper scores
 ---------------------------------
@@ -27,15 +54,28 @@ therefore carries a boolean ``scores_secondary`` column — True for conformal
 mechanisms — and proper scores from flagged rows must never be ranked against
 distributional mechanisms (they go to a flagged appendix table only).
 
+Undefined ages and masking
+--------------------------
+A family may be undefined on part of the age range: CBD (M5) is fit on ages
+>= 55 only (``MODEL_KWARGS``) and returns NaN samples below that. The runner
+scores ONLY ages on which every predictive sample and every observed rate is
+finite (a per-age mask); ``n_ages_scored`` / ``n_cells`` record how many ages
+and (horizon, age) cells entered each metric, and ``cov95_by_age`` is null on
+masked ages. Means are never silently taken over a mixture of defined and
+undefined cells.
+
 Real-data guard
 ---------------
 ``run_regime`` REFUSES any regime not named ``"synthetic"`` unless
-``allow_real=True`` is passed explicitly: PREREGISTRATION.md validation
-gate 2 (R/StMoMo oracle parity) is still OPEN, and no real-data result may be
-produced before it closes (see "Validation gates").
+``allow_real=True`` is passed explicitly. PREREGISTRATION.md validation gate
+2 (R/StMoMo oracle parity) closed on 2026-08-25 (``scripts/check_parity.py``);
+the flag is retained so that producing a real-data result stays a deliberate,
+auditable act rather than a default.
 """
 from __future__ import annotations
 
+import functools
+import json
 import zlib
 from typing import Callable, Iterable, Mapping
 
@@ -44,10 +84,13 @@ import pandas as pd
 from scipy import stats
 
 from .eval import (
+    crps_counts,
     crps_sample,
     interval_coverage,
     joint_path_coverage,
     log_score_poisson,
+    murphy_decomposition,
+    murphy_pit,
     pit_values,
     winkler_score,
 )
@@ -59,6 +102,19 @@ from .uq import CopulaPathConformal, EnbPIMx, PoissonBootstrap, SplitConformalMx
 _RATE_FLOOR = 1e-10   # same floor as mortcal.models.lc / mortcal.uq.conformal
 _LAM_FLOOR = 1e-12    # Poisson mean floor: logpmf(., 0) is -inf otherwise
 
+#: Coverage levels scored (nominal central intervals).
+LEVELS: tuple[float, ...] = (0.50, 0.80, 0.95)
+
+#: Age bands for calibration-by-age (H4). Inclusive edges; the LAST band is
+#: open-ended above so panels topping out beyond 99 still get a band. Same
+#: partition as the Mondrian bands of the conformal wrappers
+#: (``mortcal.uq.conformal.DEFAULT_AGE_BANDS``), so band-level coverage of a
+#: conformal cell is read at the resolution the wrapper calibrated at.
+AGE_BANDS: tuple[tuple[int, int], ...] = ((0, 24), (25, 64), (65, 99))
+
+#: PIT histogram bins for ``murphy_pit`` / ``pit_hist``.
+PIT_BINS = 10
+
 #: Classical model families in scope for this runner (CPU sweep).
 MODELS: dict[str, type] = {
     "LC": LeeCarterSVD,
@@ -66,6 +122,15 @@ MODELS: dict[str, type] = {
     "CBD": CBD,
     "RH": RenshawHaberman,
     "SVAR": SparseVAR,
+}
+
+#: Per-family constructor kwargs, applied under EVERY mechanism (the native
+#: fit, every bootstrap refit, every conformal member and centre refit).
+#: CBD: logit q_x is near-linear in age only at higher ages — the M5 fit is
+#: restricted to ages 55-99 (Cairns, Blake & Dowd 2006; PREREGISTRATION.md
+#: age-cap sensitivity), with samples NaN below 55 (masked in scoring).
+MODEL_KWARGS: dict[str, dict] = {
+    "CBD": {"age_min": 55},
 }
 
 #: UQ mechanisms in scope. "native" uses the model's own predictive law;
@@ -116,30 +181,132 @@ def build_estimator(model_name: str, mechanism: str,
                     mech_kwargs: Mapping | None = None):
     """Construct the (unfitted) estimator for one admissible grid cell.
 
-    ``mech_kwargs`` are forwarded to the mechanism wrapper (e.g. ``B`` for the
-    bootstrap, ``cal_years`` for split conformal); ignored for "native".
+    ``MODEL_KWARGS[model_name]`` reach the family under every mechanism: the
+    native instance directly, ``PoissonBootstrap`` through its
+    ``**model_kwargs`` (base fit AND every refit), the conformal wrappers
+    through a ``functools.partial`` base factory (every member fit and the
+    centre refit). ``mech_kwargs`` are forwarded to the mechanism wrapper
+    (e.g. ``B`` for the bootstrap, ``cal_years`` for split conformal);
+    ignored for "native". All five classical families implement
+    ``fitted_mx()`` (``mortcal/models``), the hook the bootstrap needs, so
+    ``pboot`` is constructible for every registered family.
     """
     check_admissible(model_name, mechanism)
     cls = MODELS[model_name]
+    model_kw = dict(MODEL_KWARGS.get(model_name, {}))
+    factory = functools.partial(cls, **model_kw) if model_kw else cls
     kw = dict(mech_kwargs or {})
     if mechanism == "native":
-        return cls()
+        return factory()
     if mechanism == "pboot":
-        if not hasattr(cls, "fitted_mx"):
-            # Admissible per docs/GRID.md, but the wrapper contract
-            # (mortcal/uq/bootstrap.py) needs the in-sample fitted surface.
-            raise NotImplementedError(
-                f"({model_name}, pboot) is admissible per docs/GRID.md but "
-                f"{cls.__name__} does not implement fitted_mx(), which "
-                "PoissonBootstrap requires; implement fitted_mx() first")
-        return PoissonBootstrap(cls, **kw)
+        return PoissonBootstrap(cls, **model_kw, **kw)
     if mechanism == "split_conf":
-        return SplitConformalMx(cls, **kw)
+        return SplitConformalMx(factory, **kw)
     if mechanism == "enbpi":
-        return EnbPIMx(cls, **kw)
+        return EnbPIMx(factory, **kw)
     if mechanism == "copula_conf":
-        return CopulaPathConformal(cls, **kw)
+        return CopulaPathConformal(factory, **kw)
     raise AssertionError(f"unhandled mechanism {mechanism!r}")  # pragma: no cover
+
+
+# ---------------------------------------------------------------------------
+# helpers for one grid cell
+# ---------------------------------------------------------------------------
+
+def _band_masks(n_ages: int) -> list[tuple[str, np.ndarray]]:
+    """(column tag, boolean age mask) per AGE_BANDS entry; last band open above."""
+    ages = np.arange(n_ages)
+    out = []
+    for i, (lo, hi) in enumerate(AGE_BANDS):
+        top = i == len(AGE_BANDS) - 1
+        mask = (ages >= lo) if top else ((ages >= lo) & (ages <= hi))
+        out.append((f"band{lo}_{hi}", mask))
+    return out
+
+
+def _mean_or_nan(x: np.ndarray) -> float:
+    """Mean of x, NaN when there is nothing to average (an empty age band)."""
+    x = np.asarray(x, dtype=float)
+    return float(np.mean(x)) if x.size else float("nan")
+
+
+def _ks_uniform(x: np.ndarray) -> float:
+    """KS distance of x from Uniform(0, 1); NaN on an empty set."""
+    x = np.asarray(x, dtype=float).ravel()
+    return float(stats.kstest(x, "uniform").statistic) if x.size else float("nan")
+
+
+def _json_list(values: np.ndarray) -> str:
+    """JSON array with non-finite entries encoded as null (strict JSON has
+    no NaN literal; ``json.loads`` gives back ``None`` there)."""
+    return json.dumps([float(v) if np.isfinite(v) else None for v in values])
+
+
+def _death_samples(est, samples_mx: np.ndarray, E_fut: np.ndarray,
+                   age_ok: np.ndarray, h: int, n_samples: int,
+                   rng: np.random.Generator) -> np.ndarray:
+    """[n, h, n_scored] predictive DEATH COUNTS for ``crps_counts``.
+
+    Families exposing ``sample_deaths`` (Poisson-LC, RH) draw D ~ Poisson(m E)
+    on a fresh path set from their own predictive law. For everything else
+    (SVD-LC, CBD, SVAR, every wrapper) the same construction is composed here
+    on the paths already drawn: lam = sample_mx * E_future, D = Poisson(lam)
+    — literally what ``PoissonLeeCarter.sample_deaths`` does, so the count
+    scale is the Poisson predictive law for every cell. ``Generator.poisson``
+    rejects NaN means, hence the age mask is applied before composing.
+    """
+    if hasattr(est, "sample_deaths") and bool(age_ok.all()):
+        return np.asarray(est.sample_deaths(E_fut, h, n_samples, rng), dtype=float)
+    lam = samples_mx[:, :, age_ok] * E_fut[None, :, age_ok]
+    return rng.poisson(np.clip(lam, 0.0, None)).astype(float)
+
+
+def _derived_quantities(samples_mx: np.ndarray, obs_D: np.ndarray,
+                        obs_E: np.ndarray, first_ok: int, contiguous: bool,
+                        out: dict) -> None:
+    """H5 inputs from the horizon-1 sample table: e0, e65, ä65 @ 2%.
+
+    Point functional = pointwise MEDIAN of the per-sample values (see
+    ``run_cell``); q025 / q975 = 2.5% / 97.5% sample quantiles; obs = the
+    same functional of the observed horizon-1 rates; error = point - obs.
+
+    Masked ages: the life table is built on the scored block
+    ``ages first_ok..top`` re-indexed from 0. e_x = T_x / l_x and
+    ä_x = sum_t v^t l_{x+t} / l_x are RATIOS to l_x, and every l_{x+t}, L_{x+t}
+    with t >= 0 is proportional to l_x, so both are invariant to whatever the
+    table does below x — including the infant a_0 rule that
+    ``mortcal.lifetable`` applies to the first row of the truncated table,
+    provided that row lies strictly below x. Hence e65 / ä65 are exact from
+    a table starting at 55 (CBD), while e0 is undefined (NaN) whenever age 0
+    is not scored. A model whose scored ages do not form one block ending at
+    the top age breaks the open-group closure: all derived sample statistics
+    are NaN then (observed values are always defined on the full panel).
+    """
+    n_ages = samples_mx.shape[2]
+    x_old = min(65, n_ages - 1)          # clamp only fires on truncated synthetic panels
+    obs_full = np.clip(obs_D[0] / obs_E[0], _RATE_FLOOR, None)
+    mx1 = samples_mx[:, 0, first_ok:]                                      # [n, n_scored]
+    for key, age, fn in (
+        ("e0", 0, lambda m, x: life_expectancy(m, x)),
+        ("e65", x_old, lambda m, x: life_expectancy(m, x)),
+        ("ann65", x_old, lambda m, x: annuity_factor(m, x0=x, i=0.02)),
+    ):
+        obs_val = float(fn(obs_full, age))
+        idx = age - first_ok
+        # idx >= 1 whenever the table is truncated: the truncated table's row 0
+        # takes the infant a_0 rule, which must stay strictly below x.
+        defined = contiguous and idx >= 0 and (first_ok == 0 or idx >= 1)
+        if defined:
+            vals = np.asarray(fn(mx1, idx), dtype=float)                   # [n]
+            point = float(np.median(vals))
+            q025, q975 = float(np.quantile(vals, 0.025)), float(np.quantile(vals, 0.975))
+        else:
+            point = q025 = q975 = float("nan")
+        out[f"{key}_point"] = point
+        out[f"{key}_q025"] = q025
+        out[f"{key}_q975"] = q975
+        out[f"{key}_obs"] = obs_val
+        out[f"{key}_error"] = point - obs_val
 
 
 # ---------------------------------------------------------------------------
@@ -158,7 +325,7 @@ def run_cell(
     obs_E: np.ndarray | None = None,
     E_future: np.ndarray | None = None,
     mech_kwargs: Mapping | None = None,
-) -> dict[str, float | bool]:
+) -> dict[str, float | int | bool | str]:
     """Fit one grid cell and score it on the observed test window.
 
     Parameters
@@ -175,26 +342,59 @@ def run_cell(
         score per PREREGISTRATION.md "Metrics"). Required.
     E_future : [h, n_ages], optional
         Exposures used to convert predictive m_x into Poisson death means for
-        the log score. Defaults to ``obs_E`` (the registered convention:
-        realised exposures are treated as known offsets, not forecast).
+        the log score and the count-scale CRPS. Defaults to ``obs_E`` (the
+        registered convention: realised exposures are treated as known
+        offsets, not forecast).
     mech_kwargs : forwarded to the mechanism wrapper constructor.
 
     Returns
     -------
-    One flat dict of python scalars (plus the boolean ``scores_secondary``
-    flag — True for conformal mechanisms, whose CRPS / log score / PIT are
-    placeholders computed from uniform-in-interval samples).
+    One flat dict: python floats / ints, the boolean ``scores_secondary``
+    flag (True for conformal mechanisms, whose CRPS / log score / PIT are
+    placeholders computed from uniform-in-interval samples) and two JSON
+    strings (``cov95_by_age``, ``pit_hist``). Column glossary in the module
+    docstring.
 
     Notes
     -----
-    * Point scores (RMSE/MAE on log m_x) use the pointwise MEDIAN of the log
-      predictive samples — invariant under the log transform and identical to
-      the centring convention of the conformal wrappers.
-    * Derived actuarial quantities (H5 inputs) are computed per horizon-1
-      sample through ``mortcal.lifetable`` — mean, 2.5% and 97.5% quantiles
-      of e0, e65 and the annuity-due factor ä65 @2%, plus their observed
-      counterparts, so downstream interval coverage of derived quantities
-      needs only these columns. On truncated synthetic panels with fewer
+    * **Point functional — one convention for every point metric.** The
+      point forecast of ANY scored quantity is the pointwise MEDIAN of its
+      predictive samples: log m_x per (horizon, age) cell for RMSE / MAE,
+      and the per-sample life-table functionals e0, e65, ä65 for the
+      ``*_point`` / ``*_error`` columns. The median is invariant under
+      monotone transforms (median of log m_x = log of median m_x), sits
+      inside the reported [q025, q975] interval by construction, is the
+      centring convention of the conformal wrappers, and is unaffected by
+      the heavy right tail of exponentiated Gaussian paths that would drag
+      a sample mean. No column uses the sample mean.
+    * **Age mask.** Only ages where every sample and every observed rate is
+      finite are scored (module docstring, "Undefined ages and masking");
+      ``n_ages_scored`` and ``n_cells`` (= h x n_ages_scored) record the
+      denominator of every mean. Band and by-age columns are NaN / null
+      where nothing is scored.
+    * **Proper scores.** CRPS on log m_x (per-cell ``crps_sample``); Poisson
+      log score on observed deaths rounded half-up inside
+      ``log_score_poisson`` (the pre-registered convention for Lexis-split
+      fractional deaths); ``crps_counts`` is its rounding-free sensitivity
+      companion on sampled death counts against UNROUNDED observed deaths
+      (``_death_samples`` documents the count construction).
+    * **Murphy decomposition.** ``murphy_*`` applies Murphy (1973) to the
+      95% interval-hit indicators with the constant forecast probability
+      0.95 (classical exact form, one bin): reliability = (0.95 - empirical
+      coverage)^2, resolution = 0, uncertainty = c(1 - c). It is the
+      coverage gap on the Brier scale — reported because pre-registered, and
+      read alongside ``murphy_pit_*`` (Broecker 2009 divergence form on the
+      10-bin PIT histogram with the uniform as reference), whose reliability
+      is the chi-square distance from uniformity that a single level's
+      coverage cannot see.
+    * **Per-horizon series.** ``crps_h{k}``, ``logscore_h{k}``,
+      ``coverage95_h{k}``, ``winkler95_h{k}`` (k = 1..h) are the loss series
+      per (pop, sex, origin) that the Diebold–Mariano / wild-cluster
+      bootstrap layer (``mortcal.inference``) differences; the scalar means
+      are their averages over horizons.
+    * **Derived actuarial quantities (H5)** come from the horizon-1 sample
+      table through ``mortcal.lifetable``; see ``_derived_quantities`` for
+      the masked-age treatment. On truncated synthetic panels with fewer
       than 66 ages the "65" quantities are computed at the panel's top age
       (documented clamp; real panels are always ages 0-99).
     """
@@ -212,49 +412,94 @@ def run_cell(
 
     est = build_estimator(model_name, mechanism, mech_kwargs)
     est.fit(np.asarray(D, dtype=float), np.asarray(E, dtype=float))
-    samples_mx = est.sample_mx(h, n_samples, rng)          # [n, h, n_ages]
+    samples_mx = np.asarray(est.sample_mx(h, n_samples, rng), dtype=float)
+    if samples_mx.shape != (n_samples, h, n_ages):
+        raise ValueError(f"sample_mx returned {samples_mx.shape}, expected "
+                         f"{(n_samples, h, n_ages)}")
 
-    log_samples = np.log(np.clip(samples_mx, _RATE_FLOOR, None))
-    truth = np.log(np.clip(obs_D / obs_E, _RATE_FLOOR, None))   # [h, n_ages]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        truth_full = np.log(np.clip(obs_D / obs_E, _RATE_FLOOR, None))   # [h, n_ages]
 
-    point = np.median(log_samples, axis=0)
-    out: dict[str, float | bool] = {
-        "rmse_logmx": float(np.sqrt(np.mean((point - truth) ** 2))),
-        "mae_logmx": float(np.mean(np.abs(point - truth))),
-        "crps_logmx": float(np.mean(crps_sample(log_samples, truth))),
+    # --- age mask: score only ages defined in every sample and observation ---
+    age_ok = (np.isfinite(samples_mx).all(axis=(0, 1))
+              & np.isfinite(truth_full).all(axis=0))                      # [n_ages]
+    if not age_ok.any():
+        raise ValueError("no scorable ages: every age has a non-finite sample "
+                         "or observation")
+    first_ok = int(np.argmax(age_ok))
+    contiguous = bool(age_ok[first_ok:].all())
+    n_ok = int(age_ok.sum())
+
+    log_samples = np.log(np.clip(samples_mx[:, :, age_ok], _RATE_FLOOR, None))
+    truth = truth_full[:, age_ok]                                         # [h, n_ok]
+    bands = [(tag, mask[age_ok]) for tag, mask in _band_masks(n_ages)]
+
+    out: dict[str, float | int | bool | str] = {
+        "n_ages_scored": n_ok,
+        "n_cells": int(h * n_ok),
     }
 
-    # Poisson log score on observed deaths (rounded inside log_score_poisson —
-    # the pre-registered rounding convention for Lexis-split fractional deaths).
-    lam = np.clip(samples_mx * E_fut[None, :, :], _LAM_FLOOR, None)
-    out["poisson_log_score"] = float(np.mean(log_score_poisson(lam, obs_D)))
+    # --- point metrics (pointwise median, see Notes) and proper scores ---
+    point = np.median(log_samples, axis=0)
+    out["rmse_logmx"] = float(np.sqrt(np.mean((point - truth) ** 2)))
+    out["mae_logmx"] = float(np.mean(np.abs(point - truth)))
+    crps_cells = crps_sample(log_samples, truth)                          # [h, n_ok]
+    out["crps_logmx"] = float(np.mean(crps_cells))
 
-    for level in (0.50, 0.80, 0.95):
+    lam = np.clip(samples_mx[:, :, age_ok] * E_fut[None, :, age_ok], _LAM_FLOOR, None)
+    ls_cells = log_score_poisson(lam, obs_D[:, age_ok])                   # [h, n_ok]
+    out["poisson_log_score"] = float(np.mean(ls_cells))
+
+    d_samp = _death_samples(est, samples_mx, E_fut, age_ok, h, n_samples, rng)
+    out["crps_counts"] = float(np.mean(crps_counts(d_samp, obs_D[:, age_ok])))
+
+    # --- interval metrics: overall and by age band (H4) ---
+    cov = {}
+    wink95 = None
+    for level in LEVELS:
         tag = f"{int(round(level * 100))}"
-        covered, _width = interval_coverage(log_samples, truth, level)
+        covered, _width = interval_coverage(log_samples, truth, level)    # [h, n_ok]
+        wink = winkler_score(log_samples, truth, level)
+        cov[level] = covered.astype(float)
         out[f"coverage_{tag}"] = float(np.mean(covered))
-        out[f"winkler_{tag}"] = float(np.mean(winkler_score(log_samples, truth, level)))
+        out[f"winkler_{tag}"] = float(np.mean(wink))
+        for btag, sel in bands:
+            out[f"coverage_{tag}_{btag}"] = _mean_or_nan(covered[:, sel])
+        if level == 0.95:
+            wink95 = wink
+    cov95 = cov[0.95]
 
     out["joint_path_coverage_95"] = float(
         joint_path_coverage(log_samples, truth, 0.95))
 
-    pit = pit_values(log_samples, truth, rng=rng)
-    out["pit_ks_stat"] = float(stats.kstest(pit.ravel(), "uniform").statistic)
+    # --- PIT: overall, by band, and the Murphy decompositions ---
+    pit = pit_values(log_samples, truth, rng=rng)                         # [h, n_ok]
+    out["pit_ks_stat"] = _ks_uniform(pit)
+    for btag, sel in bands:
+        out[f"pit_ks_{btag}"] = _ks_uniform(pit[:, sel])
+
+    md = murphy_decomposition(np.full(cov95.size, 0.95), cov95, n_bins=None)
+    for k in ("reliability", "resolution", "uncertainty", "brier"):
+        out[f"murphy_{k}"] = float(md[k])
+    mp = murphy_pit(pit, n_bins=PIT_BINS)
+    for k in ("reliability", "resolution", "uncertainty"):
+        out[f"murphy_pit_{k}"] = float(mp[k])
+    out["pit_hist"] = _json_list(np.asarray(mp["hist"], dtype=float))
+
+    # --- per-horizon loss series (Diebold-Mariano inputs) ---
+    for j in range(h):
+        out[f"crps_h{j + 1}"] = float(np.mean(crps_cells[j]))
+        out[f"logscore_h{j + 1}"] = float(np.mean(ls_cells[j]))
+        out[f"coverage95_h{j + 1}"] = float(np.mean(cov95[j]))
+        out[f"winkler95_h{j + 1}"] = float(np.mean(wink95[j]))
+
+    # --- per-age 95% coverage curve (mean over horizons), null when masked ---
+    curve = np.full(n_ages, np.nan)
+    curve[age_ok] = cov95.mean(axis=0)
+    out["cov95_by_age"] = _json_list(curve)
 
     # --- derived actuarial quantities from the horizon-1 sample table (H5) ---
-    x_old = min(65, n_ages - 1)         # clamp only fires on truncated synthetic panels
-    mx1 = samples_mx[:, 0, :]                                   # [n, n_ages]
-    obs_mx1 = np.clip(obs_D[0] / obs_E[0], _RATE_FLOOR, None)
-    for key, fn in (
-        ("e0", lambda m: life_expectancy(m, 0)),
-        ("e65", lambda m: life_expectancy(m, x_old)),
-        ("ann65", lambda m: annuity_factor(m, x0=x_old, i=0.02)),
-    ):
-        vals = np.asarray(fn(mx1), dtype=float)                 # [n]
-        out[f"{key}_mean"] = float(vals.mean())
-        out[f"{key}_q025"] = float(np.quantile(vals, 0.025))
-        out[f"{key}_q975"] = float(np.quantile(vals, 0.975))
-        out[f"{key}_obs"] = float(fn(obs_mx1))
+    _derived_quantities(samples_mx, obs_D, obs_E, first_ok, contiguous, out)
 
     out["scores_secondary"] = mechanism in CONFORMAL_MECHANISMS
     return out
@@ -342,24 +587,27 @@ def run_regime(
     SKIPPED and logged; its row carries the exception string in the ``error``
     column (metrics NaN) so the sweep always completes and the failure is
     auditable in the results table itself.
+
+    Per-horizon columns are named for the regime's horizons (``crps_h1`` ..
+    ``crps_h{H}``); when regimes with different H share one parquet file
+    (STABLE origins capped at 2019) the missing horizons are NaN.
     """
     regimes: list[Regime] = [regime] if isinstance(regime, Regime) else list(regime)
     models = list(models)
     mechanisms = list(mechanisms)
 
     # --- REAL-DATA GUARD -------------------------------------------------
-    # PREREGISTRATION.md validation gate 2 (R/StMoMo oracle parity) is still
-    # OPEN: Python LC / Poisson-LC parameters have not yet been verified
-    # against the R oracle, so no real-data forecast may be produced. Only
-    # regimes explicitly named "synthetic" run without allow_real=True;
-    # passing allow_real is a deliberate, auditable act reserved for after
-    # the gate closes.
+    # PREREGISTRATION.md validation gate 2 (R/StMoMo oracle parity) closed on
+    # 2026-08-25 (scripts/check_parity.py, results/parity/). The guard stays:
+    # only regimes explicitly named "synthetic" run without allow_real=True,
+    # so producing a real-data table remains a deliberate, auditable act.
     for r in regimes:
         if r.name != "synthetic" and not allow_real:
             raise RuntimeError(
-                f"run_regime refused regime {r.name!r}: PREREGISTRATION.md "
-                "validation gate 2 (oracle parity) is still open — pass "
-                "allow_real=True only once the gate has closed")
+                f"run_regime refused regime {r.name!r}: real-data regimes "
+                "require an explicit allow_real=True (PREREGISTRATION.md "
+                "validation gate 2 closed 2026-08-25; the flag records that "
+                "a real-data result was produced deliberately)")
 
     for m in models:
         for u in mechanisms:
@@ -416,5 +664,8 @@ def run_regime(
     if "scores_secondary" in df.columns:
         # nullable boolean: error rows have no flag; parquet-safe via pyarrow
         df["scores_secondary"] = df["scores_secondary"].astype("boolean")
+    for col in ("n_ages_scored", "n_cells"):
+        if col in df.columns:
+            df[col] = df[col].astype("Int64")     # nullable int: NaN on error rows
     df.to_parquet(out_path, index=False)
     return df
