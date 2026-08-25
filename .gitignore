@@ -1,0 +1,76 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# DATA — never committed.
+# HMD is free but redistribution is restricted by its user agreement: users
+# must register and accept the terms themselves. Re-hosting the files here
+# would breach that. Reproducibility is served by data/MANIFEST.sha256
+# (checksums + vintage) plus the documented download procedure, NOT by the
+# bytes. ~900 MB, would also blow past GitHub's repo size guidance.
+# ─────────────────────────────────────────────────────────────────────────────
+Dataset/
+data/raw/
+data/interim/
+data/processed/
+*.zip
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LITERATURE — PDFs and extracted full text are publisher-copyrighted.
+# Committing them is redistribution. The curated notes (INDEX.md, MISSING.md,
+# GAP-ANALYSIS.md) are our own writing and ARE tracked.
+# ─────────────────────────────────────────────────────────────────────────────
+literature/pdf/
+literature/pdf-other-datasets/
+literature/txt/
+*.pdf
+
+# ── Backups / scratch ────────────────────────────────────────────────────────
+*.ORIGINAL.*
+*.bak
+~$*.docx
+~$*.xlsx
+
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.uv/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+.ruff_cache/
+.mypy_cache/
+
+# ── R ────────────────────────────────────────────────────────────────────────
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# ── Model artefacts / results too large or regenerable ───────────────────────
+*.pt
+*.pth
+*.ckpt
+*.joblib
+*.pkl
+results/**/samples/
+mlruns/
+wandb/
+
+# ── LaTeX build products ─────────────────────────────────────────────────────
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.lot
+*.out
+*.synctex.gz
+*.toc
+
+# ── OS / editor ──────────────────────────────────────────────────────────────
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/
