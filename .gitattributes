@@ -1,0 +1,20 @@
+# Normalise line endings: LF in the repository, native in the working copy.
+# This project runs on Windows locally and Linux on the CPU server; without
+# this, every file round-trips as a whole-file diff.
+* text=auto eol=lf
+
+# Windows-only shells keep CRLF
+*.ps1  text eol=crlf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# Binary — never diff or normalise
+*.docx binary
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.pt   binary
+*.pth  binary
+
+# HMD fixed-width data and checksums stay LF
+*.sha256 text eol=lf
