@@ -74,3 +74,37 @@ Plus four techniques entirely absent from mortality forecasting: PIT/rank histog
 
 - **Schnürch & Korn (2021)**, 2D-CNN mortality forecasting with confidence intervals — cited by Miyata as producing seed-based intervals. Not yet in the library; directly relevant to the "what counts as uncertainty" argument.
 - **Perla et al. (2021)** SAJ — see `MISSING.md`.
+
+---
+
+# ADDENDUM (same day) — a correction to §1, and new prior art
+
+Chasing the canonical actuarial baselines surfaced a body of work that the arXiv sweep had entirely missed, and it **partially invalidates the counts in §1**.
+
+## Correction
+
+§1 reported "PIT / rank histogram: **0** papers" and "joint / path coverage: **0** papers". Those counts were over *the library as it then stood*, which was arXiv-biased. They are **not** safe claims about the field. Specifically:
+
+> **Dowd, Cairns, Blake, Coughlan, Epstein & Khalaf-Allah (2010),** *Backtesting Stochastic Mortality Models: An Ex-Post Evaluation of Multi-Period-Ahead Density Forecasts*, North American Actuarial Journal 14(3):281–298. `10.1080/10920277.2010.10597592`
+
+The title alone establishes that ex-post evaluation of **multi-period-ahead density forecasts** for stochastic mortality models was done in 2010. This is direct prior art for the audit half of the paper and **must be read before any novelty claim is finalised.** It very likely uses PIT-type transforms.
+
+Companion papers from the same group, now obtained:
+
+- **Cairns, Blake, Dowd, Coughlan, Epstein & Khalaf-Allah**, *Mortality Density Forecasts: An Analysis of Six Stochastic Mortality Models* — in `pdf/`. Density forecasts across six models. Read this first; it is the closest obtained prior art.
+- **Dowd et al. (2010)**, *Evaluating the Goodness of Fit of Stochastic Mortality Models*, IME 47:255–265 — not obtained.
+
+## What this does and does not do to the idea
+
+It **does not** kill the paper, but it moves the novelty. What survives, and what must be re-checked against Dowd/Cairns before committing:
+
+| Claim | Status |
+|---|---|
+| Density-forecast backtesting for mortality is new | **DEAD.** Dowd et al. 2010 did it. |
+| Proper scores (CRPS / log score) applied to *neural* mortality models | **Still open** — the 2010 work predates neural mortality entirely |
+| Evaluation across a *real* structural break (2020–24), not a simulated one | **Still open** |
+| Conformal prediction in mortality forecasting | **Still open** — nothing found in any source |
+| Sharpness-subject-to-calibration critique of the PICP=1 practice | **Still open**, and now better grounded (Gneiting–Balabdaoui–Raftery 2007) |
+| Crossed model-family × UQ-mechanism design | **Still open** |
+
+**Method lesson, recorded deliberately:** the arXiv keyword sweep produced a systematically skewed view because ASTIN / AAS / NAAJ / IME largely predate and bypass preprint culture. Author homepages (Cairns' page at `macs.hw.ac.uk/~andrewc/papers/` yielded eight papers in one fetch) and Crossref are better instruments for actuarial literature than arXiv search.
