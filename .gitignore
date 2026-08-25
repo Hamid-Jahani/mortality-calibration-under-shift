@@ -74,3 +74,8 @@ Desktop.ini
 .DS_Store
 .vscode/
 .idea/
+
+# parity panel exports are raw HMD data (redistribution-restricted); the
+# fitted StMoMo parameter dump is our own work product and IS tracked
+results/parity/D_*.csv
+results/parity/E_*.csv

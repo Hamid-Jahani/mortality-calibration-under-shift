@@ -9,6 +9,7 @@ dependencies = [
     "scipy>=1.13",
     "statsmodels>=0.14",
     "matplotlib>=3.9",
+    "pyarrow>=25.0.1",
 ]
 
 [dependency-groups]

@@ -106,7 +106,16 @@ absorbed as an analysis section.
   deaths are fractional); sensitivity via CRPS on counts.
 - Validation gate 1 (synthetic truth) PASSES. Known finding: two-stage SVD-LC is mildly
   overdispersed in-DGP (SVD kappa carries observation noise into RWD sigma).
-- OPEN GATES before real-data results: R/StMoMo oracle parity (R install attempted via
-  winget); Dowd et al. 2010b + Schnürch-Korn 2022 must be read before related-work text
-  (SSRN links in literature/GET-THESE.md — browser only).
+- Validation gate 2 (oracle parity) PASSES: Python Poisson-LC vs R StMoMo 0.4.1 on SWE
+  males 1950-2000 — identical loglik, beta rel diff 2.4e-14 when Newton runs to cap
+  (`scripts/check_parity.py`; StMoMo fit dump tracked in `results/parity/`).
+  R 4.6.1 via winget; packages in R_LIBS_USER personal library.
+- OPEN before real-data results: Dowd et al. 2010b + Schnürch-Korn 2022 must be read
+  before related-work text (SSRN, browser only — literature/GET-THESE.md); runner metric
+  defects from the adversarial verifier (docs/STATUS.md) must be fixed first.
 - Inference plan: wild cluster bootstrap over populations (20 correlated clusters), MCS at 90%.
+
+## Session state
+
+Pick-up list and defect ledger: `docs/STATUS.md`. Never re-run the dead workflow
+wf_75bb90b5-839 (resume would clobber the manual RH/conformal fixes).
