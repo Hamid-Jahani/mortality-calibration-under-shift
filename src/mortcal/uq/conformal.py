@@ -77,8 +77,18 @@ _RATE_FLOOR = 1e-10  # same floor as mortcal.models.lc
 # --------------------------------------------------------------------------
 
 def _log_rates(D: np.ndarray, E: np.ndarray) -> np.ndarray:
-    """Observed log central death rates, floored like the base models."""
-    return np.log(np.clip(D / E, _RATE_FLOOR, None))
+    """Observed log rates on the half-count scale (addendum 2 §2 / 3 §6).
+
+    log(max(D, 0.5)/E) where E > 0, NaN where E == 0 (structural zeros — no
+    observation exists; _conformal_quantile ignores NaN residuals). The old
+    1e-10 floor put a single zero-death calibration cell at log-rate -23.03,
+    inflating a SWE-female band radius from 1.44 to 12.94 nats.
+    """
+    D = np.asarray(D, dtype=float)
+    E = np.asarray(E, dtype=float)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        r = np.where(E > 0, np.maximum(D, 0.5) / np.where(E > 0, E, 1.0), np.nan)
+    return np.log(r)
 
 
 def _band_indices(n_ages: int, bands) -> list[np.ndarray]:
@@ -115,7 +125,8 @@ def _conformal_quantile(res: np.ndarray, alpha: float) -> float:
     anti-conservative in principle and is documented here: with the study's
     band sizes (>= 25 scores per cell) it binds only for alpha < 1/(n+1).
     """
-    r = np.sort(np.asarray(res, dtype=float).ravel())
+    r = np.asarray(res, dtype=float).ravel()
+    r = np.sort(r[np.isfinite(r)])          # NaN = structural zero, no residual
     n = r.size
     if n == 0:
         raise ValueError("no residuals to calibrate on")
@@ -154,8 +165,8 @@ def _expand_radius(q: np.ndarray, h: int) -> np.ndarray:
 
     Horizons beyond the calibrated range reuse the LAST calibrated radius.
     That is anti-conservative for a growing forecast-error variance and is a
-    documented limitation; in the registered design (test horizons h=1..5,
-    calibration horizons 8) it never binds.
+    documented limitation; in the registered design (test horizons h <= 9,
+    calibration horizons 9 per addendum 3 §9) it never binds.
     """
     idx = np.minimum(np.arange(h), q.shape[0] - 1)
     return q[idx]
@@ -166,6 +177,19 @@ def _uniform_interval_samples(center: np.ndarray, radius: np.ndarray,
     """[n, h, n_ages] m_x draws uniform on [center - r, center + r] in log space."""
     u = rng.uniform(-1.0, 1.0, size=(n,) + center.shape)
     return np.exp(center[None, :, :] + u * radius[None, :, :])
+
+
+def _interval_bounds(wrapper, h: int) -> tuple[np.ndarray, np.ndarray]:
+    """(lo, hi) log m_x bounds [h, n_ages] at the construction level 1 - alpha.
+
+    Addendum 3 §6: conformal cells are SCORED from these bounds directly —
+    no uniform-in-interval sampling (whose empirical quantiles shrink the
+    interval) and no Poisson composition (the radius is calibrated on
+    observed residuals and already contains observation noise).
+    """
+    center = _cached_center(wrapper, h)
+    radius = _expand_radius(wrapper._q, h)
+    return center - radius, center + radius
 
 
 def _trailing_block_residuals(base_factory, D: np.ndarray, E: np.ndarray,
@@ -241,7 +265,7 @@ class SplitConformalMx:
         passed to ``sample_mx`` so the interval is deterministic given fit)
     """
 
-    def __init__(self, base_factory, alpha: float = 0.05, cal_years: int = 8,
+    def __init__(self, base_factory, alpha: float = 0.05, cal_years: int = 9,
                  bands=DEFAULT_AGE_BANDS, n_median_samples: int = 1000,
                  seed: int = 20260825):
         self.base_factory = base_factory
@@ -284,6 +308,10 @@ class SplitConformalMx:
         radius = _expand_radius(self._q, h)
         return _uniform_interval_samples(center, radius, n, rng)
 
+    def interval(self, h: int) -> tuple[np.ndarray, np.ndarray]:
+        """(lo, hi) log m_x bounds [h, n_ages] at level 1 - alpha (addendum 3 §6)."""
+        return _interval_bounds(self, h)
+
 
 # --------------------------------------------------------------------------
 # 2. EnbPI (adapted)
@@ -324,7 +352,7 @@ class EnbPIMx:
     """
 
     def __init__(self, base_factory, alpha: float = 0.05, K: int = 10,
-                 h_cal: int = 8, bands=DEFAULT_AGE_BANDS,
+                 h_cal: int = 9, bands=DEFAULT_AGE_BANDS,
                  n_median_samples: int = 1000, seed: int = 20260825):
         self.base_factory = base_factory
         self.alpha = alpha
@@ -354,6 +382,10 @@ class EnbPIMx:
         center = _cached_center(self, h)
         radius = _expand_radius(self._q, h)
         return _uniform_interval_samples(center, radius, n, rng)
+
+    def interval(self, h: int) -> tuple[np.ndarray, np.ndarray]:
+        """(lo, hi) log m_x bounds [h, n_ages] at level 1 - alpha (addendum 3 §6)."""
+        return _interval_bounds(self, h)
 
 
 # --------------------------------------------------------------------------
@@ -396,7 +428,7 @@ class CopulaPathConformal:
     """
 
     def __init__(self, base_factory, alpha: float = 0.05, K: int = 10,
-                 h_cal: int = 8, bands=DEFAULT_AGE_BANDS,
+                 h_cal: int = 9, bands=DEFAULT_AGE_BANDS,
                  n_median_samples: int = 1000, seed: int = 20260825):
         self.base_factory = base_factory
         self.alpha = alpha
@@ -434,3 +466,7 @@ class CopulaPathConformal:
         center = _cached_center(self, h)
         radius = _expand_radius(self._q, h)
         return _uniform_interval_samples(center, radius, n, rng)
+
+    def interval(self, h: int) -> tuple[np.ndarray, np.ndarray]:
+        """(lo, hi) log m_x bounds [h, n_ages] at level 1 - alpha (addendum 3 §6)."""
+        return _interval_bounds(self, h)

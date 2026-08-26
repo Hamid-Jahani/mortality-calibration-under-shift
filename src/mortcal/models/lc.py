@@ -11,10 +11,28 @@ interval logic). Bootstrap / ensemble / conformal wrappers live elsewhere so
 that model family x UQ mechanism stay crossed factors, never conflated.
 
 Identifiability: sum(beta) = 1, sum(kappa) = 0 (the Lee-Carter convention).
+
+Zero cells (PREREGISTRATION-ADDENDUM-3):
+* zero-DEATH cells (E > 0, D = 0) enter on the half-count log-rate scale
+  log(max(D, 0.5)/E) — addendum 2 §2's convention, replacing a 1e-10 rate
+  floor whose log(1e-10) = -23.03 poisoned initial values (PLC's first Newton
+  step overshot to +1e4 on ISL/LUX panels);
+* zero-EXPOSURE cells (E = 0, D = 0; structural — nobody alive) carry weight
+  1{E > 0} (addendum 3 §1). Under the Poisson likelihood their contribution
+  is identically zero, so the weighted MLE equals the registered objective's
+  MLE exactly; for the SVD stage the cells are missing entries handled by an
+  EM loop that reduces to the plain SVD when no cell is missing.
 """
 from __future__ import annotations
 
 import numpy as np
+
+
+def _log_rate_panel(D: np.ndarray, E: np.ndarray) -> np.ndarray:
+    """log(max(D, 0.5)/E) where E > 0, NaN where E == 0 (structural zeros)."""
+    with np.errstate(divide="ignore", invalid="ignore"):
+        r = np.where(E > 0, np.maximum(D, 0.5) / np.where(E > 0, E, 1.0), np.nan)
+    return np.log(r)
 
 
 class _KtForecaster:
@@ -43,19 +61,46 @@ class _KtForecaster:
 class LeeCarterSVD:
     """Classical two-stage Lee-Carter: SVD on centred log m_x, then RWD on k_t."""
 
+    #: EM iterations for missing (E = 0) cells; exact SVD when none are missing.
+    _EM_ITER = 60
+    _EM_TOL = 1e-10
+
     def fit(self, D: np.ndarray, E: np.ndarray) -> "LeeCarterSVD":
-        mx = np.clip(D / E, 1e-10, None)
-        logm = np.log(mx)
-        self.alpha = logm.mean(axis=1)                              # [ages]
-        A = logm - self.alpha[:, None]
+        logm = _log_rate_panel(D, E)
+        miss = ~np.isfinite(logm)
+        if not miss.any():
+            self.alpha, self.beta, self.kappa = self._svd_stage(logm)
+        else:
+            # EM over the missing entries: impute with the current rank-1
+            # fit, re-run the SVD stage, repeat. Missing cells are structural
+            # zeros carrying no information, so the imputation only has to
+            # keep the SVD numerically defined; the fit is driven entirely by
+            # the observed cells. Reduces to the plain SVD at zero missing.
+            work = logm.copy()
+            row_mean = np.nanmean(logm, axis=1)
+            work[miss] = np.broadcast_to(row_mean[:, None], logm.shape)[miss]
+            prev = None
+            for _ in range(self._EM_ITER):
+                alpha, beta, kappa = self._svd_stage(work)
+                fitted = alpha[:, None] + np.outer(beta, kappa)
+                work[miss] = fitted[miss]
+                if prev is not None and np.max(np.abs(fitted - prev)) < self._EM_TOL:
+                    break
+                prev = fitted
+            self.alpha, self.beta, self.kappa = alpha, beta, kappa
+        self.kt = _KtForecaster().fit(self.kappa)
+        return self
+
+    @staticmethod
+    def _svd_stage(logm: np.ndarray):
+        alpha = logm.mean(axis=1)                                   # [ages]
+        A = logm - alpha[:, None]
         U, s, Vt = np.linalg.svd(A, full_matrices=False)
         beta, kappa = U[:, 0], s[0] * Vt[0]
         scale = beta.sum()                                          # sum(beta)=1
         beta, kappa = beta / scale, kappa * scale
         kappa = kappa - kappa.mean()                                # sum(kappa)=0
-        self.beta, self.kappa = beta, kappa
-        self.kt = _KtForecaster().fit(kappa)
-        return self
+        return alpha, beta, kappa
 
     def sample_mx(self, h: int, n: int, rng: np.random.Generator) -> np.ndarray:
         k = self.kt.sample_paths(h, n, rng)                        # [n, h]
@@ -78,8 +123,14 @@ class PoissonLeeCarter:
 
     def fit(self, D: np.ndarray, E: np.ndarray) -> "PoissonLeeCarter":
         n_age, n_year = D.shape
-        mx = np.clip(D / E, 1e-10, None)
-        a = np.log(mx).mean(axis=1)
+        # Initial alpha from observed cells only (nanmean over E > 0 columns);
+        # half-count keeps zero-death cells off the -23 rate floor. The Newton
+        # updates below need no explicit weights: at an E = 0 cell both D and
+        # Dh = E exp(eta) are identically zero, so every numerator and
+        # denominator contribution vanishes on its own (addendum 3 §1).
+        a = np.nanmean(_log_rate_panel(D, E), axis=1)
+        if not np.isfinite(a).all():
+            raise ValueError("some age has no observed (E > 0) training cell")
         b = np.full(n_age, 1.0 / n_age)
         k = np.zeros(n_year)
         ll_prev = -np.inf
@@ -94,7 +145,9 @@ class PoissonLeeCarter:
             scale = b.sum()
             b, k = b / scale, k * scale
             Dh = E * np.exp(a[:, None] + np.outer(b, k))
-            ll = float((D * np.log(Dh) - Dh).sum())
+            # D = 0 cells contribute -Dh only (0 at E = 0 cells): 0*log(0) is
+            # the likelihood's zero, not NaN.
+            ll = float((np.where(D > 0, D * np.log(np.where(D > 0, Dh, 1.0)), 0.0) - Dh).sum())
             if abs(ll - ll_prev) < self.tol * (abs(ll_prev) + 1e-12):
                 break
             ll_prev = ll

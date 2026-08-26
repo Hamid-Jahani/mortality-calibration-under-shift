@@ -9,10 +9,10 @@ protocol deviation).
 
 | Gate (PREREGISTRATION.md) | Status |
 |---|---|
-| 1. Synthetic truth (`tests/test_synthetic_calibration.py`) | **PASSES** — correctly-specified Poisson-LC attains nominal coverage against the LATENT true m_x; the harness detects an injected break as under-coverage. Known documented finding: two-stage SVD-LC is mildly overdispersed in-DGP. |
+| 1. Synthetic truth (`tests/test_synthetic_calibration.py` + `tests/test_addendum2_scoring.py` + `tests/test_addendum3.py`) | **PASSES** — correctly-specified Poisson-LC attains nominal coverage against the OBSERVED crude rate through the real-data code path (Poisson-inclusive samples, addendum 2 §1; scoring the latent m_x was the pre-addendum defect: 0.10/0.19/0.28 vs nominal 0.50/0.80/0.95). The harness detects an injected break as under-coverage. Known documented finding: two-stage SVD-LC is mildly overdispersed in-DGP. |
 | 2. Oracle parity (Python LC/PLC vs R StMoMo, 1e-6 relative on α, β, κ) | **PASSES** (2026-08-25) — identical log-likelihood, β relative difference 2.4e-14 on SWE males 1950–2000 (`scripts/check_parity.py`, `results/parity/`). |
 | 3. Life-table parity (our ex vs HMD published ex) | Spot-check harness in `tests/test_lifetable.py`; full HMD spot checks run with the first real-data pass. |
-| Reading gate: Dowd et al. (2010b), Schnürch & Korn (2022) before related-work text | **OPEN** — SSRN links in `literature/GET-THESE.md`, browser-only. |
+| Reading gate: Dowd et al. (2010b), Schnürch & Korn (2022) before related-work text | **CLOSED** 2026-08-26 — all nine manual-fetch papers on disk and extracted; prior-art verdicts registered in `docs/PRIOR-ART.md` (hash-stamped) and folded into `PREREGISTRATION-ADDENDUM-3.md` §8. |
 | Runner defect ledger (`docs/STATUS.md` items 1–6) | **CLOSED** 2026-08-26. |
 
 **The runner still guards real data**: `run_regime` raises unless the regime
@@ -77,12 +77,12 @@ act rather than a default.
 | Group | Columns |
 |---|---|
 | keys | `regime, pop, sex, origin, model, mechanism, h, n_samples, seed_entropy, error` |
-| denominators | `n_ages_scored, n_cells` |
+| denominators | `n_ages_scored, n_cells`, `n_zero_death_cells` (pre-mask, full panel, `D < 0.5` — addendum 3 §10), `derived_age_lo`, `derived_age_hi` (the contiguous scored block the H5 table is built on — addendum 3 §3) |
 | point | `rmse_logmx, mae_logmx` |
 | proper scores | `crps_logmx, poisson_log_score, crps_counts` |
-| intervals | `coverage_{50,80,95}, winkler_{50,80,95}, joint_path_coverage_95` |
+| intervals | `coverage_{50,80,95}, winkler_{50,80,95}, joint_path_coverage_95`. Conformal rows: 95% columns computed from the wrapper's own interval bounds at its construction level (addendum 3 §6 — never sample quantiles, never Poisson-composed); 50/80 columns NaN by design (addendum 2 §3) |
 | calibration by age (H4) | `coverage_{50,80,95}_band{0_24,25_64,65_99}`, `pit_ks_band{0_24,25_64,65_99}`, `cov95_by_age` (JSON list, one entry per panel age = mean 95% hit indicator over horizons, `null` where masked) |
-| PIT | `pit_ks_stat`, `pit_hist` (JSON, 10 equal bins, sums to 1) |
+| PIT | `pit_ks_stat`, `pit_ks_pvalue` (nominal, DESCRIPTIVE only — PIT values are dependent across ages/horizons; addendum 2 §4), `pit_hist` (JSON, 10 equal bins, sums to 1) |
 | Murphy | `murphy_{reliability,resolution,uncertainty,brier}` — Murphy (1973) on the 95% hit indicators with the constant forecast 0.95: reliability = (0.95 − coverage)², resolution = 0 (degenerate by construction, reported because pre-registered); `murphy_pit_{reliability,resolution,uncertainty}` — Broecker (2009) divergence form on the PIT histogram with the uniform as reference, whose reliability is the χ²-type distance from uniformity |
 | per horizon (DM loss series) | `crps_h{k}, logscore_h{k}, coverage95_h{k}, winkler95_h{k}`, k = 1..H of the regime; regimes with different H in one file leave the extra horizons NaN |
 | derived (H5) | `{e0,e65,ann65}_{point,q025,q975,obs,error}`, error = point − obs, from the horizon-1 sample table (ä65 at 2%) |

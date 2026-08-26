@@ -57,7 +57,12 @@ def build_panel(
     One row per (pop, year, age, sex) with deaths D and exposure E.
     Ages above `age_max` are dropped (HMD old-age estimates are model-smoothed
     and the 110+ open group needs special treatment; the study models 0..99).
-    Rows with E <= 0 or missing are dropped — Poisson offset log(E) undefined.
+    Rows with missing D or E are dropped. Rows with E == 0 are KEPT
+    (addendum 3 §1): the 2026-06-15 vintage's zero-exposure cells are
+    verified structural zeros (D == 0, Jan-1 population 0 at both Lexis
+    corners) and carry weight 1{E > 0} inside every model; dropping them
+    punched holes in the year x age pivot that crashed the runner. ``mx`` is
+    NaN on those rows — no rate exists where nobody was alive.
     """
     d = read_bulk_1x1(deaths_path, pops)
     e = read_bulk_1x1(exposures_path, pops)
@@ -65,7 +70,6 @@ def build_panel(
     long_e = e.melt(["pop", "year", "age"], ["female", "male"], "sex", "E")
     panel = long_d.merge(long_e, on=["pop", "year", "age", "sex"], how="inner")
     panel = panel[panel["age"] <= age_max]
-    panel = panel.dropna(subset=["D", "E"])
-    panel = panel[panel["E"] > 0].reset_index(drop=True)
-    panel["mx"] = panel["D"] / panel["E"]
+    panel = panel.dropna(subset=["D", "E"]).reset_index(drop=True)
+    panel["mx"] = np.where(panel["E"] > 0, panel["D"] / panel["E"].replace(0.0, np.nan), np.nan)
     return panel

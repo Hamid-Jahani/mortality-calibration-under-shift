@@ -47,4 +47,6 @@ def test_panel_drops_bad_exposures_and_caps_age():
     panel = build_panel(DEATHS, EXPOS, pops=["AUS"])
     assert panel["age"].max() == 99
     assert (panel["E"] > 0).all()
-    assert panel["mx"].notna().all()
+    # mx is NaN exactly on structural E == 0 rows (addendum 3 §1)
+    assert panel.loc[panel["E"] > 0, "mx"].notna().all()
+    assert panel.loc[panel["E"] == 0, "mx"].isna().all()

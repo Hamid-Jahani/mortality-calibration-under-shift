@@ -68,7 +68,11 @@ class PoissonBootstrap:
         """
         rng = rng if rng is not None else np.random.default_rng(20260825)
         self.base = self.model_cls(**self.model_kwargs).fit(D, E)
-        D_hat = np.asarray(E, dtype=float) * self.base.fitted_mx()
+        E = np.asarray(E, dtype=float)
+        # Structural E = 0 cells (addendum 3 §1): the Poisson mean is exactly
+        # 0 whatever the fitted surface says there (SVAR's is NaN — the level
+        # is unobservable at a cell nobody occupied). 0, not 0 * NaN.
+        D_hat = np.where(E > 0, E * self.base.fitted_mx(), 0.0)
         self.refits = [
             self.model_cls(**self.model_kwargs).fit(rng.poisson(D_hat).astype(float), E)
             for _ in range(self.B)
