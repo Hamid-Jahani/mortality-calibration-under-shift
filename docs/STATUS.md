@@ -66,17 +66,18 @@ alternative. The paper's spine: the crossed family × mechanism design
 (Schnürch–Korn state verbatim they held the mechanism fixed) + conformal arms
 (0 corpus hits in mortality) + H3's measurement + H5's audit.
 
-## OPEN — the one decision above code level
+## DECIDED 2026-08-26 — build the missing five families
 
-**Title promises 10 families × 7 mechanisms; the runner implements 5 × 5 —
-exactly 25 of GRID.md's 50 primary cells.** The two missing mechanisms (deep
-ensemble, MC dropout) are inadmissible on all five classical rows, so they
-exist only on the five unbuilt families (multi-output GP, neural-LC, CNN-LC,
-LSTM-k_t, NB head). No cheap path to "seven mechanisms" exists. Either build
-the neural/GP axis (STATUS items below) or retitle. **Decide before the first
-real sweep** — it determines whether that sweep is production or a 25-cell
-pilot. (Compute is not the constraint: measured ~98 min single-core for all
-three regimes, ~11 min on 8 cores.)
+**User decision: keep the tournament-locked title and build the family axis**
+(multi-output GP, neural-LC Richman–Wüthrich, shallow CNN-LC Perla, LSTM-on-
+k_t, distributional NB head) plus the deep-ensemble (M=10) and MC-dropout
+mechanisms that exist only on those rows. The classical sweep WAITS and runs
+once, as production, when the grid is complete (~11 min on 8 cores; compute
+is not the constraint). Sequence: environment repair (uv + .venv with torch,
+pinned 3.12) → written spec per family (hyperparameters tune on inner TIME
+splits; every family emits sample paths through the single interface; per-
+family validation gates on synthetic truth) → implement → gates → production
+sweeps.
 
 ## Then
 
