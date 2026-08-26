@@ -36,16 +36,24 @@ FIRST_YEAR = 1940     # synthetic panel years FIRST_YEAR .. FIRST_YEAR+T_TRAIN+H
 
 BAND_TAGS = [f"band{lo}_{hi}" for lo, hi in AGE_BANDS]
 SCALAR_KEYS = {
-    "n_ages_scored", "n_cells",
+    "n_ages_scored", "n_cells", "n_zero_death_cells",
     "rmse_logmx", "mae_logmx", "crps_logmx", "crps_counts", "poisson_log_score",
     "coverage_50", "coverage_80", "coverage_95",
     "winkler_50", "winkler_80", "winkler_95",
-    "joint_path_coverage_95", "pit_ks_stat",
+    "joint_path_coverage_95", "pit_ks_stat", "pit_ks_pvalue",
     "murphy_reliability", "murphy_resolution", "murphy_uncertainty", "murphy_brier",
     "murphy_pit_reliability", "murphy_pit_resolution", "murphy_pit_uncertainty",
 }
 BAND_KEYS = ({f"coverage_{lvl}_{b}" for lvl in (50, 80, 95) for b in BAND_TAGS}
              | {f"pit_ks_{b}" for b in BAND_TAGS})
+INT_KEYS = ("n_ages_scored", "n_cells", "n_zero_death_cells")
+
+#: PREREGISTRATION-ADDENDUM-2 §3 — a conformal mechanism constructs ONE
+#: interval, at 95%. Its 50% / 80% columns are registered not-applicable, so
+#: they are NaN by design rather than missing or zero.
+CONFORMAL_NA_KEYS = ({f"coverage_{lvl}" for lvl in (50, 80)}
+                     | {f"winkler_{lvl}" for lvl in (50, 80)}
+                     | {f"coverage_{lvl}_{b}" for lvl in (50, 80) for b in BAND_TAGS})
 DERIVED_KEYS = {f"{q}_{s}" for q in ("e0", "e65", "ann65")
                 for s in ("point", "q025", "q975", "obs", "error")}
 JSON_KEYS = {"cov95_by_age", "pit_hist"}
@@ -103,7 +111,15 @@ def _synthetic_panel(pops=("SYN_A", "SYN_B"), sex="f"):
 
 
 def _assert_types(out, mechanism, nan_ok=()):
-    """Every value has the documented python type; floats finite unless listed."""
+    """Every value has the documented python type; floats finite unless listed.
+
+    Conformal mechanisms carry the addendum-2 §3 not-applicable columns, which
+    are NaN by design; they are added to ``nan_ok`` automatically so no caller
+    has to remember.
+    """
+    nan_ok = set(nan_ok)
+    if mechanism in CONFORMAL_MECHANISMS:
+        nan_ok |= CONFORMAL_NA_KEYS
     for k, v in out.items():
         if k == "scores_secondary":
             assert isinstance(v, bool)
@@ -111,7 +127,7 @@ def _assert_types(out, mechanism, nan_ok=()):
         elif k in JSON_KEYS:
             assert isinstance(v, str)
             json.loads(v)
-        elif k in ("n_ages_scored", "n_cells"):
+        elif k in INT_KEYS:
             assert isinstance(v, int)
         else:
             assert isinstance(v, float), f"{k} is {type(v)}"
@@ -309,8 +325,15 @@ def test_run_regime_miniature_synthetic_sweep(tmp_path):
     key_cols = ["regime", "pop", "sex", "origin", "model", "mechanism"]
     assert not back.duplicated(subset=key_cols).any()
     numeric = expected_keys(3) - {"scores_secondary"} - JSON_KEYS
+    is_conf = back["mechanism"].isin(list(CONFORMAL_MECHANISMS))
     for k in numeric:
-        assert np.isfinite(back[k].astype(float)).all(), k
+        col = back[k].astype(float)
+        if k in CONFORMAL_NA_KEYS:
+            # addendum 2 §3: N/A on conformal rows, finite everywhere else
+            assert np.isfinite(col[~is_conf]).all(), k
+            assert col[is_conf].isna().all(), k
+        else:
+            assert np.isfinite(col).all(), k
     assert set(back.columns) >= expected_keys(3)
     assert (back["n_cells"] == 3 * N_AGES).all()
     assert back["scores_secondary"].astype(bool).eq(

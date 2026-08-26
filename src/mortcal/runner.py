@@ -28,7 +28,8 @@ refit downstream):
 scalar means                 rmse_logmx, mae_logmx, crps_logmx, crps_counts,
                              poisson_log_score, coverage_{50,80,95},
                              winkler_{50,80,95}, joint_path_coverage_95,
-                             pit_ks_stat, n_cells, n_ages_scored
+                             pit_ks_stat, pit_ks_pvalue, n_cells,
+                             n_ages_scored, n_zero_death_cells
 calibration by age (H4)      coverage_{50,80,95}_band{0_24,25_64,65_99},
                              pit_ks_band{0_24,25_64,65_99},
                              cov95_by_age (JSON list, one entry per panel
@@ -44,6 +45,19 @@ derived (H5)                 {e0,e65,ann65}_{point,q025,q975,obs,error}
 flags                        scores_secondary (bool)
 ===========================  ==================================================
 
+Scoring target (PREREGISTRATION-ADDENDUM-2)
+-------------------------------------------
+Rate-scale scores evaluate the predictive law of the OBSERVED rate, not the
+latent one. Predictive m_x paths are made Poisson-inclusive — D* ~ Poisson(E
+m_x*) on the model's own paths — and both sides of every rate-scale score use
+the half-count continuity correction log(max(D, 0.5) / E). Scoring latent
+samples against observed crude rates counts observation noise as
+miscalibration: a correctly-specified Poisson-LC measured 0.10 / 0.19 / 0.28
+against nominal 0.50 / 0.80 / 0.95 before this was fixed, and mechanisms
+fitted or calibrated on observed residuals (SVAR, every conformal arm)
+absorbed that noise and ranked better for a reason unrelated to any shift.
+``n_zero_death_cells`` reports how many test cells carried the correction.
+
 Conformal cells and proper scores
 ---------------------------------
 The conformal wrappers emit samples drawn UNIFORMLY inside their intervals
@@ -53,6 +67,12 @@ from those samples are placeholders, not distributional claims. Every row
 therefore carries a boolean ``scores_secondary`` column — True for conformal
 mechanisms — and proper scores from flagged rows must never be ranked against
 distributional mechanisms (they go to a flagged appendix table only).
+
+A conformal mechanism is scored at its CONSTRUCTION level only (95%); the
+``coverage_{50,80}``, ``winkler_{50,80}`` and ``coverage_{50,80}_band*``
+columns are NaN on those rows (addendum 2 §3). Reading 50% / 80% quantiles
+out of uniform-in-interval samples would describe the uniform filler rather
+than a calibrated forecast, and would flatter these arms.
 
 Undefined ages and masking
 --------------------------
@@ -85,6 +105,7 @@ from scipy import stats
 
 from .eval import (
     crps_counts,
+    log_crude_rate,
     crps_sample,
     interval_coverage,
     joint_path_coverage,
@@ -234,6 +255,21 @@ def _ks_uniform(x: np.ndarray) -> float:
     """KS distance of x from Uniform(0, 1); NaN on an empty set."""
     x = np.asarray(x, dtype=float).ravel()
     return float(stats.kstest(x, "uniform").statistic) if x.size else float("nan")
+
+
+def _ks_uniform_pvalue(x: np.ndarray) -> float:
+    """Nominal KS p-value against Uniform(0, 1) — DESCRIPTIVE ONLY.
+
+    Registered by addendum 2 §4. The KS null assumes independent draws; PIT
+    values across ages and horizons within a population are strongly
+    dependent (one shared kappa path, neighbouring ages nearly collinear), so
+    this p-value is anti-conservative and is reported as a descriptive
+    companion to the statistic, never as a test. Formal inference on
+    calibration uses the population-clustered procedures in
+    ``mortcal.inference``.
+    """
+    x = np.asarray(x, dtype=float).ravel()
+    return float(stats.kstest(x, "uniform").pvalue) if x.size else float("nan")
 
 
 def _json_list(values: np.ndarray) -> str:
@@ -417,8 +453,9 @@ def run_cell(
         raise ValueError(f"sample_mx returned {samples_mx.shape}, expected "
                          f"{(n_samples, h, n_ages)}")
 
+    # Observed rate scale: half-count continuity correction (addendum 2 §2).
     with np.errstate(divide="ignore", invalid="ignore"):
-        truth_full = np.log(np.clip(obs_D / obs_E, _RATE_FLOOR, None))   # [h, n_ages]
+        truth_full = log_crude_rate(obs_D, obs_E)                         # [h, n_ages]
 
     # --- age mask: score only ages defined in every sample and observation ---
     age_ok = (np.isfinite(samples_mx).all(axis=(0, 1))
@@ -430,13 +467,25 @@ def run_cell(
     contiguous = bool(age_ok[first_ok:].all())
     n_ok = int(age_ok.sum())
 
-    log_samples = np.log(np.clip(samples_mx[:, :, age_ok], _RATE_FLOOR, None))
+    # --- rate-scale predictive samples are POISSON-INCLUSIVE (addendum 2 §1) ---
+    # The scored quantity is the OBSERVED crude rate, which carries Poisson
+    # sampling noise; latent m_x* samples do not. Composing D* ~ Poisson(E m_x*)
+    # on the model's own paths and converting to log crude rates gives the
+    # predictive law of the quantity actually observed. Without this a
+    # correctly-specified model is scored as badly miscalibrated (measured:
+    # 0.10 / 0.19 / 0.28 against nominal 0.50 / 0.80 / 0.95), and mechanisms
+    # fitted or calibrated on observed residuals — SVAR, every conformal arm —
+    # absorb the noise and look better for a reason unrelated to the shift.
+    E_scored = E_fut[None, :, age_ok]
+    lam_rate = np.clip(samples_mx[:, :, age_ok] * E_scored, 0.0, None)
+    log_samples = log_crude_rate(rng.poisson(lam_rate).astype(float), E_scored)
     truth = truth_full[:, age_ok]                                         # [h, n_ok]
     bands = [(tag, mask[age_ok]) for tag, mask in _band_masks(n_ages)]
 
     out: dict[str, float | int | bool | str] = {
         "n_ages_scored": n_ok,
         "n_cells": int(h * n_ok),
+        "n_zero_death_cells": int((obs_D[:, age_ok] == 0).sum()),
     }
 
     # --- point metrics (pointwise median, see Notes) and proper scores ---
@@ -454,10 +503,26 @@ def run_cell(
     out["crps_counts"] = float(np.mean(crps_counts(d_samp, obs_D[:, age_ok])))
 
     # --- interval metrics: overall and by age band (H4) ---
+    # A conformal mechanism constructs ONE interval, at its construction level
+    # (95%). Reading 50% / 80% quantiles out of uniform-in-interval samples
+    # would describe the uniform filler, not a calibrated forecast, and would
+    # flatter these arms: a uniform on [lo, hi] puts exactly 50% of its mass in
+    # the middle half, so coverage_50 would trend toward nominal by
+    # construction regardless of whether the interval is any good. Addendum 2
+    # §3 registers those columns as not-applicable for conformal cells.
+    is_conformal = mechanism in CONFORMAL_MECHANISMS
+    scored_levels = (0.95,) if is_conformal else LEVELS
+
     cov = {}
     wink95 = None
     for level in LEVELS:
         tag = f"{int(round(level * 100))}"
+        if level not in scored_levels:
+            out[f"coverage_{tag}"] = float("nan")
+            out[f"winkler_{tag}"] = float("nan")
+            for btag, _sel in bands:
+                out[f"coverage_{tag}_{btag}"] = float("nan")
+            continue
         covered, _width = interval_coverage(log_samples, truth, level)    # [h, n_ok]
         wink = winkler_score(log_samples, truth, level)
         cov[level] = covered.astype(float)
@@ -475,6 +540,7 @@ def run_cell(
     # --- PIT: overall, by band, and the Murphy decompositions ---
     pit = pit_values(log_samples, truth, rng=rng)                         # [h, n_ok]
     out["pit_ks_stat"] = _ks_uniform(pit)
+    out["pit_ks_pvalue"] = _ks_uniform_pvalue(pit)                        # descriptive
     for btag, sel in bands:
         out[f"pit_ks_{btag}"] = _ks_uniform(pit[:, sel])
 

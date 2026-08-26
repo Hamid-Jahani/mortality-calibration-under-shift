@@ -2,6 +2,7 @@ from .scores import (
     crps_sample,
     crps_counts,
     round_deaths,
+    log_crude_rate,
     log_score_poisson,
     interval_coverage,
     winkler_score,
