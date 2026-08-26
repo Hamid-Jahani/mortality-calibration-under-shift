@@ -56,6 +56,36 @@ def round_deaths(deaths: np.ndarray) -> np.ndarray:
     return np.floor(np.asarray(deaths, dtype=float) + 0.5)
 
 
+#: Half-count continuity correction for zero-death cells (addendum 2 §2).
+HALF_COUNT = 0.5
+
+
+def log_crude_rate(deaths: np.ndarray, exposure: np.ndarray) -> np.ndarray:
+    """Log crude death rate log(max(D, 0.5) / E) — the rate-scale convention.
+
+    A cell with zero observed deaths has no finite log rate. The alternatives
+    are to drop it, to floor the RATE, or to floor the COUNT; PREREGISTRATION
+    -ADDENDUM-2 §2 registers the last of these, the standard demographic
+    half-count continuity correction, and forbids dropping.
+
+    Flooring the rate is what this function replaces, and it was not a
+    cosmetic choice. With the old 1e-10 rate floor a zero-death cell scored
+    as log(1e-10) = -23.03 instead of log(0.5/E) ~ -8.3 — finite, so the age
+    mask kept it, and roughly 85x the normal squared error. In the 2020-2024
+    test window that is 10.4% of cells for ISL and LUX (52 of 500 each), both
+    of which are in SHIFT_POPS: their rate-scale metrics would have been
+    dominated by the floor rather than by mortality, and the damage would
+    have concentrated at young ages and in small populations — exactly the
+    pattern H4 predicts, which is how an artefact gets read as a finding.
+
+    Applied to BOTH sides of every rate-scale score: the observed rate and
+    the Poisson-inclusive predictive samples share this convention, so the
+    correction cancels rather than biasing the comparison.
+    """
+    d = np.maximum(np.asarray(deaths, dtype=float), HALF_COUNT)
+    return np.log(d / np.asarray(exposure, dtype=float))
+
+
 def log_score_poisson(lam: np.ndarray, deaths: np.ndarray) -> np.ndarray:
     """Negative Poisson log predictive density for observed death counts.
 
