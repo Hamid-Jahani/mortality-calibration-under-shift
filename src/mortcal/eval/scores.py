@@ -72,11 +72,14 @@ def log_crude_rate(deaths: np.ndarray, exposure: np.ndarray) -> np.ndarray:
     cosmetic choice. With the old 1e-10 rate floor a zero-death cell scored
     as log(1e-10) = -23.03 instead of log(0.5/E) ~ -8.3 — finite, so the age
     mask kept it, and roughly 85x the normal squared error. In the 2020-2024
-    test window that is 10.4% of cells for ISL and LUX (52 of 500 each), both
-    of which are in SHIFT_POPS: their rate-scale metrics would have been
-    dominated by the floor rather than by mortality, and the damage would
-    have concentrated at young ages and in small populations — exactly the
-    pattern H4 predicts, which is how an artefact gets read as a finding.
+    test window, ages 0-99, the SEX-SPECIFIC counts the runner actually sees
+    are ISL female 117/500 (23.4%), ISL male 68/500, LUX female 110/500
+    (22.0%), LUX male 72/500 — all four in SHIFT_POPS. (An earlier note cited
+    52/10.4%, computed on HMD's Total column, which the study never models.)
+    Their rate-scale metrics would have been dominated by the floor rather
+    than by mortality, and the damage would have concentrated at young ages
+    and in small populations — exactly the pattern H4 predicts, which is how
+    an artefact gets read as a finding.
 
     Applied to BOTH sides of every rate-scale score: the observed rate and
     the Poisson-inclusive predictive samples share this convention, so the

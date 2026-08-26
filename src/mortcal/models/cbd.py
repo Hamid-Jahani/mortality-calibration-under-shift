@@ -105,16 +105,36 @@ class CBD:
         self.fit_mask[self._out_pos] = True
         D, E = D[rows], E[rows]
 
-        m_hat = np.clip(D / E, _EPS, None)
+        # Half-count for zero-death cells (addendum 2 §2); weight 0 for
+        # structural E = 0 cells (addendum 3 §1) — their logit is undefined.
+        with np.errstate(divide="ignore", invalid="ignore"):
+            m_hat = np.where(E > 0, np.maximum(D, 0.5) / np.where(E > 0, E, 1.0), np.nan)
         q_hat = np.clip(1.0 - np.exp(-m_hat), _EPS, 1.0 - _EPS)
         y = np.log(q_hat) - np.log1p(-q_hat)                    # logit q, [ages, years]
+        Wobs = (E > 0).astype(float)
 
         self.ages = ages.astype(float)
         self.xbar = float(self.ages.mean())
         xc = self.ages - self.xbar
-        # OLS per year against centred age: intercept = column mean (sum xc = 0)
-        self.k1 = y.mean(axis=0)                                 # [years]
-        self.k2 = (xc[:, None] * y).sum(axis=0) / (xc ** 2).sum()
+        if Wobs.all():
+            # OLS per year against centred age: intercept = column mean (sum xc = 0)
+            self.k1 = y.mean(axis=0)                             # [years]
+            self.k2 = (xc[:, None] * y).sum(axis=0) / (xc ** 2).sum()
+        else:
+            # Weighted per-year 2-parameter solve; the centring shortcut is
+            # invalid once weights vary (sum of weighted xc != 0). Reduces to
+            # the branch above at unit weights.
+            yw = np.where(Wobs > 0, y, 0.0)
+            sw = Wobs.sum(axis=0)                                # [years]
+            sx = (Wobs * xc[:, None]).sum(axis=0)
+            sxx = (Wobs * (xc ** 2)[:, None]).sum(axis=0)
+            sy = yw.sum(axis=0)
+            sxy = (xc[:, None] * yw).sum(axis=0)
+            det = sw * sxx - sx ** 2
+            if np.any(det <= 0):
+                raise ValueError("a training year has too few observed ages for CBD")
+            self.k1 = (sxx * sy - sx * sxy) / det
+            self.k2 = (sw * sxy - sx * sy) / det
 
         K = np.column_stack([self.k1, self.k2])                  # [T, 2]
         Z = np.diff(K, axis=0)                                   # [T-1, 2] increments

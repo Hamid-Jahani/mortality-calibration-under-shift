@@ -41,12 +41,14 @@ SCALAR_KEYS = {
     "coverage_50", "coverage_80", "coverage_95",
     "winkler_50", "winkler_80", "winkler_95",
     "joint_path_coverage_95", "pit_ks_stat", "pit_ks_pvalue",
+    "derived_age_lo", "derived_age_hi",
     "murphy_reliability", "murphy_resolution", "murphy_uncertainty", "murphy_brier",
     "murphy_pit_reliability", "murphy_pit_resolution", "murphy_pit_uncertainty",
 }
 BAND_KEYS = ({f"coverage_{lvl}_{b}" for lvl in (50, 80, 95) for b in BAND_TAGS}
              | {f"pit_ks_{b}" for b in BAND_TAGS})
-INT_KEYS = ("n_ages_scored", "n_cells", "n_zero_death_cells")
+INT_KEYS = ("n_ages_scored", "n_cells", "n_zero_death_cells",
+            "derived_age_lo", "derived_age_hi")
 
 #: PREREGISTRATION-ADDENDUM-2 §3 — a conformal mechanism constructs ONE
 #: interval, at 95%. Its 50% / 80% columns are registered not-applicable, so

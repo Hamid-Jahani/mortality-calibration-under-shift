@@ -123,9 +123,17 @@ class RenshawHaberman:
         if not np.all(np.diff(ridx) == 1):
             raise ValueError("retained cohorts are not contiguous")
         W = retained[cidx].astype(float)                         # StMoMo clip weights
+        # Addendum 3 §1: structural E = 0 cells carry weight 0 (their Poisson
+        # contribution is identically zero); zero-death observed cells enter
+        # the INITIALISER on the half-count scale (addendum 2 §2) instead of
+        # a 1e-10 floor whose log = -23.03 wrecked the first Newton step.
+        W = W * (E > 0)
 
-        mx = np.clip(D / E, 1e-10, None)
-        a = np.log(mx).mean(axis=1)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            init_rate = np.where(E > 0, np.maximum(D, 0.5) / np.where(E > 0, E, 1.0), np.nan)
+        a = np.nanmean(np.log(init_rate), axis=1)
+        if not np.isfinite(a).all():
+            raise ValueError("some age has no observed (E > 0) training cell")
         b = np.full(n_a, 1.0 / n_a)
         k = np.zeros(n_t)
         g = np.zeros(n_c)
@@ -135,7 +143,7 @@ class RenshawHaberman:
 
         def loglik(Dh):
             # W masks excluded-cohort cells; D=0 cells contribute -Dh only
-            return float((W * (np.where(D > 0, D * np.log(Dh), 0.0) - Dh)).sum())
+            return float((W * (np.where(D > 0, D * np.log(np.where(D > 0, Dh, 1.0)), 0.0) - Dh)).sum())
 
         ll_prev = -np.inf
         step = 1.0

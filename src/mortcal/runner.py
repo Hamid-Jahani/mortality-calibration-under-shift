@@ -106,6 +106,7 @@ from scipy import stats
 from .eval import (
     crps_counts,
     log_crude_rate,
+    round_deaths,
     crps_sample,
     interval_coverage,
     joint_path_coverage,
@@ -320,14 +321,17 @@ def _derived_quantities(samples_mx: np.ndarray, obs_D: np.ndarray,
     """
     n_ages = samples_mx.shape[2]
     x_old = min(65, n_ages - 1)          # clamp only fires on truncated synthetic panels
-    obs_full = np.clip(obs_D[0] / obs_E[0], _RATE_FLOOR, None)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        obs_full = np.clip(np.where(obs_E[0] > 0, obs_D[0] / np.where(obs_E[0] > 0, obs_E[0], 1.0), np.nan),
+                           _RATE_FLOOR, None)
     mx1 = samples_mx[:, 0, first_ok:]                                      # [n, n_scored]
     for key, age, fn in (
         ("e0", 0, lambda m, x: life_expectancy(m, x)),
         ("e65", x_old, lambda m, x: life_expectancy(m, x)),
         ("ann65", x_old, lambda m, x: annuity_factor(m, x0=x, i=0.02)),
     ):
-        obs_val = float(fn(obs_full, age))
+        obs_val = (float(fn(obs_full, age))
+                   if np.isfinite(obs_full[age:]).all() else float("nan"))
         idx = age - first_ok
         # idx >= 1 whenever the table is truncated: the truncated table's row 0
         # takes the infant a_0 rule, which must stay strictly below x.
@@ -453,9 +457,15 @@ def run_cell(
         raise ValueError(f"sample_mx returned {samples_mx.shape}, expected "
                          f"{(n_samples, h, n_ages)}")
 
-    # Observed rate scale: half-count continuity correction (addendum 2 §2).
+    # Observed rate scale: registered half-up rounding THEN the half-count
+    # correction (addendum 3 §5) — the predictive samples are integer Poisson
+    # draws, and scoring fractional Lexis-split deaths against that lattice
+    # makes a perfectly calibrated forecast look miscalibrated (measured PIT
+    # KS 0.019 -> 0.133 at lambda = 2). Both sides now share one lattice.
+    # E = 0 test cells (structural zeros, addendum 3 §3) come out non-finite
+    # and are age-masked below.
     with np.errstate(divide="ignore", invalid="ignore"):
-        truth_full = log_crude_rate(obs_D, obs_E)                         # [h, n_ages]
+        truth_full = log_crude_rate(round_deaths(obs_D), obs_E)           # [h, n_ages]
 
     # --- age mask: score only ages defined in every sample and observation ---
     age_ok = (np.isfinite(samples_mx).all(axis=(0, 1))
@@ -467,25 +477,36 @@ def run_cell(
     contiguous = bool(age_ok[first_ok:].all())
     n_ok = int(age_ok.sum())
 
-    # --- rate-scale predictive samples are POISSON-INCLUSIVE (addendum 2 §1) ---
-    # The scored quantity is the OBSERVED crude rate, which carries Poisson
-    # sampling noise; latent m_x* samples do not. Composing D* ~ Poisson(E m_x*)
-    # on the model's own paths and converting to log crude rates gives the
-    # predictive law of the quantity actually observed. Without this a
-    # correctly-specified model is scored as badly miscalibrated (measured:
-    # 0.10 / 0.19 / 0.28 against nominal 0.50 / 0.80 / 0.95), and mechanisms
-    # fitted or calibrated on observed residuals — SVAR, every conformal arm —
-    # absorb the noise and look better for a reason unrelated to the shift.
-    E_scored = E_fut[None, :, age_ok]
-    lam_rate = np.clip(samples_mx[:, :, age_ok] * E_scored, 0.0, None)
-    log_samples = log_crude_rate(rng.poisson(lam_rate).astype(float), E_scored)
+    is_conformal = mechanism in CONFORMAL_MECHANISMS
+    if is_conformal:
+        # Addendum 3 §6: conformal radii are calibrated on OBSERVED residuals
+        # and already contain observation noise — composing Poisson noise on
+        # top double-counts it (measured +150.7% width at lambda = 10). The
+        # uniform-in-interval samples feed only the flagged-secondary proper
+        # scores; interval metrics come from the wrapper's own bounds below.
+        log_samples = np.log(samples_mx[:, :, age_ok])
+    else:
+        # Rate-scale predictive samples are POISSON-INCLUSIVE (addendum 2 §1):
+        # the scored quantity is the OBSERVED crude rate, which carries Poisson
+        # sampling noise; latent m_x* samples do not. Composing
+        # D* ~ Poisson(E m_x*) on the model's own paths gives the predictive
+        # law of the quantity actually observed. Without this a correctly-
+        # specified model is scored as badly miscalibrated (measured: 0.10 /
+        # 0.19 / 0.28 against nominal 0.50 / 0.80 / 0.95).
+        E_scored = E_fut[None, :, age_ok]
+        lam_rate = np.clip(samples_mx[:, :, age_ok] * E_scored, 0.0, None)
+        log_samples = log_crude_rate(rng.poisson(lam_rate).astype(float), E_scored)
     truth = truth_full[:, age_ok]                                         # [h, n_ok]
     bands = [(tag, mask[age_ok]) for tag, mask in _band_masks(n_ages)]
 
     out: dict[str, float | int | bool | str] = {
         "n_ages_scored": n_ok,
         "n_cells": int(h * n_ok),
-        "n_zero_death_cells": int((obs_D[:, age_ok] == 0).sum()),
+        # Addendum 3 §10: pre-mask, full panel, at the half-count threshold —
+        # the count must describe the DATA, not the model's age mask (CBD
+        # reported 0 for every population), and HMD fractional deaths make
+        # "== 0" under-count by 43% in the placebo.
+        "n_zero_death_cells": int((obs_D < 0.5).sum()),
     }
 
     # --- point metrics (pointwise median, see Notes) and proper scores ---
@@ -503,39 +524,54 @@ def run_cell(
     out["crps_counts"] = float(np.mean(crps_counts(d_samp, obs_D[:, age_ok])))
 
     # --- interval metrics: overall and by age band (H4) ---
-    # A conformal mechanism constructs ONE interval, at its construction level
-    # (95%). Reading 50% / 80% quantiles out of uniform-in-interval samples
-    # would describe the uniform filler, not a calibrated forecast, and would
-    # flatter these arms: a uniform on [lo, hi] puts exactly 50% of its mass in
-    # the middle half, so coverage_50 would trend toward nominal by
-    # construction regardless of whether the interval is any good. Addendum 2
-    # §3 registers those columns as not-applicable for conformal cells.
-    is_conformal = mechanism in CONFORMAL_MECHANISMS
-    scored_levels = (0.95,) if is_conformal else LEVELS
-
-    cov = {}
-    wink95 = None
-    for level in LEVELS:
-        tag = f"{int(round(level * 100))}"
-        if level not in scored_levels:
+    # A conformal mechanism constructs ONE interval, at its construction
+    # level. Addendum 3 §6: its coverage and Winkler come from the interval
+    # BOUNDS themselves — never from quantiles of the uniform-in-interval
+    # samples, whose empirical quantiles shrink the interval (measured:
+    # split-conformal marginal/joint 0.995/0.957 from sample quantiles vs
+    # 0.960/0.740 on its own bounds — the H3 gap understated 6x). The 50% /
+    # 80% columns are not-applicable (addendum 2 §3): a uniform on [lo, hi]
+    # puts exactly half its mass in the middle half by construction.
+    if is_conformal:
+        alpha = float(est.alpha)
+        if abs((1.0 - alpha) - 0.95) > 1e-9:
+            raise ValueError(f"conformal construction level {1 - alpha:.3f} "
+                             "does not match the registered 95% columns")
+        lo, hi = est.interval(h)                                          # [h, n_ages]
+        lo, hi = lo[:, age_ok], hi[:, age_ok]
+        covered = (truth >= lo) & (truth <= hi)                           # [h, n_ok]
+        wink95 = ((hi - lo)
+                  + (2.0 / alpha) * np.where(truth < lo, lo - truth, 0.0)
+                  + (2.0 / alpha) * np.where(truth > hi, truth - hi, 0.0))
+        cov95 = covered.astype(float)
+        out["coverage_95"] = float(covered.mean())
+        out["winkler_95"] = float(wink95.mean())
+        for btag, sel in bands:
+            out[f"coverage_95_{btag}"] = _mean_or_nan(cov95[:, sel])
+        for tag in ("50", "80"):
             out[f"coverage_{tag}"] = float("nan")
             out[f"winkler_{tag}"] = float("nan")
             for btag, _sel in bands:
                 out[f"coverage_{tag}_{btag}"] = float("nan")
-            continue
-        covered, _width = interval_coverage(log_samples, truth, level)    # [h, n_ok]
-        wink = winkler_score(log_samples, truth, level)
-        cov[level] = covered.astype(float)
-        out[f"coverage_{tag}"] = float(np.mean(covered))
-        out[f"winkler_{tag}"] = float(np.mean(wink))
-        for btag, sel in bands:
-            out[f"coverage_{tag}_{btag}"] = _mean_or_nan(covered[:, sel])
-        if level == 0.95:
-            wink95 = wink
-    cov95 = cov[0.95]
+        out["joint_path_coverage_95"] = float(covered.all(axis=0).mean())
+    else:
+        cov = {}
+        wink95 = None
+        for level in LEVELS:
+            tag = f"{int(round(level * 100))}"
+            covered, _width = interval_coverage(log_samples, truth, level)  # [h, n_ok]
+            wink = winkler_score(log_samples, truth, level)
+            cov[level] = covered.astype(float)
+            out[f"coverage_{tag}"] = float(np.mean(covered))
+            out[f"winkler_{tag}"] = float(np.mean(wink))
+            for btag, sel in bands:
+                out[f"coverage_{tag}_{btag}"] = _mean_or_nan(covered[:, sel])
+            if level == 0.95:
+                wink95 = wink
+        cov95 = cov[0.95]
 
-    out["joint_path_coverage_95"] = float(
-        joint_path_coverage(log_samples, truth, 0.95))
+        out["joint_path_coverage_95"] = float(
+            joint_path_coverage(log_samples, truth, 0.95))
 
     # --- PIT: overall, by band, and the Murphy decompositions ---
     pit = pit_values(log_samples, truth, rng=rng)                         # [h, n_ok]
@@ -565,7 +601,16 @@ def run_cell(
     out["cov95_by_age"] = _json_list(curve)
 
     # --- derived actuarial quantities from the horizon-1 sample table (H5) ---
-    _derived_quantities(samples_mx, obs_D, obs_E, first_ok, contiguous, out)
+    # Addendum 3 §3: derived quantities live on the maximal contiguous scored
+    # block starting at first_ok (a structural-zero test cell at the top age
+    # truncates the table on BOTH the predictive and the observed side, and
+    # the range is reported).
+    hole = np.flatnonzero(~age_ok[first_ok:])
+    top_ok = first_ok + int(hole[0]) - 1 if hole.size else n_ages - 1
+    out["derived_age_lo"] = int(first_ok)
+    out["derived_age_hi"] = int(top_ok)
+    _derived_quantities(samples_mx[:, :, :top_ok + 1], obs_D[:, :top_ok + 1],
+                        obs_E[:, :top_ok + 1], first_ok, True, out)
 
     out["scores_secondary"] = mechanism in CONFORMAL_MECHANISMS
     return out
@@ -595,6 +640,18 @@ def _pivot_matrices(sub: pd.DataFrame, train_max_year: int,
     missing = [y for y in test_years if y not in set(int(v) for v in years)]
     if missing:
         raise ValueError(f"test years missing from panel: {missing}")
+    # Addendum 3 §2: the training window is the maximal CONTIGUOUS block of
+    # years ending at the origin. BEL's 1914-1918 gap (missing at every age)
+    # previously vanished as absent pivot columns, splicing 1913 onto 1919 —
+    # one silent random-walk step across five years and a five-year cohort
+    # mislabel in RH.
+    gaps = np.flatnonzero(np.diff(np.asarray(train_years)) > 1)
+    if gaps.size:
+        train_years = train_years[gaps[-1] + 1:]
+    # Addendum 3 §4: admissibility floor.
+    if len(train_years) < 15:
+        raise ValueError(f"inadmissible: n_train={len(train_years)} < 15 "
+                         "contiguous training years (addendum 3 §4)")
     D = piv_D[train_years].to_numpy(dtype=float)
     E = piv_E[train_years].to_numpy(dtype=float)
     obs_D = piv_D[list(test_years)].to_numpy(dtype=float).T

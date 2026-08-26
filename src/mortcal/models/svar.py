@@ -63,16 +63,30 @@ class SparseVAR:
     # ------------------------------------------------------------------ fit
     def fit(self, D: np.ndarray, E: np.ndarray) -> "SparseVAR":
         W = self.W
-        mx = np.clip(D / E, 1e-10, None)
-        logm = np.log(mx)                                # [ages, years]
+        # Half-count for zero-death cells (addendum 2 §2); structural E = 0
+        # cells are missing improvements handled by the common-complete
+        # subsample below (addendum 3 §1) — no PSD projection, no imputation.
+        with np.errstate(divide="ignore", invalid="ignore"):
+            rate = np.where(E > 0, np.maximum(D, 0.5) / np.where(E > 0, E, 1.0), np.nan)
+        logm = np.log(rate)                              # [ages, years], NaN at E=0
         n_age, n_year = logm.shape
         if n_year - 2 <= 2 * W + 2:
             raise ValueError(
                 f"need > {2 * W + 4} years for banded VAR with W={W}; got {n_year}"
             )
+        complete = np.isfinite(logm).all(axis=0)         # complete year-columns
+        if not (complete[-1] and complete[-2]):
+            raise ValueError("the last two training years must be complete "
+                             "(they set the VAR state at the origin)")
         Y = np.diff(logm, axis=1)                        # improvements [ages, T-1]
-        Ylag, Ynow = Y[:, :-1], Y[:, 1:]                 # regress t on t-1
-        nobs = Ynow.shape[1]                             # T-2 regression rows
+        # regression row t uses Y[:, t-1] and Y[:, t] -> needs year columns
+        # t-1, t, t+1 all complete (common-complete subsample, addendum 3 §1)
+        row_ok = complete[:-2] & complete[1:-1] & complete[2:]     # [T-2]
+        Ylag, Ynow = Y[:, :-1][:, row_ok], Y[:, 1:][:, row_ok]
+        nobs = Ynow.shape[1]                             # retained regression rows
+        if nobs <= 2 * W + 2:
+            raise ValueError(
+                f"only {nobs} complete regression rows for banded VAR with W={W}")
 
         self.n_age = n_age
         self._logm = logm.copy()                         # observed panel, for fitted_mx
@@ -123,12 +137,43 @@ class SparseVAR:
         W = self.W
         c = np.empty((n, self.n_age))
         B = np.zeros((n, self.n_age, 2 * W + 1))
-        for i, (lo, hi) in enumerate(self._bands):
-            p = self._beta[i].shape[0]
-            draw = self._beta[i] + rng.standard_normal((n, p)) @ self._beta_chol[i].T
-            c[:, i] = draw[:, 0]
-            B[:, i, lo - i + W: hi - i + W + 1] = draw[:, 1:]
-        return c, B
+
+        def _draw_into(idx: np.ndarray) -> None:
+            m = len(idx)
+            for i, (lo, hi) in enumerate(self._bands):
+                p = self._beta[i].shape[0]
+                d = self._beta[i] + rng.standard_normal((m, p)) @ self._beta_chol[i].T
+                c[idx, i] = d[:, 0]
+                B[idx, i, lo - i + W: hi - i + W + 1] = d[:, 1:]
+
+        _draw_into(np.arange(n))
+        # Addendum 3 §7: reject explosive draws (companion spectral radius
+        # >= 1) and redraw. OLS coefficient draws carry no stationarity
+        # constraint; on real panels unstable draws produced predictive m_x
+        # up to 3e45. Rates are NEVER clipped instead — clipping would turn
+        # divergence into a bounded interval and flatter SVAR's coverage.
+        for _ in range(100):
+            bad = np.flatnonzero(self._spectral_radius(B) >= 1.0)
+            if bad.size == 0:
+                return c, B
+            _draw_into(bad)
+        raise ValueError(
+            f"{bad.size}/{n} coefficient draws remain explosive after 100 redraws")
+
+    def _spectral_radius(self, B: np.ndarray) -> np.ndarray:
+        """|lambda|_max of each path's banded VAR(1) matrix, [n]."""
+        W = self.W
+        n = B.shape[0]
+        A = np.zeros((n, self.n_age, self.n_age))
+        for k in range(2 * W + 1):
+            d = k - W
+            if d < 0:
+                idx = np.arange(-d, self.n_age)
+                A[:, idx, idx + d] = B[:, -d:, k]
+            else:
+                idx = np.arange(0, self.n_age - d)
+                A[:, idx, idx + d] = B[:, : self.n_age - d if d else self.n_age, k]
+        return np.abs(np.linalg.eigvals(A)).max(axis=1)
 
     @staticmethod
     def _banded_dot(B: np.ndarray, y: np.ndarray, W: int) -> np.ndarray:
