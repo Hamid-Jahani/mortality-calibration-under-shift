@@ -1,0 +1,112 @@
+# .memory — operational state, 2026-08-27
+
+Fast pick-up for a session that has lost context. The *scientific* ledger is
+`docs/STATUS.md`; this file is how to RUN things and what is currently
+in flight. Registered documents are the authority over both:
+`PREREGISTRATION.md` + addenda 1–3 and `docs/PRIOR-ART.md`, all hash-stamped.
+
+## Run it
+
+```bash
+cd "h:/Mortality - Explainable AI"
+.venv/Scripts/python.exe -m pytest -q            # 159+ tests, ~100 s
+.venv/Scripts/python.exe scripts/check_parity.py # gate 2, StMoMo oracle
+```
+
+The venv works directly — no PYTHONPATH workaround any more (rebuilt
+2026-08-27). `uv` lives at `~/.local/bin/uv.exe` and is NOT on PATH in a
+fresh shell: `export PATH="$USERPROFILE/.local/bin:$PATH"`.
+`uv sync --group neural` installs torch 2.6.0+cu124 + gpytorch 1.15.2.
+
+**`torch.cuda.is_available()` is False on this machine** despite CLAUDE.md
+claiming a local NVIDIA GPU. Everything runs CPU. If a sweep ever needs GPU,
+fix the driver — do not change the code for it.
+
+## Environment traps (cost real time before)
+
+- `H:` repos need `git config --global --add safe.directory '<path>'` — the
+  tree was created under a Windows profile `C:\Users\Gaming` that no longer
+  exists. Same root cause broke the old venv (path baked into the uv
+  trampoline exe; patching `pyvenv.cfg` is NOT enough).
+- A killed `uv sync` leaves orphan uv processes holding the cache lock and a
+  half-written `.venv`. Recovery: kill all uv processes, `rm -rf .venv`, then
+  ONE clean `uv sync --group neural` in the background.
+- **Never run two `scripts/time_cells.py` at once** — they wrote the same
+  output file and silently interleaved results from different code states on
+  2026-08-27. The probe now takes an output path argument.
+
+## Current state
+
+Grid is the full 10x7: 50 primary + 4 secondary cells, transcribed cell by
+cell from `docs/GRID.md` into `runner.ADMISSIBLE`, with a `grid_secondary`
+column per row. Five classical families + GP, NeuralLC, CNN-LC, LSTM-on-k,
+NB head; mechanisms native / pboot / ensemble / dropout / split_conf /
+enbpi / copula_conf.
+
+Recent commits (newest first):
+```
+e4f63d7  conformal takes an age-restricted family; SVAR draw speed-up
+165abf1  multitask GP fits the real 100-age panel; analysis stage
+48b6d63  inference layer wired; one Poisson draw across scales
+28aa62a  neural/GP axis built, full 10x7 grid
+```
+
+## IN FLIGHT — nothing here is settled
+
+1. **Sweep-cost probe re-running** to `results/timings_clean.json`
+   (`scripts/time_cells.py`, SWE males = the 269-year panel, so upper
+   bounds). The earlier `results/timings.json` was DELETED as contaminated —
+   two overlapping runs mixed pre- and post-GP-fix numbers. Do not trust any
+   quoted timing that does not come from the clean file.
+   Reliable so far, same code state: classical cells 0.2–15 s; neural
+   ensembles ~640–830 s/cell; NB native ~85–120 s. `scripts/sweep_cost.py`
+   turns the file into per-regime wall time.
+2. **The full grid may not be affordable on this machine.** Classical 5x5 is
+   ~minutes per regime; the neural axis is 3 orders of magnitude worse and
+   `GP/split_conf` hit a 1.4 GB allocation failure at least once. Options
+   (reduce `n_median_samples` for GP, cap the GP's training window, run
+   neural on the high-RAM server, drop cells to secondary) are NOT decided.
+   If the GP window is capped: note a trailing 40-year window was measured
+   scoring BETTER than the full 269 (rmse 0.65 vs 1.19) **before** any cap
+   was chosen — so a cap justified by score would be outcome-driven. Justify
+   on feasibility and the source paper (Huynh–Ludkovski use 27 years) or not
+   at all, and disclose the prior observation.
+3. **Age-support comparability is an OPEN defect in the analysis stage.**
+   A synthetic end-to-end run put `CBD/native` alone in the MCS — CBD is fit
+   on ages 55+, so its CRPS mean is over 45 ages while LC/PLC average over
+   100. `losses_from_rows` restricts to common CELLS (addendum 3 §11) but
+   not to a common AGE SUPPORT. Cross-family score comparisons are not yet
+   apples-to-apples. Fix before any real-data ranking is reported.
+
+## Rules that are easy to break
+
+- Real-data runs need `allow_real=True` — the auditable act, kept
+  deliberately.
+- Never clip SVAR rates or Poisson means to rescue a divergent draw
+  (addendum 3 §7): rejection only, or divergence silently becomes a
+  flattering bounded interval.
+- `runner.py`'s `obs_full` keeps the 1e-10 rate floor ON PURPOSE — the
+  half-count there shifts ISL female 2020 e0 by −0.370 y, past gate 3's
+  0.15 y tolerance (addendum 3 §5 documents the split convention).
+- Losses are never imputed: `mortcal.inference` RAISES on non-finite input.
+  It used to invert the MCS silently under exactly the NaN pattern the
+  runner produces.
+- Do NOT resume workflow `wf_75bb90b5-839` (dead; clobbers manual fixes).
+- Do not commit `results/parity/D_*.csv` / `E_*.csv` (raw HMD, gitignored).
+
+## Numbers worth not re-deriving
+
+- Oracle parity after the weighted-fit rewrite: alpha 3.1e-15, beta 2.4e-14,
+  kappa 1.5e-13 vs R StMoMo.
+- Pre-addendum-2 coverage of a *correctly specified* model: 0.104 / 0.189 /
+  0.278 against nominal 0.50 / 0.80 / 0.95.
+- Conformal scored from sample quantiles vs its own bounds: marginal/joint
+  0.995/0.957 vs 0.960/0.740 — the H3 gap understated 6x.
+- Structural zeros in the shift training panel: 99 cells, 7 (pop,sex), ages
+  95–99, every one D=0 with Jan-1 population 0 at both Lexis corners.
+- Zero-death test cells 2020–24, sex-specific: ISL f 117 (23.4%), LUX f 110
+  (22.0%). NOT 52/10.4% — that was HMD's Total column, which is never
+  modelled.
+- Schnürch–Korn (2022) Table 3, the stable-regime prior art H2 must be
+  framed against: LC10 74.0, LC20 74.3, ACF 77.2, RNN 86.0, FFNN 97.0,
+  CNN 98.0 PICP at nominal 95%, ages 60–89, 2007–2016.

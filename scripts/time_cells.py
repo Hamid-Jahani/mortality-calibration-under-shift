@@ -34,7 +34,7 @@ def main():
     D, E, oD, oE = _pivot_matrices(sub, SHIFT.train_max_year, SHIFT.test_years)
     print(f"SWE male: train {D.shape}, test {oD.shape}", flush=True)
 
-    out_path = ROOT / "results" / "timings.json"
+    out_path = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "results" / "timings.json"
     out_path.parent.mkdir(exist_ok=True)
     res = {}
     for (m, u) in PROBES:

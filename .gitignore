@@ -79,3 +79,6 @@ Desktop.ini
 # fitted StMoMo parameter dump is our own work product and IS tracked
 results/parity/D_*.csv
 results/parity/E_*.csv
+
+# Sweep-cost probe output: measurements, regenerable, machine-specific
+results/timings*.json
