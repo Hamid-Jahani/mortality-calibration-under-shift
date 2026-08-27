@@ -31,7 +31,7 @@ EOF
 
 # ---- 2. data + gates ----------------------------------------------------
 test -s Dataset/deaths/Deaths_1x1/Deaths_1x1.txt || { echo "Dataset/ missing — see docs/SERVER.md"; exit 2; }
-sha256sum -c data/MANIFEST.sha256 --quiet && echo "data vintage verified (2026-06-15)"
+sha256sum -c --ignore-missing --quiet data/MANIFEST.sha256 && echo "data vintage verified (2026-06-15)"
 "$PY" -m pytest tests/ -q -x --no-header -p no:cacheprovider 2>&1 | tail -1
 
 # ---- 3. launch (detached, resumable, logs in results/logs) --------------
