@@ -307,23 +307,24 @@ def _json_list(values: np.ndarray) -> str:
     return json.dumps([float(v) if np.isfinite(v) else None for v in values])
 
 
-def _death_samples(est, samples_mx: np.ndarray, E_fut: np.ndarray,
-                   age_ok: np.ndarray, h: int, n_samples: int,
-                   rng: np.random.Generator) -> np.ndarray:
-    """[n, h, n_scored] predictive DEATH COUNTS for ``crps_counts``.
+def _compose_deaths(samples_mx: np.ndarray, E_scored: np.ndarray,
+                    age_ok: np.ndarray, rng: np.random.Generator) -> np.ndarray:
+    """[n, h, n_scored] predictive DEATH COUNTS: D* ~ Poisson(E m_x*).
 
-    Families exposing ``sample_deaths`` (Poisson-LC, RH) draw D ~ Poisson(m E)
-    on a fresh path set from their own predictive law. For everything else
-    (SVD-LC, CBD, SVAR, every wrapper) the same construction is composed here
-    on the paths already drawn: lam = sample_mx * E_future, D = Poisson(lam)
-    — literally what ``PoissonLeeCarter.sample_deaths`` does, so the count
-    scale is the Poisson predictive law for every cell. ``Generator.poisson``
-    rejects NaN means, hence the age mask is applied before composing.
+    ONE construction for every family. Poisson-LC and RH also expose a
+    ``sample_deaths`` shortcut, but that method redraws its own kappa paths,
+    so ``crps_counts`` would come from a different realisation than every
+    other column in its row — MC noise plus a cross-family asymmetry
+    affecting exactly the two families that have the method. Composing here
+    on the paths already drawn makes the count scale and the rate scale two
+    views of a SINGLE draw (addendum 2 §1: the count-scale construction is
+    the same one the rate scale uses).
+
+    ``Generator.poisson`` rejects NaN means, hence the age mask is applied
+    by the caller before composing.
     """
-    if hasattr(est, "sample_deaths") and bool(age_ok.all()):
-        return np.asarray(est.sample_deaths(E_fut, h, n_samples, rng), dtype=float)
-    lam = samples_mx[:, :, age_ok] * E_fut[None, :, age_ok]
-    return rng.poisson(np.clip(lam, 0.0, None)).astype(float)
+    lam = np.clip(samples_mx[:, :, age_ok] * E_scored, 0.0, None)
+    return rng.poisson(lam).astype(float)
 
 
 def _derived_quantities(samples_mx: np.ndarray, obs_D: np.ndarray,
@@ -445,7 +446,7 @@ def run_cell(
       ``log_score_poisson`` (the pre-registered convention for Lexis-split
       fractional deaths); ``crps_counts`` is its rounding-free sensitivity
       companion on sampled death counts against UNROUNDED observed deaths
-      (``_death_samples`` documents the count construction).
+      (``_compose_deaths`` documents the count construction).
     * **Murphy decomposition.** ``murphy_*`` applies Murphy (1973) to the
       95% interval-hit indicators with the constant forecast probability
       0.95 (classical exact form, one bin): reliability = (0.95 - empirical
@@ -505,6 +506,7 @@ def run_cell(
     contiguous = bool(age_ok[first_ok:].all())
     n_ok = int(age_ok.sum())
 
+    E_scored = E_fut[None, :, age_ok]
     is_conformal = mechanism in CONFORMAL_MECHANISMS
     if is_conformal:
         # Addendum 3 §6: conformal radii are calibrated on OBSERVED residuals
@@ -513,6 +515,7 @@ def run_cell(
         # uniform-in-interval samples feed only the flagged-secondary proper
         # scores; interval metrics come from the wrapper's own bounds below.
         log_samples = np.log(samples_mx[:, :, age_ok])
+        d_samp = _compose_deaths(samples_mx, E_scored, age_ok, rng)
     else:
         # Rate-scale predictive samples are POISSON-INCLUSIVE (addendum 2 §1):
         # the scored quantity is the OBSERVED crude rate, which carries Poisson
@@ -521,9 +524,9 @@ def run_cell(
         # law of the quantity actually observed. Without this a correctly-
         # specified model is scored as badly miscalibrated (measured: 0.10 /
         # 0.19 / 0.28 against nominal 0.50 / 0.80 / 0.95).
-        E_scored = E_fut[None, :, age_ok]
-        lam_rate = np.clip(samples_mx[:, :, age_ok] * E_scored, 0.0, None)
-        log_samples = log_crude_rate(rng.poisson(lam_rate).astype(float), E_scored)
+        # ONE draw, two scales: crps_counts scores these very counts.
+        d_samp = _compose_deaths(samples_mx, E_scored, age_ok, rng)
+        log_samples = log_crude_rate(d_samp, E_scored)
     truth = truth_full[:, age_ok]                                         # [h, n_ok]
     bands = [(tag, mask[age_ok]) for tag, mask in _band_masks(n_ages)]
 
@@ -548,7 +551,6 @@ def run_cell(
     ls_cells = log_score_poisson(lam, obs_D[:, age_ok])                   # [h, n_ok]
     out["poisson_log_score"] = float(np.mean(ls_cells))
 
-    d_samp = _death_samples(est, samples_mx, E_fut, age_ok, h, n_samples, rng)
     out["crps_counts"] = float(np.mean(crps_counts(d_samp, obs_D[:, age_ok])))
 
     # --- interval metrics: overall and by age band (H4) ---
