@@ -217,3 +217,10 @@ common-cell guards have run.
   design-floor cells, not failures. Next-shortest: CHL 28, HKG 34 — fine.
 - Provenance columns present (device=cpu, origin=2019); n_zero_death_cells
   confirms ISL 117, EST 40 (sex-specific, as previously measured).
+- **CORRECTION (20:45)**: the MemoryError / torch._dynamo rows were NOT from
+  the node. Their parts are timestamped 18:43–18:44 = the laptop's third
+  launch (WinError 1455), which wrote a few fast KOR/HRV cells before dying;
+  the pull extracted the node's tar on top of that local snapshot. The node
+  was clean throughout. Local snapshot purged; `server_pull.sh` now clears
+  the local parts dir before extracting. The KOR/HRV re-run on the node was
+  unnecessary and harmless (regenerates identical parts).

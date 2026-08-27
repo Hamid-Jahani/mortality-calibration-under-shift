@@ -210,3 +210,5 @@ MemoryError or _dynamo; structural "panel too short" / explosive-draw rows
 are legitimate and stay. Pull with scripts/server_pull.sh shift (works;
 557 KB at 50 parts). Local results/shift.parts is a SNAPSHOT — the node is
 the source of truth until the run ends.
+CORRECTION 20:45: the poisoned rows were LAPTOP artifacts (18:43 launch),
+never on the node. server_pull.sh now purges the local parts dir first.
