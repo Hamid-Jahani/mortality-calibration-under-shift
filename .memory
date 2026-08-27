@@ -199,3 +199,14 @@ First server launch ran at load 52 on 12 cores: `_worker_init` sets
 OMP/OPENBLAS vars after numpy is imported in the spawned worker, too late.
 scripts/launch_sweeps.sh now exports them before python starts (inherited
 env is read at BLAS load). Restarted with the 14 finished parts reused.
+
+## SWEEP STATE (2026-08-27 ~20:40)
+
+Main run (relaunch 19:42, JOBS=10, pinned) + a parallel re-run of KOR,HRV
+(jobs=2, log results/logs/shift_rerun_KOR_HRV.out) after their first-launch
+parts carried MemoryError / torch._dynamo rows. Final QA rule before any
+analysis: the concatenated parquet must have ZERO rows whose error mentions
+MemoryError or _dynamo; structural "panel too short" / explosive-draw rows
+are legitimate and stay. Pull with scripts/server_pull.sh shift (works;
+557 KB at 50 parts). Local results/shift.parts is a SNAPSHOT — the node is
+the source of truth until the run ends.
