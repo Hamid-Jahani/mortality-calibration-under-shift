@@ -129,9 +129,21 @@ def _conformal_quantile(res: np.ndarray, alpha: float) -> float:
     r = np.sort(r[np.isfinite(r)])          # NaN = structural zero, no residual
     n = r.size
     if n == 0:
-        raise ValueError("no residuals to calibrate on")
+        # A band the base family is undefined on (CBD is fit on ages 55+, so
+        # the 0-24 band has no residual at all). NaN radius -> NaN samples ->
+        # the runner's age mask drops exactly those ages, which is the same
+        # treatment the family's native cell gets. Raising here instead would
+        # kill every CBD x conformal cell in the grid over ages the cell was
+        # never going to score.
+        return float("nan")
     k = math.ceil((n + 1) * (1.0 - alpha))
     return float(r[min(k, n) - 1])
+
+
+def _nanmedian_log(x: np.ndarray) -> np.ndarray:
+    """Median over the sample axis, NaN-safe (undefined ages stay NaN)."""
+    with np.errstate(invalid="ignore"):
+        return np.nanmedian(x, axis=0)
 
 
 def _median_log_forecast(model, h: int, n_samples: int,
@@ -143,7 +155,8 @@ def _median_log_forecast(model, h: int, n_samples: int,
     model's uncertainty mechanism — conformal calibrates around the point
     forecast and replaces the native interval entirely.
     """
-    return np.median(np.log(model.sample_mx(h, n_samples, rng)), axis=0)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return _nanmedian_log(np.log(model.sample_mx(h, n_samples, rng)))
 
 
 def _cached_center(wrapper, h: int) -> np.ndarray:

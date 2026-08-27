@@ -394,3 +394,72 @@ def test_crps_counts_is_reproducible_from_the_cell_seed():
     b = run_cell(D, E, "PLC", "native", rng=np.random.default_rng(77), **kw)
     assert a["crps_counts"] == b["crps_counts"]
     assert np.isfinite(a["crps_counts"]) and a["crps_counts"] > 0
+
+
+def test_svar_stability_prefilter_is_exact():
+    """The infinity-norm pre-filter must never accept an explosive draw:
+    rho(A) <= ||A||_inf is a theorem, so a draw passing the cheap test is
+    provably stable, and anything failing it still gets the eigendecomposition.
+    """
+    from mortcal.models.svar import SparseVAR
+    rng = np.random.default_rng(5)
+    D, E, _, _ = _world(301)
+    m = SparseVAR().fit(D, E)
+    c, B = m._sample_coefs(200, rng)
+    rho = m._spectral_radius(B)
+    assert np.all(rho < 1.0), "every returned draw must be stable"
+    # the bound itself
+    A = np.zeros((B.shape[0], m.n_age, m.n_age))
+    W = m.W
+    for k in range(2 * W + 1):
+        d = k - W
+        if d < 0:
+            idx = np.arange(-d, m.n_age)
+            A[:, idx, idx + d] = B[:, -d:, k]
+        else:
+            idx = np.arange(0, m.n_age - d)
+            A[:, idx, idx + d] = B[:, :m.n_age - d if d else m.n_age, k]
+    assert np.all(rho <= np.abs(A).sum(axis=2).max(axis=1) + 1e-9), \
+        "rho(A) <= ||A||_inf must hold for every draw"
+
+
+# ---------------------------------------------------------------------------
+# a family undefined on part of the age range must still take a conformal
+# wrapper: the bands it cannot inform get a NaN radius (masked in scoring),
+# not an exception that kills every CBD x conformal cell in the grid.
+# ---------------------------------------------------------------------------
+
+def test_conformal_wraps_a_family_with_a_restricted_age_range():
+    from mortcal.models import CBD
+    from mortcal.uq import SplitConformalMx, EnbPIMx
+    import functools
+    D, E, obs_D, obs_E = _world(401)
+    factory = functools.partial(CBD, age_min=25)     # undefined below age 25
+    for cls in (SplitConformalMx, EnbPIMx):
+        w = cls(factory).fit(D, E)
+        lo, hi = w.interval(H)
+        assert np.isfinite(lo[:, 25:]).all(), f"{cls.__name__}: defined ages must be finite"
+        assert np.isnan(lo[:, :25]).all(), f"{cls.__name__}: undefined ages must be NaN"
+
+
+def test_cbd_conformal_cell_scores_its_defined_ages():
+    """CBD is fit on ages 55+ (MODEL_KWARGS), so a conformal wrapper around it
+    must score ages 55-99 and mask the rest — not error out. Needs a
+    full-width panel, so this world is built here rather than by _world."""
+    from mortcal.runner import MODEL_KWARGS
+    assert MODEL_KWARGS["CBD"]["age_min"] == 55
+    n_ages, T_, rng = 100, 60, np.random.default_rng(402)
+    ages = np.arange(n_ages)
+    alpha = -7.5 + 5.5 * (ages / n_ages) ** 1.3
+    beta = np.exp(-0.5 * ((ages - 12) / 14.0) ** 2)
+    beta = beta / beta.sum()
+    k = np.cumsum(-1.0 + rng.normal(0, 0.7, T_ + H))
+    k -= k[:T_].mean()
+    mx = np.exp(alpha[:, None] + np.outer(beta, k))
+    E_ = np.full((n_ages, T_ + H), 2e4)
+    D_ = rng.poisson(E_ * mx).astype(float)
+    out = run_cell(D_[:, :T_], E_[:, :T_], "CBD", "split_conf", h=H,
+                   n_samples=200, rng=np.random.default_rng(4),
+                   obs_D=D_[:, T_:].T, obs_E=E_[:, T_:].T)
+    assert np.isfinite(out["coverage_95"]), "CBD x conformal must produce a score"
+    assert out["n_ages_scored"] == n_ages - 55
