@@ -22,9 +22,14 @@ act rather than a default.
 
 ## What the runner does
 
-- `MODELS` — classical families in scope for the CPU sweep: `LC`
-  (Lee–Carter SVD), `PLC` (Poisson Lee–Carter), `CBD` (M5), `RH` (M2-A),
-  `SVAR` (banded VAR on improvements).
+- `MODELS` — all ten registered families: `LC` (Lee–Carter SVD), `PLC`
+  (Poisson Lee–Carter), `CBD` (M5), `RH` (M2-A), `SVAR` (banded VAR on
+  improvements), and the five of docs/NEURAL-SPEC.md — `GP` (multitask GP),
+  `NLC` (Richman–Wüthrich), `CNN` (shallow CNN-LC), `LSTM` (LSTM-on-κ),
+  `NB` (negative-binomial head). The neural five need the `neural`
+  dependency group (`uv sync --group neural`); mechanisms `ensemble` /
+  `dropout` exist only on those rows, and rows carry a `grid_secondary`
+  flag for GRID.md's "(s)" cells.
 - `MODEL_KWARGS` — per-family constructor arguments applied under EVERY
   mechanism. Currently `CBD: {age_min: 55}` — M5 assumes logit q_x linear in
   age, which holds at older ages only, so the fit uses ages 55–99 and returns
@@ -86,7 +91,7 @@ act rather than a default.
 | Murphy | `murphy_{reliability,resolution,uncertainty,brier}` — Murphy (1973) on the 95% hit indicators with the constant forecast 0.95: reliability = (0.95 − coverage)², resolution = 0 (degenerate by construction, reported because pre-registered); `murphy_pit_{reliability,resolution,uncertainty}` — Broecker (2009) divergence form on the PIT histogram with the uniform as reference, whose reliability is the χ²-type distance from uniformity |
 | per horizon (DM loss series) | `crps_h{k}, logscore_h{k}, coverage95_h{k}, winkler95_h{k}`, k = 1..H of the regime; regimes with different H in one file leave the extra horizons NaN |
 | derived (H5) | `{e0,e65,ann65}_{point,q025,q975,obs,error}`, error = point − obs, from the horizon-1 sample table (ä65 at 2%) |
-| flag | `scores_secondary` (True for conformal mechanisms) |
+| flag | `scores_secondary` (True for conformal mechanisms), `grid_secondary` (True for GRID.md "(s)" cells) |
 
 The by-age curve and the PIT histogram are persisted so the H4 figures and
 the PIT panels plot straight from parquet without refits.
