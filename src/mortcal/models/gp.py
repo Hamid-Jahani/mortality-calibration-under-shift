@@ -182,6 +182,20 @@ class MultiOutputGP:
             z = post.rsample(torch.Size([n])).reshape(n, h, self.n_ages)
         return np.exp(z.numpy() * self._sd[None, None, :] + self._mu[None, None, :])
 
+    def median_logmx(self, h: int) -> np.ndarray:
+        """[h, ages] pointwise median of the predictive law of log m_x — for a
+        Gaussian posterior that is exactly the posterior mean, so no draws are
+        needed. The conformal wrappers use this instead of estimating the
+        median from ``n_median_samples`` posterior draws: on the 269-year SWE
+        panel that ``rsample`` of 1000 joint draws allocated 1.59 GB and
+        failed SOLO (results/timings_solo.json), which had been misread as
+        memory pressure from concurrent jobs. Exact, allocation-free, and
+        identical in expectation to what the sampling estimated."""
+        x_fut = 1.0 + self._x_step * torch.arange(1, h + 1, dtype=torch.float64)
+        with torch.no_grad(), _gp_ctx():
+            mean = self.lik_(self.model_(x_fut)).mean                # [h, ages], z-scale
+        return mean.numpy() * self._sd[None, :] + self._mu[None, :]
+
     def fitted_mx(self) -> np.ndarray:
         """Posterior-mean in-sample surface on the trained block, [ages, T]."""
         with torch.no_grad(), _gp_ctx():

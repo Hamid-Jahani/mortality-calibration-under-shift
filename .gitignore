@@ -82,3 +82,8 @@ results/parity/E_*.csv
 
 # Sweep-cost probe output: measurements, regenerable, machine-specific
 results/timings*.json
+
+# sweep scratch: per-population parts (resume checkpoints) and run logs are
+# regenerable; the concatenated results/<regime>.parquet IS tracked
+results/*.parts/
+results/logs/

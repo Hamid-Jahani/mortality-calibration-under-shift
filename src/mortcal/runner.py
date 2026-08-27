@@ -96,6 +96,7 @@ from __future__ import annotations
 
 import functools
 import json
+import os
 import zlib
 from typing import Callable, Iterable, Mapping
 
@@ -793,6 +794,10 @@ def run_regime(
                             "mechanism": mechanism, "h": h,
                             "n_samples": n_samples,
                             "seed_entropy": str(list(ss.entropy)),
+                            # provenance: dropout-trained families are a
+                            # different realization per device (see .memory);
+                            # never mix devices within one regime
+                            "device": os.environ.get("MORTCAL_DEVICE", "cpu"),
                             "error": None,
                         }
                         if build_err is not None:

@@ -110,3 +110,59 @@ e4f63d7  conformal takes an age-restricted family; SVAR draw speed-up
 - Schnürch–Korn (2022) Table 3, the stable-regime prior art H2 must be
   framed against: LC10 74.0, LC20 74.3, ACF 77.2, RNN 86.0, FFNN 97.0,
   CNN 98.0 PICP at nominal 95%, ages 60–89, 2007–2016.
+
+## TRAP ADDED 2026-08-27 (afternoon) — drive letter G: vs H:
+
+The external volume mounts as **G:** in some sessions and **H:** in others.
+`.venv` bakes absolute paths; `uv run` (even `--no-sync`) sees a path
+mismatch, silently REMOVES the venv and recreates it EMPTY — that happened
+today and cost a full `uv sync --group neural`. Before anything: check
+`Get-PSDrive` and use the letter the venv was built under, or resync once.
+Also: uv here is 0.11.19 under the Gaming profile, not 0.12.5.
+GP/split_conf OOM (1.59 GB) reproduces SOLO — it is the wrapper's
+`n_median_samples=1000` rsample on the GP posterior, not contention.
+
+## LAUNCH PLAN (2026-08-27, afternoon) — how the real-data sweeps run
+
+`scripts/run_regime.py <regime> --out results/<regime>.parquet --jobs 12
+--exclude-models GP` then a second pass `--models GP --jobs 2`. Reason: the
+per-cell probe timings are WALL seconds of a single multi-threaded process,
+so a serial sweep is 2.17 h/triple wall (shift = 87 h). Parallelism is per
+population (one process each, BLAS/torch pinned to ONE thread in
+_worker_init so 12 jobs on 12 cores do not oversubscribe — the 2.2x
+inflation in results/timings.json came from overlapping multi-threaded
+runs). GP cells need ~1.6 GB each on 15.7 GB RAM -> their own pass at low
+parallelism. Parts land in results/<regime>.parts/<POP>.parquet and a
+killed run resumes by skipping existing parts. Device: MORTCAL_DEVICE
+(default cpu); GPU only if the A/B probe (results/timings_gpu.json vs
+timings_cached.json) shows a real gain.
+
+## VENV LOCATION (2026-08-27, afternoon) — C:, not the repo
+
+`.venv` in the repo became UNDELETABLE (four zombie uv.exe processes, 0 MB
+working set, immune to taskkill/Stop-Process, holding handles under
+.venv/Lib/site-packages/torch). The working environment is now
+`C:/Users/Gaming/venvs/mortcal` built with
+`UV_PROJECT_ENVIRONMENT=C:/Users/Gaming/venvs/mortcal uv sync --group neural`.
+Use `MORTCAL_PY=C:/Users/Gaming/venvs/mortcal/Scripts/python.exe` for
+scripts/launch_sweeps.sh and that interpreter for pytest. After the next
+reboot: `rm -rf .venv` in the repo (leftover), keep using the C: env.
+
+## DEVICE NOTE (2026-08-27) — GPU is a different realization, not a bit-copy
+
+With identical weights and inputs (verified: weight diff 0.0, TF32 off), CPU
+and CUDA runs differ because `nn.Dropout` draws its masks from device-specific
+RNG streams: 4.9% max relative in the first train-mode forward pass, 1% in the
+3-step forecast; eval-mode forward passes agree to float32. `MORTCAL_DEVICE`
+therefore changes the realization of every dropout-trained family (NLC, CNN,
+LSTM, NB). RULE: one device per regime, recorded in the parquet (`device`
+column should be added to runner rows before any GPU sweep); never mix.
+
+## MEASURED 2026-08-27 evening — cache useless, GPU 5-8x, tonight on CPU
+
+timings_cached ≈ timings_solo: the `_subset_cache` gives NO speed-up (kept,
+harmless). GPU: NB 39.6→8.3 s, NLC 34.6→4.5, CNN 53.9→9.9, LSTM ~1x.
+Shift+placebo run CPU-only (12 workers, 1 thread each) — 12 CUDA contexts do
+not fit 4 GB VRAM and one serialized GPU is slower than 12 CPU workers for
+the neural axis. GPU hybrid is for STABLE, after probing 2–3 concurrent GPU
+processes. `device` is recorded per parquet row.

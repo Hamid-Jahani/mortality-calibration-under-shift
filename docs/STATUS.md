@@ -149,3 +149,41 @@ sweep is ever GPU-bound, fix the driver first, not the code.
   D=0, Jan-1 population 0 at both Lexis corners.
 - RH bug story: cohort constraint documented-but-not-implemented → κ bent
   3.7 → coverage 0.68; fixed → nominal.
+
+## 2026-08-27 (afternoon) — solo timings, GP conformal fix, launch prep
+
+- **Sweep arithmetic corrected from the solo probe** (`results/timings_solo.json`):
+  contention inflated the earlier numbers 2.2x (not 4x; GP alone 4.2x). Per
+  (origin, pop, sex): 2.17 h solo vs 4.85 h contended. Shift 7.2 h / placebo
+  4.0 h / stable 72 h on 12 parallel single-threaded workers. CNN and LSTM
+  have NO solo measurement (probe ended first); their solo figures are
+  contended x 0.56, labelled derived. `sweep_cost.py` prints NaN for them —
+  correct behaviour, not a bug.
+- **GP/split_conf OOM is real, not contention**: reproduces solo (1.59 GB) —
+  the conformal centre sampled 1000 joint posterior draws to estimate a
+  median. Fixed: `MultiOutputGP.median_logmx` (posterior mean = median for a
+  Gaussian) and `_median_log_forecast` prefers it (`tests/test_gp_median.py`).
+  `GP/native` needs no window cap — that conclusion stands.
+- **Neural CPU cost — hypothesis REFUTED**: masked/stacked/paired training tensors were rebuilt
+  every epoch; now cached per excluded-year set (`_subset_cache`), no numerical
+  change — and NO measured speed-up (timings_cached ≈ timings_solo). Device switch added (`MORTCAL_DEVICE`, default cpu; cuda opt-in must
+  be justified by `results/timings_gpu.json` vs `timings_cached.json`).
+  `torch.cuda.is_available()` is True on the rebuilt env — the earlier False was
+  a disk-full install missing torch_cuda.dll.
+- **Launcher**: `scripts/run_regime.py --jobs N --exclude-models GP` (one
+  process per population, BLAS/torch pinned to one thread) +
+  `scripts/launch_sweeps.sh` two-pass (GP separately at jobs=2 for memory).
+- **Environment**: repo `.venv` undeletable (zombie uv processes); working env
+  is `C:/Users/Gaming/venvs/mortcal` (see `.memory`).
+- Stable regime: no server answer yet → runs locally after shift+placebo, full
+  design, multi-day; no origin-subset addendum unless that becomes impossible.
+- **GPU A/B measured** (`results/timings_cached.json` vs `timings_gpu.json`, solo,
+  single-fit cells): NB/native 39.6→8.3 s, NB/dropout 39.4→7.2, NLC/dropout
+  34.6→4.5, CNN/dropout 53.9→9.9, LSTM/dropout 6.7→5.9. Cross-device runs are
+  different dropout-mask realizations (eval-mode forward passes agree to fp32);
+  one device per regime, `device` column recorded per row.
+- **Decision for shift + placebo: CPU only, 12 single-thread workers** (~11 h).
+  Neural GPU work is ~17 min/triple × 40 triples ≈ 11 h serialized on one 4 GB
+  card vs 4.3 h across 12 CPU workers, and 12 CUDA contexts would not fit in
+  4 GB. GPU is reserved for the 72-hour stable regime as a hybrid (classical +
+  LSTM on CPU workers, NB/NLC/CNN on 2–3 GPU processes) after a concurrency probe.
