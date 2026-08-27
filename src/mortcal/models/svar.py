@@ -153,7 +153,17 @@ class SparseVAR:
         # up to 3e45. Rates are NEVER clipped instead — clipping would turn
         # divergence into a bounded interval and flatter SVAR's coverage.
         for _ in range(100):
-            bad = np.flatnonzero(self._spectral_radius(B) >= 1.0)
+            # Exact two-stage test. rho(A) <= ||A||_inf is a theorem, so any
+            # draw whose banded row-sum is below 1 is provably stable and
+            # needs no eigendecomposition; only the remainder pays for one.
+            # Typical draws pass the cheap test, and the batched eigvals over
+            # [n, ages, ages] was most of SVAR's per-cell wall time.
+            row_sum = np.abs(B).sum(axis=2).max(axis=1)              # ||A||_inf
+            maybe = np.flatnonzero(row_sum >= 1.0)
+            if maybe.size == 0:
+                return c, B
+            rho = self._spectral_radius(B[maybe])
+            bad = maybe[rho >= 1.0]
             if bad.size == 0:
                 return c, B
             _draw_into(bad)
