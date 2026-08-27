@@ -87,3 +87,6 @@ results/timings*.json
 # regenerable; the concatenated results/<regime>.parquet IS tracked
 results/*.parts/
 results/logs/
+
+# server-side environment created by scripts/server_setup.sh
+.venv-server/

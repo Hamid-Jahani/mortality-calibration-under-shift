@@ -177,3 +177,18 @@ gpytorch). The CUDA env `C:/Users/Gaming/venvs/mortcal` is for the GPU
 hybrid on STABLE only, at low parallelism. Also: `Start-Process
 -ArgumentList` joins elements WITHOUT quoting — launch bash via a wrapper
 script in a space-free path (scratchpad/launch_detached.sh).
+
+## SERVER (2026-08-27 evening) — where the sweeps actually run
+
+Compute node `tararis-ai3` = 192.168.1.47 (Ubuntu 24.04, 12 cores, 23 GB
+RAM, 55 GB free), reachable ONLY via the bastion `baazar` (= ai-server,
+24 cores; ~/.ssh/config, SSH-over-TLS ProxyCommand, key loaded in the
+Windows ssh-agent by the user). The inner hop authenticates with the
+bastion's own ~/.ssh/id_ed25519, so from the laptop every command is
+nested:  ssh.exe baazar 'ssh 192.168.1.47 "<cmd>"'  (Windows OpenSSH
+ssh.exe, not Git's). Repo arrived as a git bundle (no GitHub creds on the
+node) at ~/mortality-calibration-under-shift; only the sweep-relevant HMD
+files were streamed (tar over both hops) into ~/mcs_dataset then moved to
+Dataset/. Env: .venv-server (uv, py3.12, CPU torch 2.6.0, gpytorch 1.15.2).
+Launch: scripts/server_setup.sh -> nohup scripts/launch_sweeps.sh shift
+placebo; logs in results/logs/server_launch.out; parts per (pop, model).
