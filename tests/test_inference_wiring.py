@@ -184,3 +184,43 @@ def test_adapter_drops_error_rows_even_with_finite_losses():
     L, groups, names, rep = losses_from_rows(df)
     assert L.shape == (15, 3)
     assert rep["dropped_cells"] == [("shift", "P1", "f", 2019)]
+
+
+# ---------------------------------------------------------------------------
+# 3 — arms must share an AGE SUPPORT, not just cells
+# ---------------------------------------------------------------------------
+
+def test_adapter_refuses_arms_scored_on_different_age_supports():
+    """CBD is fit on ages 55+, so its per-horizon CRPS is a mean over 45 ages
+    while LC/PLC average over 100. Those means are not comparable and a naive
+    MCS ranks CBD first for that reason alone (observed on a synthetic sweep:
+    in_set == ['CBD/native']). Cells are matched by addendum 3 §11; the age
+    support has to be matched too."""
+    df = _rows(arms=(("PLC", "native"), ("CBD", "native")))
+    df["n_ages_scored"] = np.where(df["model"] == "CBD", 45, 100)
+    with pytest.raises(ValueError, match="age support"):
+        losses_from_rows(df)
+
+
+def test_adapter_allows_ragged_age_support_when_asked_explicitly():
+    df = _rows(arms=(("PLC", "native"), ("CBD", "native")))
+    df["n_ages_scored"] = np.where(df["model"] == "CBD", 45, 100)
+    L, groups, names, rep = losses_from_rows(df, allow_ragged_age_support=True)
+    assert L.shape[1] == 2
+    assert rep["age_support"] == {"CBD/native": [45], "PLC/native": [100]}
+    assert rep["ragged_age_support"] is True
+
+
+def test_adapter_accepts_matched_age_supports_silently():
+    df = _rows(arms=(("PLC", "native"), ("LC", "native")))
+    df["n_ages_scored"] = 100
+    _, _, _, rep = losses_from_rows(df)
+    assert rep["ragged_age_support"] is False
+    assert rep["age_support"] == {"LC/native": [100], "PLC/native": [100]}
+
+
+def test_adapter_survives_rows_without_the_age_column():
+    """Older parquet files predate n_ages_scored; do not hard-fail on them."""
+    df = _rows()
+    _, _, _, rep = losses_from_rows(df)
+    assert rep["age_support"] is None

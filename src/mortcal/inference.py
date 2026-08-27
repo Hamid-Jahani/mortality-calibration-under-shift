@@ -166,7 +166,8 @@ def model_confidence_set(losses: np.ndarray, groups: np.ndarray, alpha: float = 
 CELL_KEYS = ("regime", "pop", "sex", "origin")
 
 
-def losses_from_rows(df, loss: str = "crps", arms=None, cluster: str = "pop"):
+def losses_from_rows(df, loss: str = "crps", arms=None, cluster: str = "pop",
+                     allow_ragged_age_support: bool = False):
     """Build (losses, groups, names, report) from runner parquet rows.
 
     Parameters
@@ -181,6 +182,8 @@ def losses_from_rows(df, loss: str = "crps", arms=None, cluster: str = "pop"):
         contrast inside one sub-grid stays uncensored by an arm outside it
         (docs/GRID.md claims discipline).
     cluster : row column supplying the cluster label (default ``"pop"``).
+    allow_ragged_age_support : permit arms scored over DIFFERENT numbers of
+        ages. Off by default and rarely right — see below.
 
     Returns
     -------
@@ -191,6 +194,21 @@ def losses_from_rows(df, loss: str = "crps", arms=None, cluster: str = "pop"):
         ``n_cells_dropped``, ``dropped_cells``, ``arms_with_failures``,
         ``horizons`` — the intersection accounting addendum 3 §11 requires be
         reported alongside any contrast.
+
+    **Common age support.** A family may be undefined on part of the age
+    range — CBD (M5) is fit on ages 55+ — and the runner's per-horizon loss
+    columns are already MEANS over whatever ages that family scored. A mean
+    CRPS over ages 55-99 is not comparable with a mean over 0-99: mortality
+    rates and their forecast errors vary by orders of magnitude across the
+    age range. Observed on a synthetic sweep, an unguarded comparison put
+    ``CBD/native`` alone in the model confidence set purely because it
+    averaged over 45 ages while LC and PLC averaged over 100. Arms are
+    therefore required to share ``n_ages_scored``; the honest ways to
+    compare a restricted family are to run the others under the same
+    restriction, or to report it in a separate sub-grid.
+    ``allow_ragged_age_support=True`` overrides, and the resulting report
+    carries ``ragged_age_support: True`` so the caveat travels with the
+    numbers.
 
     **Addendum 3 §11.** A cell enters only if EVERY compared arm produced a
     valid row there. Arms fail on different cells (conformal arms need long
@@ -248,6 +266,22 @@ def losses_from_rows(df, loss: str = "crps", arms=None, cluster: str = "pop"):
     _require_finite(losses, names, "losses_from_rows")
     groups = wide.index.get_level_values(cluster).to_numpy()
 
+    support = None
+    ragged = False
+    if "n_ages_scored" in keep.columns:
+        support = {a: sorted({int(v) for v in g})
+                   for a, g in keep.groupby("_arm")["n_ages_scored"]}
+        distinct = {n for v in support.values() for n in v}
+        ragged = len(distinct) > 1
+        if ragged and not allow_ragged_age_support:
+            raise ValueError(
+                "arms do not share an age support: "
+                + ", ".join(f"{a}={v}" for a, v in sorted(support.items()))
+                + ". The per-horizon loss columns are means over each family's "
+                "OWN scored ages, so these are not comparable. Restrict the "
+                "arms, re-run the others under the same age restriction, or "
+                "pass allow_ragged_age_support=True to accept the caveat.")
+
     failing = sorted(set(d.loc[~d["_ok"], "_arm"]) & set(names))
     report = {
         "n_units": int(losses.shape[0]),
@@ -258,5 +292,7 @@ def losses_from_rows(df, loss: str = "crps", arms=None, cluster: str = "pop"):
         "arms_with_failures": failing,
         "horizons": [int(c[len(loss) + 2:]) for c in hcols],
         "loss": loss,
+        "age_support": support,
+        "ragged_age_support": ragged,
     }
     return losses, groups, names, report
