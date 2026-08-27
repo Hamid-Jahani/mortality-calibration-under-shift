@@ -187,3 +187,17 @@ sweep is ever GPU-bound, fix the driver first, not the code.
   card vs 4.3 h across 12 CPU workers, and 12 CUDA contexts would not fit in
   4 GB. GPU is reserved for the 72-hour stable regime as a hybrid (classical +
   LSTM on CPU workers, NB/NLC/CNN on 2–3 GPU processes) after a concurrency probe.
+
+## 2026-08-27 19:42 — REAL-DATA SWEEPS RUNNING on the compute node
+
+`tararis-ai3` (192.168.1.47 via bastion `baazar`; docs/SERVER.md, .memory):
+`launch_sweeps.sh shift placebo`, JOBS=10, GP_JOBS=7, CPU torch, thread
+pinning in the launch env (first attempt ran at load 52; restarted at load
+11 with 25 parts reused). Suite on the node: 171 passed, 1 skipped. Data:
+7 files, 281 MB, manifest-verified. Expected: shift ≈ 9 h, placebo ≈ 5 h,
+then the GP passes. Check: `ssh baazar 'ssh 192.168.1.47 "tail -3
+~/mortality-calibration-under-shift/results/logs/server_launch.out; ls
+~/mortality-calibration-under-shift/results/shift.parts | wc -l"'`.
+Retrieve: rsync results/*.parquet back, then the analysis stage
+(scripts/analyse.py) — never read a ranking before the age-support and
+common-cell guards have run.
