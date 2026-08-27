@@ -16,7 +16,7 @@ dependencies = [
 dev = ["pytest>=8", "pytest-cov"]
 # neural families only; kept out of the default env so classical work never
 # waits on the 2.5 GB CUDA wheel. Install: uv sync --group neural
-neural = ["torch>=2.6"]
+neural = ["torch>=2.6", "gpytorch>=1.13"]
 
 [tool.uv.sources]
 torch = { index = "pytorch-cu124" }

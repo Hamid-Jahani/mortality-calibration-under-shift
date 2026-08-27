@@ -117,9 +117,12 @@ from .eval import (
     winkler_score,
 )
 from .lifetable import annuity_factor, life_expectancy
-from .models import CBD, LeeCarterSVD, PoissonLeeCarter, RenshawHaberman, SparseVAR
+from .models import (CBD, CNNLC, LSTMKt, LeeCarterSVD, MultiOutputGP,
+                     NBHead, NeuralLC, PoissonLeeCarter, RenshawHaberman,
+                     SparseVAR)
 from .splits import Regime
-from .uq import CopulaPathConformal, EnbPIMx, PoissonBootstrap, SplitConformalMx
+from .uq import (CopulaPathConformal, DeepEnsemble, EnbPIMx, MCDropout,
+                 PoissonBootstrap, SplitConformalMx)
 
 _RATE_FLOOR = 1e-10   # same floor as mortcal.models.lc / mortcal.uq.conformal
 _LAM_FLOOR = 1e-12    # Poisson mean floor: logpmf(., 0) is -inf otherwise
@@ -137,13 +140,20 @@ AGE_BANDS: tuple[tuple[int, int], ...] = ((0, 24), (25, 64), (65, 99))
 #: PIT histogram bins for ``murphy_pit`` / ``pit_hist``.
 PIT_BINS = 10
 
-#: Classical model families in scope for this runner (CPU sweep).
+#: All ten registered model families (docs/GRID.md rows). The neural/GP
+#: classes import without torch; constructing one without the neural extra
+#: raises with the install command (docs/NEURAL-SPEC.md).
 MODELS: dict[str, type] = {
     "LC": LeeCarterSVD,
     "PLC": PoissonLeeCarter,
     "CBD": CBD,
     "RH": RenshawHaberman,
     "SVAR": SparseVAR,
+    "GP": MultiOutputGP,
+    "NLC": NeuralLC,
+    "CNN": CNNLC,
+    "LSTM": LSTMKt,
+    "NB": NBHead,
 }
 
 #: Per-family constructor kwargs, applied under EVERY mechanism (the native
@@ -155,12 +165,12 @@ MODEL_KWARGS: dict[str, dict] = {
     "CBD": {"age_min": 55},
 }
 
-#: UQ mechanisms in scope. "native" uses the model's own predictive law;
-#: the others wrap the model class. Deep ensemble and MC dropout are
-#: inadmissible for every classical family (docs/GRID.md: deterministic fits
-#: have no seed variance) and are therefore not registered here at all.
+#: All seven registered UQ mechanisms. "native" uses the model's own
+#: predictive law; the others wrap the model class. Admissibility per cell is
+#: ADMISSIBLE below, transcribed from docs/GRID.md.
 MECHANISMS: tuple[str, ...] = (
-    "native", "pboot", "split_conf", "enbpi", "copula_conf",
+    "native", "pboot", "ensemble", "dropout",
+    "split_conf", "enbpi", "copula_conf",
 )
 
 #: Mechanisms whose samples are uniform draws inside a conformal interval —
@@ -169,15 +179,29 @@ MECHANISMS: tuple[str, ...] = (
 CONFORMAL_MECHANISMS: frozenset[str] = frozenset(
     {"split_conf", "enbpi", "copula_conf"})
 
-#: Admissible (model, mechanism) pairs — transcribed from docs/GRID.md rows
-#: Lee-Carter (SVD), Poisson-LC, CBD (M5), APC/RH (M2-A), sparse VAR: every
-#: classical family admits all five mechanisms here (the grid's dashes for
-#: classical families are deep ensemble / MC dropout, which this runner does
-#: not register). Kept explicit so a future registry addition MUST also be
+_CONF = ("split_conf", "enbpi", "copula_conf")
+
+#: SECONDARY cells — the "(s)" entries of docs/GRID.md: run if time, reported
+#: in the appendix, flagged per row via the ``grid_secondary`` column.
+SECONDARY: frozenset[tuple[str, str]] = frozenset({
+    ("GP", "ensemble"), ("NLC", "pboot"), ("CNN", "pboot"), ("LSTM", "pboot"),
+})
+
+#: Admissible (model, mechanism) pairs — a cell-by-cell transcription of
+#: docs/GRID.md (50 primary + 4 secondary). Inadmissibility reasons live in
+#: the grid: deterministic classical fits have no seed variance (no
+#: ensemble/dropout); the GP posterior already integrates parameter
+#: uncertainty (no bootstrap); point neural nets have no model-native
+#: predictive law (no native). Kept explicit so a registry addition MUST be
 #: added here consciously, mirroring the grid.
 ADMISSIBLE: frozenset[tuple[str, str]] = frozenset(
-    (m, u) for m in ("LC", "PLC", "CBD", "RH", "SVAR") for u in MECHANISMS
-)
+    [(m, u) for m in ("LC", "PLC", "CBD", "RH", "SVAR")
+     for u in ("native", "pboot", *_CONF)]
+    + [("GP", u) for u in ("native", *_CONF)]
+    + [(m, u) for m in ("NLC", "CNN", "LSTM")
+       for u in ("ensemble", "dropout", *_CONF)]
+    + [("NB", u) for u in ("native", "ensemble", "dropout", *_CONF)]
+) | SECONDARY
 
 
 class InadmissibleCellError(ValueError):
@@ -222,6 +246,10 @@ def build_estimator(model_name: str, mechanism: str,
         return factory()
     if mechanism == "pboot":
         return PoissonBootstrap(cls, **model_kw, **kw)
+    if mechanism == "ensemble":
+        return DeepEnsemble(cls, model_kwargs=model_kw, **kw)
+    if mechanism == "dropout":
+        return MCDropout(cls, model_kwargs=model_kw, **kw)
     if mechanism == "split_conf":
         return SplitConformalMx(factory, **kw)
     if mechanism == "enbpi":
@@ -613,6 +641,7 @@ def run_cell(
                         obs_E[:, :top_ok + 1], first_ok, True, out)
 
     out["scores_secondary"] = mechanism in CONFORMAL_MECHANISMS
+    out["grid_secondary"] = (model_name, mechanism) in SECONDARY
     return out
 
 

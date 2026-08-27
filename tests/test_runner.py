@@ -68,7 +68,7 @@ def horizon_keys(h):
 
 def expected_keys(h):
     return (SCALAR_KEYS | BAND_KEYS | DERIVED_KEYS | JSON_KEYS
-            | horizon_keys(h) | {"scores_secondary"})
+            | horizon_keys(h) | {"scores_secondary", "grid_secondary"})
 
 
 def simulate_world(rng, n_ages=N_AGES):
@@ -126,6 +126,8 @@ def _assert_types(out, mechanism, nan_ok=()):
         if k == "scores_secondary":
             assert isinstance(v, bool)
             assert v is (mechanism in CONFORMAL_MECHANISMS)
+        elif k == "grid_secondary":
+            assert isinstance(v, bool)
         elif k in JSON_KEYS:
             assert isinstance(v, str)
             json.loads(v)
@@ -268,10 +270,14 @@ def test_per_horizon_column_count_equals_H(h):
 def test_run_cell_rejects_unknown_and_requires_obs():
     D, E, obs_D, obs_E = _one_world(3)
     with pytest.raises(InadmissibleCellError, match="unknown mechanism"):
-        run_cell(D, E, "PLC", "dropout", 3, 50, np.random.default_rng(0),
+        run_cell(D, E, "PLC", "jackknife", 3, 50, np.random.default_rng(0),
                  obs_D=obs_D[:3], obs_E=obs_E[:3])
     with pytest.raises(InadmissibleCellError, match="unknown model"):
-        run_cell(D, E, "GP", "native", 3, 50, np.random.default_rng(0),
+        run_cell(D, E, "GLM", "native", 3, 50, np.random.default_rng(0),
+                 obs_D=obs_D[:3], obs_E=obs_E[:3])
+    # known but inadmissible under GRID.md (classical: no seed variance)
+    with pytest.raises(InadmissibleCellError):
+        run_cell(D, E, "PLC", "dropout", 3, 50, np.random.default_rng(0),
                  obs_D=obs_D[:3], obs_E=obs_E[:3])
     with pytest.raises(ValueError, match="obs_D and obs_E"):
         run_cell(D, E, "PLC", "native", 3, 50, np.random.default_rng(0))
@@ -280,7 +286,7 @@ def test_run_cell_rejects_unknown_and_requires_obs():
 def test_pboot_constructible_for_every_classical_family():
     """All five families implement fitted_mx(): pboot is admissible AND
     constructible for each, with the family kwargs forwarded to every refit."""
-    for m in MODELS:
+    for m in ("LC", "PLC", "CBD", "RH", "SVAR"):
         est = build_estimator(m, "pboot", {"B": 2})
         assert isinstance(est, PoissonBootstrap) and est.B == 2
         assert est.model_kwargs == MODEL_KWARGS.get(m, {})
@@ -291,12 +297,19 @@ def test_pboot_constructible_for_every_classical_family():
 
 
 def test_admissible_grid_matches_registries():
-    for m in MODELS:
-        for u in MECHANISMS:
-            check_admissible(m, u)              # classical grid: all admissible
-    assert ("LC", "native") in ADMISSIBLE
+    from mortcal.runner import SECONDARY
+    for m in ("LC", "PLC", "CBD", "RH", "SVAR"):
+        for u in ("native", "pboot", "split_conf", "enbpi", "copula_conf"):
+            check_admissible(m, u)
+    assert len(ADMISSIBLE - SECONDARY) == 50    # GRID.md: 50 primary cells
     with pytest.raises(InadmissibleCellError):
-        check_admissible("LC", "deep_ensemble")
+        check_admissible("LC", "ensemble")      # classical: no seed variance
+    with pytest.raises(InadmissibleCellError):
+        check_admissible("NLC", "native")       # point net: no native law
+    with pytest.raises(InadmissibleCellError):
+        check_admissible("GP", "pboot")         # posterior already has it
+    with pytest.raises(InadmissibleCellError):
+        check_admissible("LC", "deep_ensemble") # unknown mechanism name
 
 
 # ---------------------------------------------------------------------------
@@ -326,7 +339,7 @@ def test_run_regime_miniature_synthetic_sweep(tmp_path):
     assert len(back) == expected
     key_cols = ["regime", "pop", "sex", "origin", "model", "mechanism"]
     assert not back.duplicated(subset=key_cols).any()
-    numeric = expected_keys(3) - {"scores_secondary"} - JSON_KEYS
+    numeric = expected_keys(3) - {"scores_secondary", "grid_secondary"} - JSON_KEYS
     is_conf = back["mechanism"].isin(list(CONFORMAL_MECHANISMS))
     for k in numeric:
         col = back[k].astype(float)
