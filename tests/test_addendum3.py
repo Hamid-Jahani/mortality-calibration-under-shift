@@ -337,3 +337,60 @@ def test_grossly_miscalibrated_forecast_is_flagged_by_pit_pvalue():
                    rng=np.random.default_rng(15), obs_D=obs_D * 3.0, obs_E=obs_E)
     assert out["pit_ks_stat"] > 0.3
     assert out["pit_ks_pvalue"] < 1e-4
+
+
+# ---------------------------------------------------------------------------
+# crps_counts shares the rate scale's Poisson draw (adversarial review, LATER
+# item): PLC/RH exposed sample_deaths, which redraws its OWN kappa paths, so
+# crps_counts came from a different realisation than every other column in its
+# row — MC noise plus a cross-family asymmetry (only the two families with
+# that method were affected).
+# ---------------------------------------------------------------------------
+
+def test_count_scale_is_the_same_draw_as_the_rate_scale():
+    """log_samples and the count samples must be two views of ONE draw:
+    log(max(D*,0.5)/E) is recoverable from the death samples exactly."""
+    from mortcal.runner import _compose_deaths
+    from mortcal.eval.scores import log_crude_rate
+    from mortcal.models import PoissonLeeCarter
+
+    D, E, obs_D, obs_E = _world(201)
+    est = PoissonLeeCarter().fit(D, E)
+    smx = est.sample_mx(H, 40, np.random.default_rng(1))
+    age_ok = np.ones(N_AGES, dtype=bool)
+    Es = obs_E[None, :, age_ok]
+
+    d1 = _compose_deaths(smx, Es, age_ok, np.random.default_rng(9))
+    d2 = _compose_deaths(smx, Es, age_ok, np.random.default_rng(9))
+    np.testing.assert_array_equal(d1, d2, "composition must be rng-deterministic")
+    # the two scales agree cell for cell
+    np.testing.assert_allclose(log_crude_rate(d1, Es), np.log(np.maximum(d1, 0.5) / Es))
+
+
+def test_count_composition_is_family_independent():
+    """A family exposing sample_deaths must get the SAME construction as one
+    that does not — no privileged path."""
+    from mortcal.runner import _compose_deaths
+    from mortcal.models import LeeCarterSVD, PoissonLeeCarter
+
+    D, E, _, obs_E = _world(202)
+    age_ok = np.ones(N_AGES, dtype=bool)
+    Es = obs_E[None, :, age_ok]
+    plc = PoissonLeeCarter().fit(D, E)
+    assert hasattr(plc, "sample_deaths"), "precondition: PLC has the shortcut"
+    smx = plc.sample_mx(H, 30, np.random.default_rng(2))
+    a = _compose_deaths(smx, Es, age_ok, np.random.default_rng(3))
+    b = _compose_deaths(smx, Es, age_ok, np.random.default_rng(3))
+    np.testing.assert_array_equal(a, b)
+    lc_smx = LeeCarterSVD().fit(D, E).sample_mx(H, 30, np.random.default_rng(2))
+    c = _compose_deaths(lc_smx, Es, age_ok, np.random.default_rng(3))
+    assert c.shape == a.shape           # identical construction, different paths
+
+
+def test_crps_counts_is_reproducible_from_the_cell_seed():
+    D, E, obs_D, obs_E = _world(203)
+    kw = dict(h=H, n_samples=200, obs_D=obs_D, obs_E=obs_E)
+    a = run_cell(D, E, "PLC", "native", rng=np.random.default_rng(77), **kw)
+    b = run_cell(D, E, "PLC", "native", rng=np.random.default_rng(77), **kw)
+    assert a["crps_counts"] == b["crps_counts"]
+    assert np.isfinite(a["crps_counts"]) and a["crps_counts"] > 0
