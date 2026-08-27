@@ -192,3 +192,10 @@ files were streamed (tar over both hops) into ~/mcs_dataset then moved to
 Dataset/. Env: .venv-server (uv, py3.12, CPU torch 2.6.0, gpytorch 1.15.2).
 Launch: scripts/server_setup.sh -> nohup scripts/launch_sweeps.sh shift
 placebo; logs in results/logs/server_launch.out; parts per (pop, model).
+
+## THREAD PINNING (2026-08-27 night) — env at launch, not the initializer
+
+First server launch ran at load 52 on 12 cores: `_worker_init` sets
+OMP/OPENBLAS vars after numpy is imported in the spawned worker, too late.
+scripts/launch_sweeps.sh now exports them before python starts (inherited
+env is read at BLAS load). Restarted with the 14 finished parts reused.

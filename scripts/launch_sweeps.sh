@@ -10,6 +10,12 @@
 # MORTCAL_DEVICE=cuda may be exported first ONLY if results/timings_gpu.json
 # beat results/timings_cached.json for the neural cells.
 set -euo pipefail
+# Thread pinning MUST live in the launch environment: a multiprocessing
+# initializer runs after numpy/OpenBLAS is already loaded in the spawned
+# worker, so env vars set there are ignored (measured 2026-08-27 on the
+# compute node: load 52 on 12 cores with 10 workers). Inherited env is read
+# by BLAS at import time, which is before the initializer.
+export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
 cd "$(dirname "$0")/.."
 # MORTCAL_PY overrides the interpreter (the venv may live outside the repo:
 # UV_PROJECT_ENVIRONMENT=C:/Users/Gaming/venvs/mortcal after the 2026-08-27
