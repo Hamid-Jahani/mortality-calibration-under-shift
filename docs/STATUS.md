@@ -1,8 +1,8 @@
-# Session state — 2026-08-26 (evening)
+# Session state — 2026-08-27
 
 ## Where things stand
 
-**119 tests green.** Registered documents: PREREGISTRATION.md + addenda 1–3,
+**143 tests green** (24 neural gates included). Registered documents: PREREGISTRATION.md + addenda 1–3,
 `docs/PRIOR-ART.md` — all hash-stamped in their commits. Addenda 2 AND 3 are
 **implemented and test-guarded** (`tests/test_addendum2_scoring.py`,
 `tests/test_addendum3.py` — the latter uses low-exposure fractional-death
@@ -79,12 +79,28 @@ splits; every family emits sample paths through the single interface; per-
 family validation gates on synthetic truth) → implement → gates → production
 sweeps.
 
+## DONE 2026-08-27 — the neural/GP axis is built (commit 28aa62a)
+
+All five families implemented per docs/NEURAL-SPEC.md and gated
+(`tests/test_neural.py`, G-N1..G-N5, 24 tests): NLC, CNN, LSTM, NB
+(NB2 head sampling its Gamma mixing rate so the runner's Poisson
+composition reproduces the NB law), GP (multitask exact GP on the trailing
+complete-year block). Mechanisms `ensemble` (M=10, member seeds recorded)
+and `dropout`. Runner registry is the full 10×7: 50 primary + 4 secondary
+cells, `grid_secondary` column.
+
+Two measured corrections, dated before any real-data run: the CNN grid
+{1e-2, 3e-3} diverges at every point (in-sample 10–20 nats) → {1e-3, 3e-4}
+× {300, 800}; gate G-N1 recalibrated from "within 2× PLC" to "finite and
+< 1.0 nats" — persistence scores 0.25–0.51 on the gate worlds and the
+cell-feature nets' ~0.5 extrapolation plateau is the audited fragility, not
+a defect. Output-bias centring starts the nets at the empirical mean rate;
+the GP carries a Poisson-level noise floor and one shared jitter context
+(`gp.py:_gp_ctx`; its symeig fallback warning is expected).
+
 ## Then
 
-1. Neural families (torch via uv, GPU): neural-LC embeddings, CNN-LC,
-   LSTM-k_t, NB head + deep-ensemble/MC-dropout mechanisms.
-2. Multi-output GP (gpytorch) or document exclusion.
-3. Inference layer wiring: `mortcal.inference` has ZERO call sites and
+1. Inference layer wiring: `mortcal.inference` has ZERO call sites and
    **silently inverts under NaN** (one hole flips the MCS to eliminate the
    good models at p=0.000; `dm_wild_cluster` returns t=inf, p=0.0). Needs a
    runner-row → [n_units, n_models] adapter (does not exist) and a
@@ -101,19 +117,15 @@ sweeps.
    2024-final question answered in docs/DATA-PREREQS.md §B (register S-S1/
    S-S2/S-S3 sensitivities at analysis time).
 
-## Environment — BROKEN, workaround in use
+## Environment — FIXED 2026-08-27
 
-`.venv` was built under Windows profile `C:\Users\Gaming`, which no longer
-exists. `uv` is not on PATH. Patching `pyvenv.cfg` is NOT enough (path baked
-into the trampoline exe). All 86 site-packages intact. Run tests with:
-
-```
-PYTHONPATH="<repo>/.venv/Lib/site-packages;<repo>/src" \
-  "C:/Users/ASUS/AppData/Roaming/uv/python/cpython-3.12.13-windows-x86_64-none/python.exe" \
-  -m pytest -q
-```
-
-Durable fix: reinstall uv for the ASUS profile, recreate .venv.
+uv 0.12.5 reinstalled for the ASUS profile (`~/.local/bin/uv.exe`); `.venv`
+recreated with `uv sync --group neural` → torch 2.6.0+cu124 + gpytorch
+1.15.2. Plain `.venv/Scripts/python.exe -m pytest -q` works again (143
+green, ~100 s). **`torch.cuda.is_available()` is False on this machine** —
+no visible NVIDIA driver despite CLAUDE.md's GPU claim; the cu124 wheel
+runs CPU, which the spec budgets as sufficient at this model scale. If a
+sweep is ever GPU-bound, fix the driver first, not the code.
 
 ## Don'ts
 
