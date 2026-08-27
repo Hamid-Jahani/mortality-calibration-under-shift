@@ -81,7 +81,19 @@ class MultiOutputGP:
         self.T = Y.shape[0]
         self._x = torch.linspace(0.0, 1.0, self.T, dtype=torch.float64)
         self._x_step = 1.0 / max(self.T - 1, 1)
-        self._Y = torch.as_tensor(Y, dtype=torch.float64)
+        # Standardise each task (age) before fitting and invert on sampling.
+        # The ICM shares one kernel across tasks, so it assumes comparable
+        # task scales; raw HMD log rates do not have them — measured on SWE
+        # males 1980-2019 the level spans [-11.74, -0.37] and the per-age sd
+        # ranges 0.063 (age 95) to 0.85, a 13x spread. Unstandardised, the
+        # multitask covariance is numerically singular for more than ~20 ages
+        # (measured: 20 ages fit, 40/60/100 raise NotPSDError at any year
+        # span, including the source paper's 27). This is preprocessing, not
+        # a change of model: the posterior is mapped back exactly.
+        self._mu = Y.mean(axis=0)                          # [ages]
+        sd = Y.std(axis=0, ddof=1)
+        self._sd = np.where(sd > 1e-8, sd, 1.0)
+        self._Y = torch.as_tensor((Y - self._mu) / self._sd, dtype=torch.float64)
 
         # tuning on the trailing inner-validation years (marginal-likelihood
         # training on the inner-train block; val = predictive NLL)
@@ -115,11 +127,17 @@ class MultiOutputGP:
                 return gpytorch.distributions.MultitaskMultivariateNormal(
                     self.mean(tx), self.covar(tx))
 
-        # Noise floored at 1e-4: the observed log crude rate carries Poisson
-        # sampling noise (sd >= 1/sqrt(D)), so a collapsed likelihood noise is
-        # both wrong and numerically fatal (singular K + sigma^2 I).
+        # ONE floored homoscedastic noise. The default likelihood carries a
+        # global noise PLUS 100 unconstrained per-task noises; those collapsed
+        # toward zero and left K + Sigma singular (measured: NotPSDError for
+        # more than ~20 ages at any year span, including the source paper's
+        # 27). After per-task standardisation every task has unit variance, so
+        # a single shared noise is the right structure rather than a
+        # concession — and the floor is substantively right too: the observed
+        # log crude rate carries Poisson sampling noise, sd ~ 1/sqrt(D), so
+        # zero observation noise is not a state the data can be in.
         lik = gpytorch.likelihoods.MultitaskGaussianLikelihood(
-            num_tasks=n_tasks,
+            num_tasks=n_tasks, has_task_noise=False,
             noise_constraint=gpytorch.constraints.GreaterThan(1e-4)).double()
         model = MTGP(x, Y, lik).double()
         model.train(); lik.train()
@@ -135,9 +153,21 @@ class MultiOutputGP:
 
     @staticmethod
     def _val_nll(model, lik, x_val, Y_val) -> float:
+        """MARGINAL predictive NLL on the inner-validation years.
+
+        Deliberately not the joint ``log_prob``: that needs a Cholesky of the
+        full [n_val * n_tasks] predictive covariance, which is the single
+        place the multitask GP was numerically fragile, and hyperparameter
+        SELECTION does not need the joint density — only a consistent
+        ranking of configurations. Cell-wise Gaussian NLL from the predictive
+        mean and variance gives that with no factorisation at all.
+        """
         with torch.no_grad():
             pred = lik(model(x_val))
-            return float(-pred.log_prob(Y_val))
+            mu = pred.mean
+            var = torch.clamp(pred.variance, min=1e-10)
+            nll = 0.5 * (torch.log(2 * np.pi * var) + (Y_val - mu) ** 2 / var)
+            return float(nll.mean())
 
     # ------------------------------------------------------------- sampling
     def sample_mx(self, h: int, n: int, rng: np.random.Generator) -> np.ndarray:
@@ -149,11 +179,11 @@ class MultiOutputGP:
         with torch.no_grad(), _gp_ctx():
             post = self.lik_(self.model_(x_fut))
             torch.manual_seed(int(g.initial_seed()))
-            s = post.rsample(torch.Size([n])).reshape(n, h, self.n_ages)
-        return np.exp(s.numpy())
+            z = post.rsample(torch.Size([n])).reshape(n, h, self.n_ages)
+        return np.exp(z.numpy() * self._sd[None, None, :] + self._mu[None, None, :])
 
     def fitted_mx(self) -> np.ndarray:
         """Posterior-mean in-sample surface on the trained block, [ages, T]."""
         with torch.no_grad(), _gp_ctx():
-            mean = self.lik_(self.model_(self._x)).mean            # [T, ages]
-        return np.exp(mean.numpy()).T
+            mean = self.lik_(self.model_(self._x)).mean            # [T, ages], z-scale
+        return np.exp(mean.numpy() * self._sd[None, :] + self._mu[None, :]).T
