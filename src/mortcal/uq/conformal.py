@@ -155,6 +155,11 @@ def _median_log_forecast(model, h: int, n_samples: int,
     model's uncertainty mechanism — conformal calibrates around the point
     forecast and replaces the native interval entirely.
     """
+    # Families whose predictive law has a closed-form median (the GP: its
+    # posterior mean) expose median_logmx(h); using it is exact and avoids the
+    # n_samples joint draws that OOMed the GP conformal cells (1.59 GB, solo).
+    if hasattr(model, "median_logmx"):
+        return np.asarray(model.median_logmx(h), dtype=float)
     with np.errstate(divide="ignore", invalid="ignore"):
         return _nanmedian_log(np.log(model.sample_mx(h, n_samples, rng)))
 

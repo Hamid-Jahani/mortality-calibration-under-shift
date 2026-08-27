@@ -36,8 +36,14 @@ def main():
 
     out_path = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "results" / "timings.json"
     out_path.parent.mkdir(exist_ok=True)
+    # optional argv[2]: comma list of "FAM/mech" to probe (subset of PROBES),
+    # e.g. NB/native,NLC/ensemble — for A/B timing without the full 20-min list
+    probes = PROBES
+    if len(sys.argv) > 2:
+        want = {tuple(s.split("/")) for s in sys.argv[2].split(",") if s}
+        probes = [p for p in PROBES if p in want]
     res = {}
-    for (m, u) in PROBES:
+    for (m, u) in probes:
         if (m, u) not in ADMISSIBLE:
             print(f"  {m}/{u}: inadmissible", flush=True)
             continue

@@ -37,6 +37,23 @@ def _require_torch():
             "the neural families need torch: uv sync --group neural")
 
 
+def _device() -> "torch.device":
+    """Compute device for the torch families, from MORTCAL_DEVICE (default cpu).
+
+    Default is CPU on purpose: at this model scale (2x64 hidden, <= 27k
+    cells, full-batch Adam) kernel-launch overhead can exceed the arithmetic,
+    so GPU is an opt-in that must be justified by a measured per-cell timing
+    (results/timings_*.json), never assumed. Requesting cuda without a
+    usable device is an error, not a silent fallback — a sweep must know
+    what it ran on.
+    """
+    import os
+    name = os.environ.get("MORTCAL_DEVICE", "cpu")
+    if name.startswith("cuda") and not torch.cuda.is_available():
+        raise RuntimeError("MORTCAL_DEVICE=cuda but torch.cuda.is_available() is False")
+    return torch.device(name)
+
+
 def _torch_seed_from(rng: np.random.Generator) -> "torch.Generator":
     """A torch generator advanced from the caller's numpy generator, so the
     study-wide 'rng in, reproducible draws out' contract holds for torch
@@ -88,7 +105,20 @@ class _TorchFamily:
         D = np.asarray(D, dtype=float)
         E = np.asarray(E, dtype=float)
         self.n_ages, self.T = D.shape
+        # per-fit cache of training subsets keyed by the excluded-year set:
+        # the masked / stacked / paired tensors are constant within one
+        # training run, so building them once instead of every epoch changes
+        # nothing numerically. MEASURED 2026-08-27 (results/timings_cached.json
+        # vs timings_solo.json): NO wall-time gain — per-epoch re-indexing was
+        # not the dominant cost, the arithmetic is. Kept because it is free
+        # and harmless, not because it is fast. The real lever is the device:
+        # cuda gives 5-8x on NB/NLC/CNN (timings_gpu.json), ~1x on LSTM.
+        self._subset_cache: dict = {}
+        self.device = _device()
         self._prepare(D, E)
+        for k, v in list(vars(self).items()):          # training tensors -> device
+            if isinstance(v, torch.Tensor):
+                setattr(self, k, v.to(self.device))
 
         val_years = set(range(self.T - self.inner_val_years, self.T))
         best = None
@@ -105,7 +135,7 @@ class _TorchFamily:
 
     def _train(self, lr, epochs, exclude_years):
         torch.manual_seed(self.seed)          # same init for every config
-        net = self._build()
+        net = self._build().to(self.device)
         opt = torch.optim.Adam(net.parameters(), lr=lr)
         net.train()
         for _ in range(int(epochs)):
@@ -202,17 +232,27 @@ class _CellFamily(_TorchFamily):
     def _mask(self, exclude_years):
         keep = ~np.isin(self._yr_idx, list(exclude_years)) if exclude_years else \
             np.ones_like(self._yr_idx, dtype=bool)
-        return torch.as_tensor(keep)
+        return torch.as_tensor(keep).to(self.device)
+
+    def _subset(self, exclude_years):
+        """(age, yearx, D, E, w) restricted to the kept cells — built once per
+        excluded-year set and cached for the whole training run."""
+        key = frozenset(exclude_years)
+        sub = self._subset_cache.get(key)
+        if sub is None:
+            m = self._mask(exclude_years)
+            sub = (self._age[m], self._yearx[m], self._D[m], self._E[m], self._w[m])
+            self._subset_cache[key] = sub
+        return sub
 
     def _loss(self, net, exclude_years):
-        m = self._mask(exclude_years)
-        out = net(self._age[m], self._yearx[m])
-        return self._nll(out, self._D[m], self._E[m], self._w[m])
+        age, yearx, D, E, w = self._subset(exclude_years)
+        return self._nll(net(age, yearx), D, E, w)
 
     def _val_loss(self, net, val_years):
         net.eval()
         with torch.no_grad():
-            m = torch.as_tensor(np.isin(self._yr_idx, list(val_years)))
+            m = torch.as_tensor(np.isin(self._yr_idx, list(val_years))).to(self.device)
             return self._nll(net(self._age[m], self._yearx[m]),
                              self._D[m], self._E[m], self._w[m])
 
@@ -221,14 +261,15 @@ class _CellFamily(_TorchFamily):
         [len(year_idx), n_ages, n_out]."""
         yrs = np.asarray(year_idx)
         aa, tt = np.meshgrid(np.arange(self.n_ages), yrs, indexing="ij")
-        age = torch.as_tensor(aa.ravel(), dtype=torch.long)
-        yx = torch.as_tensor(self._scale_year(tt.ravel()), dtype=torch.float32)
+        age = torch.as_tensor(aa.ravel(), dtype=torch.long).to(self.device)
+        yx = torch.as_tensor(self._scale_year(tt.ravel()),
+                             dtype=torch.float32).to(self.device)
         out = net(age, yx).reshape(self.n_ages, len(yrs), self.n_out)
         return out.permute(1, 0, 2)                          # [years, ages, out]
 
     def _insample_logmx(self):
         out = self._forward_years(self.net_, np.arange(self.T))
-        return out[:, :, 0].T.numpy()                        # [ages, T]
+        return out[:, :, 0].T.cpu().numpy()                        # [ages, T]
 
 
 class NeuralLC(_CellFamily):
@@ -245,7 +286,7 @@ class NeuralLC(_CellFamily):
         self.net_.eval()
         with torch.no_grad():
             out = self._forward_years(self.net_, np.arange(self.T, self.T + h))
-        return out[:, :, 0].numpy()                          # [h, ages]
+        return out[:, :, 0].cpu().numpy()                          # [h, ages]
 
     def mc_sample_mx(self, h: int, n: int, rng: np.random.Generator) -> np.ndarray:
         """[n, h, ages] stochastic forward passes with dropout ACTIVE."""
@@ -256,7 +297,7 @@ class NeuralLC(_CellFamily):
         with torch.no_grad():
             for i in range(n):
                 o = self._forward_years(self.net_, np.arange(self.T, self.T + h))
-                outs[i] = o[:, :, 0].numpy()
+                outs[i] = o[:, :, 0].cpu().numpy()
         self.net_.eval()
         return np.exp(outs)
 
@@ -327,9 +368,14 @@ class CNNLC(_TorchFamily):
         return Net(self._logm_fill.mean(axis=1))
 
     def _targets(self, exclude_years):
-        ts = [t for t in range(self.L, self.T) if t not in exclude_years]
-        X = torch.stack([self._X[:, t - self.L:t].T for t in ts])   # [B, L, A]
-        return ts, X
+        key = frozenset(exclude_years)
+        cached = self._subset_cache.get(key)
+        if cached is None:
+            ts = [t for t in range(self.L, self.T) if t not in exclude_years]
+            X = torch.stack([self._X[:, t - self.L:t].T for t in ts])   # [B, L, A]
+            cached = (ts, X)
+            self._subset_cache[key] = cached
+        return cached
 
     def _loss(self, net, exclude_years):
         ts, X = self._targets(exclude_years)
@@ -354,7 +400,7 @@ class CNNLC(_TorchFamily):
         with torch.no_grad():
             for step in range(h):
                 pred = self.net_(win[None])[0]                # [A]
-                out[step] = pred.numpy()
+                out[step] = pred.cpu().numpy()
                 win = torch.cat([win[1:], pred[None]], dim=0)
         return out
 
@@ -368,7 +414,7 @@ class CNNLC(_TorchFamily):
                 win = self._X[:, -self.L:].T.clone()
                 for step in range(h):
                     pred = self.net_(win[None])[0]
-                    outs[i, step] = pred.numpy()
+                    outs[i, step] = pred.cpu().numpy()
                     win = torch.cat([win[1:], pred[None]], dim=0)
         self.net_.eval()
         return np.exp(outs)
@@ -377,7 +423,7 @@ class CNNLC(_TorchFamily):
         fitted = self._logm_fill.copy()
         with torch.no_grad():
             ts, X = self._targets(set())
-            out = self.net_(X).numpy()                        # [B, A]
+            out = self.net_(X).cpu().numpy()                        # [B, A]
         for j, t in enumerate(ts):
             fitted[:, t] = out[j]
         return fitted
@@ -429,13 +475,18 @@ class LSTMKt(_TorchFamily):
         return Net()
 
     def _pairs(self, exclude_years):
-        ts = [t for t in range(self.Lw, self.T) if t not in exclude_years]
-        X = torch.as_tensor(
-            np.stack([self._kn[t - self.Lw:t] for t in ts])[:, :, None],
-            dtype=torch.float32)
-        y = torch.as_tensor(np.asarray([self._kn[t] for t in ts]),
-                            dtype=torch.float32)
-        return X, y
+        key = frozenset(exclude_years)
+        cached = self._subset_cache.get(key)
+        if cached is None:
+            ts = [t for t in range(self.Lw, self.T) if t not in exclude_years]
+            X = torch.as_tensor(
+                np.stack([self._kn[t - self.Lw:t] for t in ts])[:, :, None],
+                dtype=torch.float32).to(self.device)
+            y = torch.as_tensor(np.asarray([self._kn[t] for t in ts]),
+                                dtype=torch.float32).to(self.device)
+            cached = (X, y)
+            self._subset_cache[key] = cached
+        return cached
 
     def _loss(self, net, exclude_years):
         X, y = self._pairs(exclude_years)
@@ -451,7 +502,7 @@ class LSTMKt(_TorchFamily):
         super().fit(D, E)
         with torch.no_grad():
             X, y = self._pairs(set())
-            resid = (self.net_(X) - y).numpy() * self._k_std
+            resid = (self.net_(X) - y).cpu().numpy() * self._k_std
         self.sigma_ = float(np.std(resid, ddof=1))
         return self
 
@@ -464,8 +515,8 @@ class LSTMKt(_TorchFamily):
         out = np.empty((n, h))
         with torch.no_grad():
             for step in range(h):
-                x = torch.as_tensor(win[:, :, None], dtype=torch.float32)
-                mu = self.net_(x).numpy() * self._k_std + self._k_mean
+                x = torch.as_tensor(win[:, :, None], dtype=torch.float32).to(self.device)
+                mu = self.net_(x).cpu().numpy() * self._k_std + self._k_mean
                 k_next = mu + eps[:, step]
                 out[:, step] = k_next
                 win = np.concatenate(
@@ -496,8 +547,8 @@ class LSTMKt(_TorchFamily):
         out = np.empty(h)
         with torch.no_grad():
             for step in range(h):
-                x = torch.as_tensor(win[:, :, None], dtype=torch.float32)
-                mu = self.net_(x).numpy()[0] * self._k_std + self._k_mean
+                x = torch.as_tensor(win[:, :, None], dtype=torch.float32).to(self.device)
+                mu = self.net_(x).cpu().numpy()[0] * self._k_std + self._k_mean
                 out[step] = mu
                 win = np.concatenate(
                     [win[:, 1:], [[(mu - self._k_mean) / self._k_std]]], axis=1)
@@ -543,8 +594,8 @@ class NBHead(_CellFamily):
         self.net_.eval()
         with torch.no_grad():
             out = self._forward_years(self.net_, np.arange(self.T, self.T + h))
-        log_rate = out[:, :, 0].numpy()                       # [h, ages], per-exposure
-        r = np.exp(np.clip(out[:, :, 1].numpy(), -7.0, 14.0))
+        log_rate = out[:, :, 0].cpu().numpy()                       # [h, ages], per-exposure
+        r = np.exp(np.clip(out[:, :, 1].cpu().numpy(), -7.0, 14.0))
         return log_rate, r
 
     def _point_logmx(self, h: int) -> np.ndarray:
@@ -565,12 +616,12 @@ class NBHead(_CellFamily):
         with torch.no_grad():
             for i in range(n):
                 o = self._forward_years(self.net_, np.arange(self.T, self.T + h))
-                mu = np.exp(o[:, :, 0].numpy())
-                r = np.exp(np.clip(o[:, :, 1].numpy(), -7.0, 14.0))
+                mu = np.exp(o[:, :, 0].cpu().numpy())
+                r = np.exp(np.clip(o[:, :, 1].cpu().numpy(), -7.0, 14.0))
                 out[i] = rng.gamma(shape=r, scale=mu / r)
         self.net_.eval()
         return out
 
     def _insample_logmx(self):
         out = self._forward_years(self.net_, np.arange(self.T))
-        return out[:, :, 0].T.numpy()
+        return out[:, :, 0].T.cpu().numpy()

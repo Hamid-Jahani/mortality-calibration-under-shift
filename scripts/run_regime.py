@@ -29,6 +29,40 @@ EXPOS = DS / "exposures" / "Exposures_1x1" / "Exposures_1x1.txt"
 REGIMES = {"shift": splits.SHIFT, "placebo": splits.PLACEBO, "stable": splits.STABLE}
 
 
+def _worker_init() -> None:
+    """Pin every numeric library in this worker to one thread."""
+    import os
+    for var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS",
+                "NUMEXPR_NUM_THREADS"):
+        os.environ[var] = "1"
+    try:
+        import torch
+        torch.set_num_threads(1)
+    except ImportError:
+        pass
+
+
+def _run_one_pop(pop, part, sub, regimes, models, mechs, n_samples, seed, log) -> str:
+    pop_regimes = [r.__class__(**{**r.__dict__, "pops": (pop,)}) for r in regimes]
+    log(f"{pop}: {len(sub):,} panel rows, {len(pop_regimes)} origin(s)")
+    df_pop = runner.run_regime(
+        sub, pop_regimes, models, mechs, n_samples=n_samples,
+        out_path=Path(part), allow_real=True, base_seed=seed, log=log,
+    )
+    n_err = int(df_pop["error"].notna().sum()) if "error" in df_pop else 0
+    msg = f"{pop}: rows={len(df_pop)} error_rows={n_err}"
+    log(msg)
+    return msg
+
+
+def _run_one_pop_task(task) -> str:
+    pop, part, sub, regimes, models, mechs, n_samples, seed = task
+    t0 = time.time()
+    quiet = lambda m: None  # noqa: E731 — per-cell chatter stays in the worker
+    msg = _run_one_pop(pop, part, sub, regimes, models, mechs, n_samples, seed, quiet)
+    return f"{msg} ({time.time() - t0:.0f}s)"
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("regime", choices=sorted(REGIMES))
@@ -37,6 +71,10 @@ def main(argv=None) -> int:
     p.add_argument("--mechanisms", default="all", help="comma list of registry names or 'all'")
     p.add_argument("--n-samples", type=int, default=1000)
     p.add_argument("--pops", default=None, help="optional comma subset of the regime's populations")
+    p.add_argument("--exclude-models", default="", help="comma list of registry names to skip "
+                   "(e.g. GP, so the 1.6 GB GP cells run in a separate low-parallel pass)")
+    p.add_argument("--jobs", type=int, default=1, help="populations processed in parallel; each "
+                   "worker pins BLAS/torch to ONE thread so 12 jobs on 12 cores do not oversubscribe")
     p.add_argument("--seed", type=int, default=20260825)
     args = p.parse_args(argv)
 
@@ -47,6 +85,8 @@ def main(argv=None) -> int:
         regimes = [r.__class__(**{**r.__dict__, "pops": pops}) for r in regimes]
 
     models = list(runner.MODELS) if args.models == "all" else args.models.split(",")
+    excluded = {m for m in args.exclude_models.split(",") if m}
+    models = [m for m in models if m not in excluded]
     mechs = list(runner.MECHANISMS) if args.mechanisms == "all" else args.mechanisms.split(",")
 
     t0 = time.time()
@@ -66,20 +106,32 @@ def main(argv=None) -> int:
 
     import pandas as pd  # local: keep module import cheap for --help
 
+    todo = []
     for pop in pops:
         part = parts_dir / f"{pop}.parquet"
         if part.exists():
             log(f"{pop}: part exists, skipping (resume)")
             continue
-        pop_regimes = [r.__class__(**{**r.__dict__, "pops": (pop,)}) for r in regimes]
-        sub = panel[panel["pop"] == pop]
-        log(f"{pop}: {len(sub):,} panel rows, {len(pop_regimes)} origin(s)")
-        df_pop = runner.run_regime(
-            sub, pop_regimes, models, mechs, n_samples=args.n_samples,
-            out_path=part, allow_real=True, base_seed=args.seed, log=log,
-        )
-        n_err = int(df_pop["error"].notna().sum()) if "error" in df_pop else 0
-        log(f"{pop}: rows={len(df_pop)} error_rows={n_err}")
+        todo.append((pop, str(part)))
+
+    jobs = max(1, min(args.jobs, len(todo))) if todo else 1
+    log(f"{len(todo)} population(s) to run, jobs={jobs}")
+    if jobs == 1:
+        for pop, part in todo:
+            _run_one_pop(pop, part, panel[panel["pop"] == pop], regimes, models, mechs,
+                         args.n_samples, args.seed, log)
+    else:
+        # one process per population; each worker pins BLAS/torch to a single
+        # thread (see _worker_init) so `jobs` workers on `jobs` cores do not
+        # oversubscribe — the 2.2x inflation measured in results/timings.json
+        # came from overlapping multi-threaded runs.
+        import multiprocessing as mp
+        ctx = mp.get_context("spawn")
+        tasks = [(pop, part, panel[panel["pop"] == pop], regimes, models, mechs,
+                  args.n_samples, args.seed) for pop, part in todo]
+        with ctx.Pool(jobs, initializer=_worker_init) as pool:
+            for msg in pool.imap_unordered(_run_one_pop_task, tasks):
+                log(msg)
 
     parts = sorted(parts_dir.glob("*.parquet"))
     df = pd.concat([pd.read_parquet(p) for p in parts], ignore_index=True)
