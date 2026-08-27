@@ -39,10 +39,17 @@ from mortcal.runner import CONFORMAL_MECHANISMS                     # noqa: E402
 CLASSICAL = ("LC", "PLC", "CBD", "RH", "SVAR")
 
 
-def _mcs(df, arms, alpha, n_boot, loss, seed):
-    """One MCS over `arms`, or a reason string if it cannot be formed."""
+def _mcs(df, arms, alpha, n_boot, loss, seed, ragged=False):
+    """One MCS over `arms`, or a reason string if it cannot be formed.
+
+    A ragged age support is a REASON TO SKIP, not something to work around:
+    the per-horizon losses are means over each family's own scored ages
+    (CBD is fit on 55+), so a contrast spanning different supports is not
+    comparable. The skip reason is recorded in the output.
+    """
     try:
-        L, groups, names, rep = losses_from_rows(df, loss=loss, arms=arms)
+        L, groups, names, rep = losses_from_rows(
+            df, loss=loss, arms=arms, allow_ragged_age_support=ragged)
     except ValueError as exc:
         return {"skipped": str(exc)}
     out = model_confidence_set(L, groups, alpha=alpha, n_boot=n_boot,
@@ -78,10 +85,18 @@ def main(argv=None) -> int:
     }
 
     # --- 1. classical families under their own predictive law ---------------
+    # Two versions: the full set (skips if CBD's restricted age support makes
+    # it incomparable) and the full-age families only, which is the contrast
+    # that is always valid.
     arms = [(m, "native") for m in CLASSICAL if (m, "native") in present]
     if len(arms) >= 2:
         res["mcs_classical_native"] = _mcs(df, arms, args.alpha, args.n_boot,
                                            args.loss, args.seed)
+    full_age = [(m, "native") for m in CLASSICAL
+                if m != "CBD" and (m, "native") in present]
+    if len(full_age) >= 2:
+        res["mcs_classical_native_full_age"] = _mcs(
+            df, full_age, args.alpha, args.n_boot, args.loss, args.seed)
 
     # --- 2. mechanism contrast WITHIN each family ---------------------------
     # Conformal proper scores are flagged secondary (addendum 2 §3): rank them
