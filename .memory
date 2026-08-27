@@ -166,3 +166,14 @@ Shift+placebo run CPU-only (12 workers, 1 thread each) — 12 CUDA contexts do
 not fit 4 GB VRAM and one serialized GPU is slower than 12 CPU workers for
 the neural axis. GPU hybrid is for STABLE, after probing 2–3 concurrent GPU
 processes. `device` is recorded per parquet row.
+
+## SWEEP WORKERS NEED CPU TORCH (2026-08-27 evening)
+
+12 workers importing the cu124 torch each map ~2 GB of CUDA DLLs ->
+`OSError: [WinError 1455] The paging file is too small` (15.7 GB RAM, small
+pagefile). Sweeps therefore run from `C:/Users/Gaming/venvs/mortcal-cpu`
+(default deps + PyPI torch==2.6.0, which is the CPU build on Windows, +
+gpytorch). The CUDA env `C:/Users/Gaming/venvs/mortcal` is for the GPU
+hybrid on STABLE only, at low parallelism. Also: `Start-Process
+-ArgumentList` joins elements WITHOUT quoting — launch bash via a wrapper
+script in a space-free path (scratchpad/launch_detached.sh).
