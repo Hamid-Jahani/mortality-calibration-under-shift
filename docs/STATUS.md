@@ -201,3 +201,19 @@ then the GP passes. Check: `ssh baazar 'ssh 192.168.1.47 "tail -3
 Retrieve: rsync results/*.parquet back, then the analysis stage
 (scripts/analyse.py) — never read a ranking before the age-support and
 common-cell guards have run.
+
+### First real rows (partial pull, 50 parts / 502 rows) — 2026-08-27 ~20:30
+
+- **Poisoned parts from the oversubscribed first launch**: every MemoryError
+  and every "partially initialized torch._dynamo" row is in KOR or HRV — the
+  two shortest panels, which reached the memory-heavy cells while 10 workers
+  × 12 BLAS threads exhausted RAM (no cgroup/ulimit cap on the node; 17.6 GB
+  available at load 11). Resume skips existing parts, so those two were
+  deleted and re-run separately (`results/logs/shift_rerun_KOR_HRV.out`).
+- **Structural infeasibility (legitimate, recorded, dropped by the common-cell
+  restriction at analysis)**: KOR (17 training years): split_conf (needs ≥18),
+  EnbPI/copula (≥28), LSTM (>17); HRV (19): EnbPI/copula. SVAR pboot on both:
+  explosive-draw rejection per addendum 3 §7. The paper must list these as
+  design-floor cells, not failures. Next-shortest: CHL 28, HKG 34 — fine.
+- Provenance columns present (device=cpu, origin=2019); n_zero_death_cells
+  confirms ISL 117, EST 40 (sex-specific, as previously measured).
