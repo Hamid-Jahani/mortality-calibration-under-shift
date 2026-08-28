@@ -37,6 +37,9 @@ from mortcal.inference import (dm_wild_cluster, losses_from_rows,   # noqa: E402
 from mortcal.runner import CONFORMAL_MECHANISMS                     # noqa: E402
 
 CLASSICAL = ("LC", "PLC", "CBD", "RH", "SVAR")
+#: loss for any contrast that includes a conformal arm (addendum 2 §3): the
+#: per-horizon Winkler/interval score at the construction level.
+INTERVAL_LOSS = "winkler95"
 
 
 def _mcs(df, arms, alpha, n_boot, loss, seed, ragged=False):
@@ -105,8 +108,10 @@ def main(argv=None) -> int:
         conf = [(fam, u) for u in sorted(CONFORMAL_MECHANISMS)
                 if (fam, u) in present]
         if len(conf) >= 2:
+            # interval mechanisms are compared on the INTERVAL score: their
+            # crps/logscore are flagged placeholders (losses_from_rows raises)
             res[f"mcs_conformal_{fam}"] = _mcs(df, conf, args.alpha,
-                                               args.n_boot, args.loss, args.seed)
+                                               args.n_boot, INTERVAL_LOSS, args.seed)
 
     # --- 3. pairwise DM: native vs split conformal, per family --------------
     dm = {}
@@ -115,7 +120,8 @@ def main(argv=None) -> int:
         if not all(c in present for c in pair):
             continue
         try:
-            L, groups, names, rep = losses_from_rows(df, loss=args.loss, arms=pair)
+            # native vs conformal: mixed arms -> interval score, not crps
+            L, groups, names, rep = losses_from_rows(df, loss=INTERVAL_LOSS, arms=pair)
         except ValueError as exc:
             dm[fam] = {"skipped": str(exc)}
             continue

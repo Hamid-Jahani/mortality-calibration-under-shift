@@ -238,6 +238,21 @@ def losses_from_rows(df, loss: str = "crps", arms=None, cluster: str = "pop",
             raise ValueError(f"requested arms absent from these rows: {sorted(missing)}")
     names = sorted(d["_arm"].unique())
 
+    # Proper scores of conformal cells are PLACEHOLDERS (uniform-in-interval
+    # samples; runner docstring, addendum 2 §3) and carry scores_secondary =
+    # True. Ranking them - against distributional arms OR against each other -
+    # ranks interval widths dressed as CRPS. Found on the first real snapshot
+    # (2026-08-28): every conformal-family MCS was being decided on crps.
+    # Interval-valid losses for those contrasts are the per-horizon Winkler
+    # (winkler95_h*) or coverage (coverage95_h*) series.
+    if loss in ("crps", "logscore") and "scores_secondary" in d.columns:
+        flagged = sorted(set(d.loc[d["scores_secondary"].fillna(False).astype(bool), "_arm"]) & set(names))
+        if flagged:
+            raise ValueError(
+                f"loss={loss!r} is a flagged secondary (placeholder) score for arm(s) "
+                f"{flagged}; compare interval mechanisms on loss='winkler95' "
+                "(or 'coverage95'), never on crps/logscore.")
+
     # a row is admissible only if it carries no error AND every horizon is finite
     ok = d["error"].isna() if "error" in d else pd.Series(True, index=d.index)
     finite = np.isfinite(d[hcols].to_numpy(dtype=float)).all(axis=1)

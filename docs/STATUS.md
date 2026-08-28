@@ -242,3 +242,16 @@ common-cell guards have run.
   solo probe. Revised ETA: shift pass 1 ≈ 11:00–13:00, GP pass +2–3 h,
   placebo (one wave, bounded by the long Nordic panels) +8–12 h, placebo GP
   +1–2 h → everything done around 2026-08-29 morning, node time.
+
+### Analysis-stage defect found on the snapshot dry run (fixed, 2026-08-28)
+
+Every conformal-family MCS and the native-vs-split DM were being decided on
+**crps** — for conformal cells a flagged placeholder (uniform-in-interval
+samples; addendum 2 §3). `losses_from_rows` now REFUSES crps/logscore on any
+`scores_secondary` arm (`tests/test_secondary_guard.py`); `analyse.py`
+routes every contrast that includes a conformal arm through the per-horizon
+interval score `winkler95`. Snapshot rankings printed by the script's log
+before the fix were disregarded, not recorded.
+Residual: `CBD/copula_conf` scores 35 ages vs 45 for split/EnbPI (NaN
+propagation in the copula path score over CBD's undefined ages) → fix with a
+nan-aware max and re-run the CBD cells (seconds) after the main sweep.
