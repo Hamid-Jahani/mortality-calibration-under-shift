@@ -1,6 +1,14 @@
 \section{Related work}
 \label{sec:related}
 
+The literature was mapped against the five hypotheses \emph{before} any
+model was fit to real data: the map (\texttt{docs/PRIOR-ART.md}, SHA-256
+\texttt{3f36fb62\ldots}) was committed on 2026-08-26 and hash-stamped, and
+the hypothesis-status clarifications it forced were registered the same day
+as Addendum~3 (Section~\ref{sec:design-prereg}). The verdicts below are
+therefore dated evidence of what was known when the design was frozen, not
+a reading of the results.
+
 \subsection{Stochastic mortality models and the Cairns--Blake--Dowd programme}
 
 \citet{lee1992modeling} model the log central death rate as
@@ -18,7 +26,7 @@ counts, and \citet{brouhns2005bootstrapping} add a semiparametric bootstrap
 that carries parameter uncertainty into the projection. Coherent
 multi-population variants follow \citet{li2005coherent}, and
 \citet{li2017coherent} replace the factor structure by a sparse vector
-autoregression on log rates.
+autoregression on mortality improvements.
 
 \citet{cairns2006two} introduce the two-factor CBD model for post-60
 mortality with explicit parameter uncertainty; \citet{renshaw2006cohort} add
@@ -29,18 +37,28 @@ biological reasonableness; \citet{cairns2011mortality} take six of them
 forward as \emph{density} forecasters and judge their fan charts ex ante;
 \citet{dowd2010evaluating} test the residuals of the same six for goodness
 of fit; and \citet{dowd2010backtesting} set out a backtesting framework for
-their multi-period-ahead density forecasts, applied ex post to English and
-Welsh males. \todo{VERIFY against Dowd et al.\ (2010b) once read: the exact
-backtests used (probability-integral or hit-rate based), the horizons, and
-the finding that parameter-uncertainty-inclusive densities are ``more
-plausible''; adjust the novelty claim in Section~\ref{sec:intro}
-accordingly} Later members of the programme include the Bayesian
-two-population model of \citet{cairns2011bayesian}, the general procedure
-for model construction of \citet{hunt2014general} and the CBDX workhorse of
-\citet{dowd2020cbdx}. \citet{booth2008mortality} review the wider field.
-The \pkg{StMoMo} package \citep{villegas2018stmomo} implements the family in
-a common generalised-linear framework and is the numerical oracle for the
-classical arms of this study.
+their multi-period-ahead density forecasts and apply it ex post to English
+and Welsh males. That last paper is the direct ancestor of the present
+audit and deserves a precise description. It backtests six models---M1,
+M2B, M3B, M5, M6 and M7, each in a parameter-certain and a
+parameter-uncertain variant---by locating realised mortality within the
+prediction intervals of forecasts made from earlier origins, one population
+and one age range at a time. Three of its findings frame ours. It reports
+that ``forecast performance tends to improve with higher ages'', the
+ex-ante alternative to \Hfour. It notes, in a footnote, that ``the
+positions of the individual observations within the prediction intervals
+are not independent'' across horizons, and then measures marginal
+positions anyway; the joint-path coverage of \Hthree\ is the quantity that
+footnote points at and does not compute. And it lists life expectancy,
+survival rates and annuity prices as metrics on which ``in principle,
+backtests could be conducted'' and confines itself to the mortality rate;
+\Hfive\ is that extension. Later members of the programme include the
+Bayesian two-population model of \citet{cairns2011bayesian}, the general
+procedure for model construction of \citet{hunt2014general} and the CBDX
+workhorse of \citet{dowd2020cbdx}. \citet{booth2008mortality} review the
+wider field. The \pkg{StMoMo} package \citep{villegas2018stmomo} implements
+the family in a common generalised-linear framework and is the numerical
+oracle for the classical arms of this study.
 
 Two features of this programme frame ours. It established that stochastic
 mortality models are to be judged as density forecasters, not point
@@ -62,24 +80,57 @@ that it transfers from the HMD to the United States Mortality Database.
 \citet{scognamiglio2022calibrating} fit Lee--Carter and Poisson Lee--Carter
 jointly across populations with a network that replicates their structure.
 \citet{marino2023neural} deepen Lee--Carter and add interval estimation
-for the future $\kappa_t$; \citet{miyata2022extending} replace the two-stage
-procedure by a variational autoencoder fit in one stage and obtain intervals
-without MCMC; \citet{schnurch2022point} is the one neural mortality paper
-whose title promises interval forecasts. \todo{Schn\"urch and Korn (2022) not
-yet read; describe their interval construction and any coverage evidence
-here} Adjacent non-neural machine-learning comparators are the
-gradient-boosted multi-population model of \citet{miao2025gradient}, the
-tree-based analysis of \citet{deprez2017machine}, the pension-fund
-application of \citet{demelo2025actuarial}, and the Markov-switching
-Bayesian VAR on an age-partitioned Lee--Carter of \citet{fu2025applying},
-which is a Bayesian rather than a neural route to uncertainty under
-structural change.
+for the future $\kappa_t$ by a bootstrap ensemble of LSTMs;
+\citet{miyata2022extending} replace the two-stage procedure by a
+variational autoencoder fit in one stage and obtain intervals without MCMC.
+
+\citet{schnurch2022point} is the one neural mortality paper whose title
+promises interval forecasts, and it is the closest prior work to ours. On
+54 HMD populations at ages 60--89, trained to 2006 and tested on
+2007--2016, they report the prediction-interval coverage probability (PICP)
+and mean width at a nominal 95\% for Lee--Carter fit on ten and on twenty
+years, an autoregressive-cohort model, and recurrent, feed-forward and
+convolutional networks: coverages of 74.0, 74.3, 77.2, 86.0, 97.0 and 98.0
+per cent respectively, with the neural intervals the widest. Their
+intervals come from the variation across independently seeded trainings of
+the same network, and their pass rule is one-sided (``minimize MPIW under
+the constraint that PICP is at or above'' the nominal level), so
+over-coverage is a pass. Two features of that study define what ours adds.
+First, the uncertainty mechanism is held fixed by design: the authors
+``rule out several existing methods from the literature because they would
+require substantial structural changes, such as the insertion of dropout
+layers for Monte Carlo dropout'', because doing so ``might decrease the
+forecasting performance, the optimization of which is still our main
+goal''. The 74-versus-98 per cent gap is therefore confounded between
+architecture and mechanism, which is exactly what the crossed design of
+Section~\ref{sec:design} separates. Second, their classical arms see ten or
+twenty training years while the networks see every year of all 54
+populations, so part of the classical under-coverage is a training-window
+artefact; the expanding-origin rule of Section~\ref{sec:design-regimes}
+gives every family the same window. Their Table~2 also shows the
+point-versus-proper-score inversion of \Hone\ (mean squared error ranks the
+networks first; Poisson deviance ranks Lee--Carter first), which they
+attribute to exposure weighting rather than to distributional sharpness.
+
+Adjacent non-neural machine-learning comparators are the gradient-boosted
+multi-population model of \citet{miao2025gradient}, the tree-based analysis
+of \citet{deprez2017machine}, the pension-fund application of
+\citet{demelo2025actuarial}, and the Markov-switching Bayesian VAR on an
+age-partitioned Lee--Carter of \citet{fu2025applying}, which is a Bayesian
+rather than a neural route to uncertainty under structural change.
 
 The evaluation profile of this lineage is documented in
 Section~\ref{sec:intro}: point accuracy throughout; intervals plotted where
-they exist; coverage computed once, without a sharpness penalty; proper
-scores never. The four neural families in our grid
-(Section~\ref{sec:design-families}) are drawn from it.
+they exist; coverage computed without a sharpness penalty where it is
+computed at all; proper scores rarely. Its stable-regime coverage record is
+nevertheless informative, and it already settles part of \Htwo: in periods
+without a break, classical intervals under-cover and bootstrap-ensemble
+neural intervals over-cover \citep{schnurch2022point,marino2023neural}. The
+registered ``under-cover for every family'' clause was therefore falsified
+in the stable regime before our first fit, and the stable regime of this
+paper is a replication arm (Section~\ref{sec:design-status}). The four
+neural families in our grid (Section~\ref{sec:design-families}) are drawn
+from this lineage.
 
 \subsection{Bayesian and Gaussian-process mortality models}
 
@@ -88,11 +139,17 @@ regression; \citet{huynh2021multi} extend this to multi-output GPs over many
 HMD populations and, alone in our library, evaluate by CRPS as the score is
 meant to be used. \citet{barigou2023bayesian} average Bayesian mortality
 models by leave-future-out validation with the expected log predictive
-density and CRPS; \citet{liu2020bayesian} fit a Bayesian Poisson log-normal
-model with regularised time structure. These are the models whose predictive
-distributions are honest by construction, and their evaluation practice is
-the one we adopt for every family; a multi-output GP is one of the ten
-families audited.
+density and CRPS across four countries, and find that ``the `optimal' model
+depends on the country and the scoring rule studied'';
+\citet{goes2025bayesian} report, on an England and Wales war-shock window,
+a top-one inversion between CRPS and the point and log-score rankings.
+These two papers, with \citet{schnurch2022point}, are why \Hone\ is prior
+art and is carried as a harness-validity check rather than a finding
+(Section~\ref{sec:design-status}). \citet{liu2020bayesian} fit a Bayesian
+Poisson log-normal model with regularised time structure. These are the
+models whose predictive distributions are honest by construction, and their
+evaluation practice is the one we adopt for every family; a multi-output GP
+is one of the ten families audited.
 
 \subsection{COVID-era mortality modelling}
 
@@ -110,11 +167,17 @@ Li--Lee model to measure the impact on granular data;
 machine learning to estimate the trend deviation; and
 \citet{robben2025granular} model epidemic and temperature shocks by regime
 switching. \citet{barigou2023bayesian}, as noted, simulate a pandemic
-perturbation because real post-shock data did not yet exist. None of these
-papers evaluates prediction intervals that were fit before 2020 against what
-happened in 2020--2024. That is the gap this audit fills, and the papers
-above are what a modeller would reach for afterwards to repair a failure we
-document; repairing it is not our contribution.
+perturbation because real post-shock data did not yet exist, and remark
+that adapting their validation to ``a change of regime'' is ``beyond the
+scope'' of their paper. \citet{goes2025bayesian} state the constraint
+directly: because the pandemic ``predominantly impacts the most recent
+years of data'', an out-of-sample test was ``impractical'' and their COVID
+analysis ``focuses solely on evaluating the in-sample fit''. None of these
+papers evaluates prediction intervals that were fit before 2020 against
+what happened in 2020--2024; with twenty populations now final through
+2024, the constraint that stopped them is gone. That is the gap this audit
+fills, and the papers above are what a modeller would reach for afterwards
+to repair a failure we document; repairing it is not our contribution.
 
 \subsection{Proper scoring rules, calibration and sharpness}
 
@@ -133,9 +196,10 @@ samples tie. The decomposition of a proper score into uncertainty,
 resolution and miscalibration goes back to \citet{murphy1973new};
 \citet{pohle2020murphy} generalises it to all forecast types and
 \citet{dimitriadis2021stable} give a stable estimator via isotonic
-recalibration. \citet{dawid2014theory} survey the theory; \citet{yanagisawa2023proper}
-extend proper scoring to survival-time distributions, which is the natural
-target when the object of interest is a lifetime rather than a rate.
+recalibration. \citet{dawid2014theory} survey the theory;
+\citet{yanagisawa2023proper} extend proper scoring to survival-time
+distributions, which is the natural target when the object of interest is a
+lifetime rather than a rate.
 
 \subsection{Conformal prediction}
 
@@ -153,18 +217,26 @@ distributions---a bound that a structural break is designed to make large.
 for dynamic time series without exchangeability; \citet{gibbs2021adaptive}
 adapt the miscoverage level online under distribution shift, and
 \citet{gibbs2024conformal} extend this to arbitrary shifts. For multi-step
-forecasts, where the object of interest is the whole path,
-\citet{sun2024copula} calibrate a joint band through a copula of the
-per-horizon scores; related constructions are the copula-based multi-target
-sets of \citet{messoudi2021copula}, the multi-horizon bands of
-\citet{stankeviciute2021conformal} and the functional bands of
-\citet{diquigiovanni2022conformal}. \citet{sun2025conformal} address change
-points directly. \citet{angelopoulos2023gentle} is the standard primer.
+forecasts, where the object of interest is the whole path, joint coverage
+is solved prior art in machine learning: \citet{stankeviciute2021conformal}
+obtain simultaneous multi-horizon bands from a recurrent network by a
+Bonferroni allocation, \citet{sun2024copula} calibrate a joint band through
+a copula of the per-horizon scores, \citet{messoudi2021copula} build
+copula-based multi-target sets, and \citet{diquigiovanni2022conformal} give
+functional bands from a scaled supremum-norm score. \citet{sun2025conformal}
+address change points directly. \citet{angelopoulos2023gentle} is the
+standard primer.
 
-We found no application of conformal prediction to mortality forecasting.
-Three conformal mechanisms enter our grid as \emph{audited arms}, on the
-same footing as the native and ensemble mechanisms; we make no claim that
-they fix anything, and we deliberately do not invoke the finite-sample
+We found no application of conformal prediction to mortality forecasting:
+in the 52-paper corpus of the prior-art map, ``conformal'' has no hit in any
+mortality text, and neither do ``Monte Carlo dropout'' or ``deep
+ensemble''. Three conformal mechanisms enter our grid as \emph{audited
+arms}, on the same footing as the native and ensemble mechanisms; the
+joint-path arm is positioned against \citet{stankeviciute2021conformal}
+and \citet{diquigiovanni2022conformal}, whose construction it uses, and we
+claim the first \emph{measurement} of the marginal-to-joint coverage gap in
+mortality forecasting, not the method. We make no claim that any conformal
+arm fixes anything, and we deliberately do not invoke the finite-sample
 guarantee under a break, for exactly the reason \citet{barber2023conformal}
 give.
 
@@ -186,11 +258,34 @@ confidence set, the set of models not significantly outperformed at a given
 confidence level; \citet{shang2018model} apply the latter to age-specific
 mortality (Japanese national and prefectural data, retirement ages), the one
 prior use we found in this setting. Because our shift regime is a single
-common shock observed in twenty correlated populations, ordinary
+common shock observed in twenty correlated populations, the effective
+number of independent observations is nearer one than twenty, and ordinary
 Diebold--Mariano standard errors overstate the information available; we
-cluster by population and use the wild cluster bootstrap of
-\citet{cameron2008bootstrap} with the six-point weights of
+cluster by population, impose the null, and use the wild cluster bootstrap
+of \citet{cameron2008bootstrap} with the six-point weights of
 \citet{webb2023reworking}, which \citet{mackinnon2017wild} show remain
 reliable at the small number of clusters we have. Rolling-origin evaluation
 follows \citet{tashman2000out}; pre-registration follows the practice
 advocated by \citet{nosek2018preregistration}.
+
+\subsection{What is and is not prior art}
+
+For the record, and because it was written down before any result existed,
+the prior-art map's verdict on each hypothesis is: \Hone\ is prior art
+\citep{barigou2023bayesian,goes2025bayesian,schnurch2022point}; the
+stable-regime half of \Htwo\ is prior art and contradicts the registered
+universality, while its shift-regime half is untested anywhere; \Hthree\ is
+novel in mortality as a measurement and not novel as a method; \Hfour's
+registered direction is contradicted by \citet{dowd2010backtesting}; and
+\Hfive's construction is prior art while an ex-post coverage audit of the
+derived quantities is not found. The white space that remains, and that
+this paper occupies, is the crossed family-by-mechanism design, the
+conformal arms, the marginal-to-joint gap, the derived-quantity coverage
+audit, and the out-of-sample pandemic test the field declined for lack of
+data. Two items are still unread at the time of writing and are named so
+that their absence is visible: the online supplement of
+\citet{schnurch2022point} (Section~C.3, implied annuity present values),
+which is the one live threat to \Hfive's residual novelty if it audits
+annuity-interval coverage rather than presenting point values, and the full
+text of \citet{stankeviciute2021conformal}, cited above from its
+description in later work.

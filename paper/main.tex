@@ -61,6 +61,15 @@
     {\input{tables/#1}}%
     {\todoinline{table \texttt{#1} is produced by \texttt{scripts/analyze.py} from \texttt{results/*.parquet}; not yet generated}}}
 
+% --- \inputfigure{name}: \includegraphics of a generated figure, or a placeholder
+% Figures are written by the analysis stage as figures/<name>.pdf. A missing
+% file renders as a placeholder so the draft always compiles. Optional
+% argument = width (default \textwidth).
+\newcommand{\inputfigure}[2][\textwidth]{%
+  \IfFileExists{figures/#2.pdf}%
+    {\includegraphics[width=#1]{figures/#2.pdf}}%
+    {\todoinline{figure \texttt{#2.pdf} is produced by the analysis stage from \texttt{results/*.parquet}; not yet generated}}}
+
 % --- notation ------------------------------------------------------------------
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\Prob}{\mathbb{P}}

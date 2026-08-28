@@ -93,3 +93,13 @@ results/logs/
 
 # local snapshots of a running sweep (scripts/final_qa.py on partial pulls)
 results/_*
+
+# generated paper artefacts: regenerated from results/*.parquet by
+# scripts/make_tables.py / make_figures.py / sensitivities.py; only the
+# static grid table is hand-maintained. Final versions are committed
+# deliberately once the sweeps are complete.
+paper/tables/tab-*.tex
+!paper/tables/tab-grid.tex
+paper/figures/*.pdf
+paper/figures/figures-manifest.json
+results/sensitivities.json
