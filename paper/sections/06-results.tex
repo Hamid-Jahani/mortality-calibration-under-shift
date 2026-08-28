@@ -1,157 +1,369 @@
 \section{Results}
 \label{sec:results}
 
-\noindent\textit{This section is a skeleton. No model has yet been scored
-on real data; every table is a placeholder hook for a fragment that
-\texttt{scripts/analyze.py} will generate from the per-cell results files.
-No number in this section is to be typed by hand.}
+\noindent\textit{This section is a skeleton. Every table is a generated
+fragment (\texttt{paper/tables/<name>.tex}, one \texttt{booktabs} body per
+hook) produced by the analysis stage from the per-cell results files; every
+figure is a generated \texttt{figures/<name>.pdf}. No number in this
+section is typed by hand, and no fragment generated from a partial sweep
+snapshot is quoted: such fragments carry a first-line comment marking them
+non-final and are regenerated from \texttt{results/<regime>.parquet}
+before any sentence is written about them. Each table's note states the
+regime, the number of populations, and---where a contrast is
+involved---the number of cells dropped by the common-cell restriction of
+Addendum~3 (\S11).}
 
 \subsection{Validation gates}
 
 Gates 1--3 (Section~\ref{sec:design-gates}) passed before any real-data
 result was read. The one substantive finding from gate~1---the mild
 over-dispersion of two-stage SVD Lee--Carter on Poisson data---is carried
-into the reading of the SVD-LC rows below.
+into the reading of the SVD-LC rows below. A fourth, post-sweep gate
+(\texttt{scripts/final\_qa.py}) classifies every cell that produced no
+valid row before any table is generated; its output is the first table of
+this section.
+
+\subsection{What was scored: design-floor and method-failure cells}
+\label{sec:results-infeasible}
+
+\begin{table}[htbp]\centering
+\caption{Primary-grid cells that produced no valid row, by population,
+family and mechanism: the QA gate's class (\emph{structural} design-floor
+cell, \emph{method} failure, or \emph{machine} failure), an excerpt of the
+recorded reason, and the number of rows affected. The machine class must be
+empty for any table in this paper to be generated. Regime, population count
+and the total number of error rows are stated in the table note.}
+\label{tab:infeasible}
+\inputtable{tab-infeasible}
+\end{table}
+
+Table~\ref{tab:infeasible} lists every (population, family, mechanism) cell
+of the primary grid that produced no valid row, in the three classes of the
+QA gate. \emph{Structural} cells are design-floor cells: the panel is
+shorter than the mechanism's calibration or ensemble-member requirement, or
+falls under the registered admissibility floor of $n_{\text{train}}\ge 15$
+complete training years (Addendum~3, \S4); the shortest shift panels
+(training lengths in Table~\ref{tab:populations}) are of this kind, and
+these cells are a property of the design, not a failure of any method.
+\emph{Method} cells are those in which a family's own sampler declines to
+produce a predictive law on that panel under a registered rule: the
+explosive-coefficient-draw rejection of the sparse VAR (Addendum~3, \S7,
+rejection and never clipping) and overflow of the Poisson composition on
+bootstrap refits. The registered rejection rule does fire on real data for
+the sparse VAR; which populations and arms it affects, and how many rows,
+is reported in the table rather than here, and the finding is read as a
+property of the family under its own rule. \emph{Machine} cells are
+artefacts of a broken run and are re-run, never analysed around; the gate
+refuses to pass while any exist. Error rows of every class are excluded
+from every mean in this paper, and every contrast between arms below is
+computed on the intersection of cells in which each compared arm produced
+a valid row, with the intersection size reported (Addendum~3, \S11).
+\todo{confirm on the final files that the machine class is empty and that
+the structural list matches the training lengths of
+Table~\ref{tab:populations} exactly}
 
 \subsection{Calibration where nothing breaks: the stable regime}
 
-Table~\ref{tab:h2-coverage} (stable panel) reports empirical coverage at
-50/80/95\% and the interval score for every admissible cell across the
-thirteen expanding origins 1990--2014. It establishes the reference level
-for \Htwo\ and \Hfive: how far each family--mechanism pair is from nominal
-when the future resembles the past.
-\todo{stable-regime run not yet executed; requires runner defects 1--5 in
-the defect ledger (STATUS.md) closed first}
+The stable panel of Table~\ref{tab:h2-coverage} reports empirical coverage
+at 50/80/95\% and the 95\% interval score for every admissible cell across
+the thirteen expanding origins 1990--2014, with the per-origin effective
+cluster count in the table note (the stable panel is unbalanced;
+Addendum~3, \S4). It establishes the reference level for \Htwo\ and
+\Hfive: how far each family--mechanism pair is from nominal when the future
+resembles the past. Under Addendum~3 (\S8) this regime is a
+\emph{replication arm}: stable-regime coverage for neural and classical
+families has been published, and the audit's open question is the shift
+half. \todo{stable-regime run not yet executed; the stable rows of every
+regime-indexed table are a pending placeholder until
+\texttt{results/stable.parquet} exists}
 
-\subsection{H1: ranking by RMSE versus ranking by CRPS}
+\subsection{H1 as a harness-validity check: ranking by RMSE versus ranking by proper scores}
 
 \begin{table}[htbp]\centering
-\caption{Shift regime: rank of each family by RMSE on log rates and by CRPS,
-with the Spearman correlation and the number of top-3 inversions.}
+\caption{Distributional arms only: rank of each family--mechanism arm by
+mean RMSE on log rates, by mean CRPS on log rates and by mean Poisson log
+score, with the rank correlation between the orderings, by regime. CBD
+(fit on ages 55--99, 45 scored ages) is ranked in its own block with its
+age support stated. The three conformal mechanisms are absent: their
+proper scores are placeholders (Section~\ref{sec:design-mechanisms}).}
 \label{tab:h1-rankings}
 \inputtable{tab-h1-rankings}
 \end{table}
 
-The table will show whether the family ordering that the literature's
-default metric produces survives the move to a proper score.
-\todo{result pending}
+Table~\ref{tab:h1-rankings} ranks the distributional arms---the
+family--mechanism cells whose samples constitute a predictive
+distribution---three times within each regime: by mean RMSE on log rates,
+by mean CRPS on log rates and by mean Poisson log score, and reports the
+rank correlation between the point-accuracy ordering and each
+proper-score ordering. Two exclusions are by construction. The conformal
+arms do not appear, because their CRPS, log score and PIT are placeholder
+scores from uniform-in-interval samples and are never ranked against a
+distributional mechanism. CBD is ranked in a separate block: it is fit on
+ages 55--99 and therefore scored on 45 ages, and a mean over a different
+age support is not the same quantity as a mean over ages 0--99. Means are
+taken within population--sex first and then across populations, never
+exposure-weighted. Under Addendum~3 (\S8) \Hone\ is a harness-validity
+check rather than a headline: the RMSE-versus-proper-score inversion is
+already published \citep{barigou2023bayesian,goes2025bayesian,schnurch2022point},
+and what this table adds is its magnitude under pre-registration.
+\todo{result pending} \todo{the registered top-3 inversion count and the
+cluster-bootstrap interval for the correlation are not part of the
+generated table; report them in the text once computed}
 
 \subsection{H2: marginal coverage across the break}
 
 \begin{table}[htbp]\centering
-\caption{Empirical coverage of nominal 50/80/95\% intervals and mean interval
-score, by family and mechanism, in the stable and shift regimes.}
+\caption{Empirical coverage of nominal 50/80/95\% central intervals and
+mean 95\% interval score, by family, mechanism and regime, with the number
+of cells behind each mean. Conformal mechanisms are scored at their
+construction level only, so their 50\% and 80\% columns are blank by
+design (Addendum~2, \S3). Error rows are excluded from every mean and
+counted in Table~\ref{tab:infeasible}; a regime whose results file does
+not yet exist appears as a pending row.}
 \label{tab:h2-coverage}
 \inputtable{tab-h2-coverage}
 \end{table}
 
-The table will show, for every admissible cell, the shortfall from nominal in
-each regime and the shift-minus-stable difference with its wild-cluster
-bootstrap interval. \todo{result pending}
+Table~\ref{tab:h2-coverage} reports, for every admissible family--mechanism
+cell and every regime, the mean empirical coverage at 50, 80 and 95\%, the
+mean 95\% interval score, and the number of cells behind each mean;
+conformal rows carry the 95\% columns only, because a conformal wrapper
+constructs one interval at one level and its coverage and interval score
+are read from that interval's bounds. The interval score is the
+width-penalised companion that keeps a vague interval from passing as a
+calibrated one. \Htwo\ is stated two-sided (Addendum~3, \S8): the absolute
+departure $|{\text{coverage}-\text{nominal}}|$ grows from the stable to the
+shift regime, with the direction free to differ by family and mechanism.
+The registered test---the paired shift-minus-stable contrast of the
+coverage indicators under the wild cluster bootstrap---is not a column of
+this descriptive table. \todo{result pending} \todo{paired
+shift-minus-stable contrast with its wild-cluster-bootstrap interval: to be
+reported in the text or a companion fragment once the stable regime exists}
 
 \subsection{H3: joint path coverage}
 
 \begin{table}[htbp]\centering
-\caption{Marginal coverage at each horizon $h=1,\dots,5$ against joint path
-coverage over the whole trajectory, nominal 95\%, shift regime.}
+\caption{Marginal coverage of nominal 95\% intervals, pooled over horizons,
+against joint path coverage over the whole horizon set ($H=5$ in the shift
+and stable regimes, $H=9$ in the placebo), and their difference, by family,
+mechanism and regime. Conformal rows enter with both quantities read from
+their interval bounds at the construction level (Addendum~3, \S6).}
 \label{tab:h3-joint}
 \inputtable{tab-h3-joint}
 \end{table}
 
-The table will show the gap between the coverage a mortality paper reports
-and the coverage a liability depends on, for every family, and whether the
-copula conformal band closes it. \todo{result pending}
+Table~\ref{tab:h3-joint} sets, for each family--mechanism cell and regime,
+mean marginal coverage at 95\% beside mean joint path coverage at the same
+nominal level and the gap between the two: the difference between the
+coverage a mortality paper reports and the coverage a liability depends
+on. Conformal rows are included, because both quantities are read from
+their interval bounds, and the copula conformal arm is the only mechanism
+whose band is constructed to be joint over $h=1,\dots,H$. Under
+Addendum~3 (\S8) the registered comparator for \Hthree\ is not the marginal
+rate but each model's own simulated-path-implied joint coverage, computed
+from the same predictive paths, so that the realised-minus-implied gap can
+take either sign; that quantity is not among the columns the runner emits.
+\todo{result pending} \todo{model-implied joint coverage column (Addendum~3
+\S8) is not emitted by the runner; add it to the analysis stage or record
+the omission as a deviation in Section~\ref{sec:design-deviations}}
+
+\begin{figure}[htbp]\centering
+\inputfigure{fig-joint-vs-marginal-shift}
+\caption{Marginal 95\% coverage against joint path coverage over
+$h=1,\dots,H$ as paired bars per mechanism, one panel per family, shift
+regime, on the common cells of each panel (intersection size in the panel
+title). Conformal arms are drawn in a distinct style and read from their
+interval bounds; the nominal level is marked. The stable and placebo
+counterparts are the same figure on those regimes' files.}
+\label{fig:joint-vs-marginal}
+\end{figure}
 
 \subsection{H4: where in age the intervals fail}
 
 \begin{table}[htbp]\centering
-\caption{Shift-regime coverage of nominal 95\% intervals by age band
-($0$--$24$, $25$--$64$, $65$--$99$), by family and mechanism.}
+\caption{Empirical coverage of nominal 95\% intervals within the age bands
+$0$--$24$, $25$--$64$ and $65$--$99$, by family, mechanism and regime.
+CBD is fit on ages 55--99: its $0$--$24$ entry is blank and its
+$25$--$64$ entry covers ages 55--64 only, as the table note states.
+Conformal rows are read at the same bands the wrappers calibrate on.}
 \label{tab:h4-age}
 \inputtable{tab-h4-age}
 \end{table}
 
-The table will show whether the failure concentrates at the ages that carry
-annuity liabilities. \todo{result pending; runner currently emits only
-scalar mean coverage; per-age-band columns are defect 1 in the ledger}
+Table~\ref{tab:h4-age} gives, for each family--mechanism cell and regime,
+the 95\% coverage within the three registered age bands, so that the
+$65$--$99$ and $25$--$64$ columns can be read against each other as
+\Hfour\ requires; the conformal wrappers are Mondrian-stratified on the
+same bands, so a conformal row is read at the resolution it was calibrated
+at. CBD contributes no $0$--$24$ value and a $25$--$64$ value restricted to
+ages 55--64, which the table note records so that its row is not read
+against the full-age families. The registered direction (worse coverage at
+65--99 than at 25--64) is contradicted by \citet{dowd2010backtesting}, who
+find forecast performance improving with age; Addendum~3 (\S8) pre-commits
+to reporting a reversal as an informative result. \todo{result pending}
 
 \begin{figure}[htbp]\centering
-\todoinline{figure \texttt{fig-calibration-by-age.pdf}: single-age coverage
-curves, shift versus stable, one panel per family}
-\caption{Calibration by single age, nominal 95\%, shift (solid) versus
-stable (dashed), one panel per family; mechanisms as line styles.}
-\label{fig:calibration-by-age}
+\inputfigure{fig-coverage-by-age-shift}
+\caption{Single-age empirical coverage of nominal 95\% intervals (mean
+over horizons), one panel per family, mechanisms as lines with conformal
+arms dashed, shift regime, on the common cells of each panel. Ages a
+family does not score are left blank and CBD's panel states its age
+support; the horizontal line is the nominal level. The stable and placebo
+counterparts are the same figure on those regimes' files.}
+\label{fig:coverage-by-age}
 \end{figure}
 
-\subsection{PIT histograms and the Murphy decomposition}
+\subsection{PIT uniformity, reliability and the Murphy decomposition}
 
 \begin{table}[htbp]\centering
-\caption{Randomised PIT decile frequencies and Kolmogorov--Smirnov distance
-from uniformity, pooled within population, by family and mechanism and
-regime.}
+\caption{Distributional arms only: mean Kolmogorov--Smirnov distance of the
+randomised PIT from uniformity, and the share of population--sex cells
+whose nominal KS $p$-value falls below $0.05$, by family, mechanism and
+regime; conformal rows are left blank because their PIT is a placeholder.
+The $p$-value is descriptive: PIT values within a cell are dependent
+across ages and horizons (Addendum~2, \S4), and formal inference on
+calibration is population-clustered.}
 \label{tab:pit}
 \inputtable{tab-pit}
 \end{table}
 
 \begin{table}[htbp]\centering
-\caption{Murphy decomposition of the interval score into uncertainty,
-resolution and miscalibration, shift regime.}
+\caption{Murphy decomposition of the Brier score of the 95\% interval-hit
+indicator into reliability, resolution and uncertainty, together with the
+reliability term of the PIT-scale decomposition against the uniform
+reference, by family, mechanism and regime. With a single constant nominal
+level the resolution term is zero by construction (table footnote). The
+PIT-scale column is shown for distributional arms only.}
 \label{tab:murphy}
 \inputtable{tab-murphy}
 \end{table}
 
-The PIT table will show the \emph{shape} of each failure (U, hump or slope);
-the Murphy table will show whether a poor score comes from miscalibration or
-from lack of resolution. \todo{result pending; Murphy estimator is defect 2
-in the ledger}
+Table~\ref{tab:pit} reports, for the distributional arms, the mean KS
+distance of the randomised PIT from the uniform and the share of cells
+whose nominal KS $p$-value is below $0.05$; the $p$-value is descriptive
+only, because PIT values across ages and horizons within a cell are
+dependent, and the shape of each departure is read from
+Figure~\ref{fig:pit-hist}. Table~\ref{tab:murphy} decomposes the Brier
+score of the 95\% hit indicator: with a constant forecast probability
+there is one bin, so reliability is the squared coverage gap, resolution
+is zero by construction, and uncertainty is the base-rate term; the
+PIT-scale reliability beside it is the chi-square-type distance from
+uniformity that a single level's coverage cannot see, and it is
+distributional-arms only because a conformal cell's PIT is a placeholder.
+\todo{result pending} \todo{Section~\ref{sec:metrics} describes a Murphy
+decomposition of the interval score and of exceedance Brier scores with an
+isotonic recalibration; the harness emits the one-bin hit-indicator form
+and the PIT-scale form above---reconcile the metrics text with the emitted
+columns before submission}
+
+\begin{figure}[htbp]\centering
+\inputfigure{fig-pit-hist-shift}
+\caption{Ten-bin randomised PIT histograms averaged across population--sex
+cells, in a family $\times$ distributional-mechanism grid, shift regime;
+the horizontal line is the uniform reference. Conformal arms are absent
+because their PIT is a placeholder. A U shape reads as over-confidence, a
+hump as under-confidence, a slope as bias. The stable and placebo
+counterparts are the same figure on those regimes' files.}
+\label{fig:pit-hist}
+\end{figure}
+
+\begin{figure}[htbp]\centering
+\inputfigure{fig-reliability-shift}
+\caption{Reliability diagram: empirical coverage against nominal level
+(50, 80, 95\%) per mechanism, one panel per family, shift regime, with
+the diagonal as perfect calibration. Conformal arms contribute a single
+point at their construction level, 95\%, in a distinct style. The stable
+and placebo counterparts are the same figure on those regimes' files.}
+\label{fig:reliability}
+\end{figure}
 
 \subsection{Forecast comparison: Diebold--Mariano and the model confidence set}
 
 \begin{table}[htbp]\centering
-\caption{Pairwise Diebold--Mariano statistics on CRPS with wild-cluster
-bootstrap $p$-values, and membership of the 90\% model confidence set, by
-regime.}
+\caption{Registered forecast-comparison tests from the analysis stage.
+Upper block: each model confidence set at 90\%---contrast name, loss used,
+arms retained, elimination $p$-values, and cells kept and dropped by the
+common-cell restriction. Lower block: pairwise Diebold--Mariano, native
+versus split conformal within each family---loss used, mean loss
+differential, wild-cluster-bootstrap $p$-value and number of clusters.
+Contrasts among distributional arms use CRPS on log rates; every contrast
+that includes a conformal arm uses the per-horizon 95\% interval score. A
+contrast that cannot be formed is listed with its recorded reason.}
 \label{tab:dm-mcs}
 \inputtable{tab-dm-mcs}
 \end{table}
 
-The table will show which differences between distributional cells survive
-clustering by population, and how the set of not-outperformed models
-changes between the stable and shift regimes. \todo{result pending;
-per-horizon loss columns are defect 4 in the ledger}
+Table~\ref{tab:dm-mcs} shows the two registered inference procedures, and
+its loss column is the reason it is one table: a contrast among
+distributional arms is decided on CRPS on log rates, while any contrast
+that includes a conformal arm is decided on the per-horizon 95\% interval
+score, because a conformal cell's CRPS is a placeholder. The model
+confidence sets are, first, the classical families under their own
+predictive law---formed over the full-age families, and over all five only
+when CBD's 45-age support does not make the loss incomparable, a skip that
+is recorded with its reason rather than worked around---and, second, the
+three conformal mechanisms within each family on the interval score. The
+Diebold--Mariano block tests native against split conformal within each
+family on the interval score, with a negative differential favouring the
+native arm. Every entry is computed on the intersection of cells in which
+each compared arm produced a valid row, and the kept and dropped counts are
+part of the table. \todo{result pending} \todo{the ensemble-versus-dropout
+and bootstrap-versus-native contrasts of Section~\ref{sec:design-grid} are
+not yet in the analysis script; add them or record the omission}
+\todo{confirm the raise-on-NaN guard in the inference layer is in place on
+the final files before any set membership is read (STATUS ledger)}
 
 \subsection{Twin crises: 1914--1922 beside 2020--2024}
 
 \begin{table}[htbp]\centering
-\caption{Placebo and shift regimes side by side: coverage of nominal 95\%
-intervals at each horizon for the classical families, eleven and twenty
-populations respectively; placebo reported pooled and by the pre-specified
-strata (neutral register-based, belligerent total, civilian-only).}
+\caption{Placebo (train to 1913, test 1914--1922, eleven populations) and
+shift (train to 2019, test 2020--2024, twenty populations) side by side:
+marginal 95\% coverage and joint path coverage, by family and mechanism,
+with the placebo strata of Addendum~1 (neutral register-based, belligerent
+total, civilian-only) as a further column. Joint coverage is over $H=9$
+horizons in the placebo and $H=5$ in the shift, so the two joint columns
+are not on one scale. The placebo and strata columns are a pending
+placeholder until the placebo results file and its sensitivities exist.}
 \label{tab:twin-crises}
 \inputtable{tab-twin-crises}
 \end{table}
 
-The table will show whether the pattern of interval failure at the earlier
-break resembles the pattern at the later one---descriptively, without a
-transfer regression---with the neutral stratum as the pandemic-only
-analogue. \todo{result pending}
+Table~\ref{tab:twin-crises} places the placebo and shift regimes side by
+side for each family--mechanism cell, on marginal 95\% coverage and joint
+path coverage, so that the pattern of interval failure at the earlier
+break can be compared with the pattern at the later one
+descriptively---without a transfer regression---with the caveat that the
+placebo joint column spans nine horizons and the shift column five. The
+strata column carries the placebo result by the strata registered in
+Addendum~1, of which the neutral register-based stratum is the
+pandemic-only analogue; the pooled placebo result is always read beside
+it. \todo{result pending; gated on the placebo sweep and its data-quality
+check} \todo{the strata column is filled from the placebo sensitivities
+output; confirm it is populated before this subsection is written}
 
 \subsection{Architecture or mechanism? Contrasts within sub-grids}
 
 The payoff of the crossed design. Each contrast below is pre-registered and
-computed as a paired difference within the admissible sub-grid named.
+computed as a paired difference within the admissible sub-grid named, on
+the common cells of that sub-grid.
 
 \begin{enumerate}
-\item \emph{Conformal versus native, classical families only.} Does wrapping
-  a classical fit in a conformal band change its shift-regime coverage, and
-  at what cost in width?
+\item \emph{Conformal versus native.} Does wrapping a fit in a conformal
+  band change its shift-regime interval score and coverage? The native
+  versus split-conformal block of Table~\ref{tab:dm-mcs} carries this
+  contrast, per family, on the interval score; the width side of the
+  question is read from the interval-score column of
+  Table~\ref{tab:h2-coverage}.
 \item \emph{Ensemble versus Monte Carlo dropout, neural families only.} Do
   two mechanisms on the same architecture give the same coverage?
+  \todo{not yet in the analysis script}
 \item \emph{Bootstrap versus native, classical families only.} Does adding
   parameter uncertainty move a classical interval toward nominal at the
-  break?
+  break? \todo{not yet in the analysis script}
 \item \emph{Joint-path conformal versus split conformal, all families.} The
-  H3 mechanism contrast.
+  \Hthree\ mechanism contrast: the within-family conformal confidence sets
+  of Table~\ref{tab:dm-mcs} on the interval score, read with the joint
+  column of Table~\ref{tab:h3-joint}.
 \end{enumerate}
-\todo{one table or figure per contrast; hooks to be added once the analysis
-script fixes the layout}
+\todo{one paragraph per contrast once the fragments exist; no main effect
+over the ragged grid is ever reported}
