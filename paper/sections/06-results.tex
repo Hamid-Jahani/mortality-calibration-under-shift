@@ -26,7 +26,7 @@ this section.
 \subsection{What was scored: design-floor and method-failure cells}
 \label{sec:results-infeasible}
 
-\begin{table}[htbp]\centering
+\begin{table}[p]\centering
 \caption{Primary-grid cells that produced no valid row, by population,
 family and mechanism: the QA gate's class (\emph{structural} design-floor
 cell, \emph{method} failure, or \emph{machine} failure), an excerpt of the
@@ -39,7 +39,8 @@ and the total number of error rows are stated in the table note.}
 
 Table~\ref{tab:infeasible} lists every (population, family, mechanism) cell
 of the primary grid that produced no valid row, in the three classes of the
-QA gate. \emph{Structural} cells are design-floor cells: the panel is
+QA gate; the unabridged ledger, one row per affected cell with the full
+recorded reason, is Appendix~\ref{app:infeasible}. \emph{Structural} cells are design-floor cells: the panel is
 shorter than the mechanism's calibration or ensemble-member requirement, or
 falls under the registered admissibility floor of $n_{\text{train}}\ge 15$
 complete training years (Addendum~3, \S4); the shortest shift panels
@@ -49,10 +50,10 @@ these cells are a property of the design, not a failure of any method.
 produce a predictive law on that panel under a registered rule: the
 explosive-coefficient-draw rejection of the sparse VAR (Addendum~3, \S7,
 rejection and never clipping) and overflow of the Poisson composition on
-bootstrap refits. The registered rejection rule does fire on real data for
-the sparse VAR; which populations and arms it affects, and how many rows,
-is reported in the table rather than here, and the finding is read as a
-property of the family under its own rule. \emph{Machine} cells are
+bootstrap refits. \todo{whether and where the sparse-VAR rejection rule
+fires---which populations and arms, and how many rows---is reported in
+Table~\ref{tab:infeasible}, and any such rows are read as a property of the
+family under its own registered rule} \emph{Machine} cells are
 artefacts of a broken run and are re-run, never analysed around; the gate
 refuses to pass while any exist. Error rows of every class are excluded
 from every mean in this paper, and every contrast between arms below is
@@ -105,14 +106,15 @@ taken within population--sex first and then across populations, never
 exposure-weighted. Under Addendum~3 (\S8) \Hone\ is a harness-validity
 check rather than a headline: the RMSE-versus-proper-score inversion is
 already published \citep{barigou2023bayesian,goes2025bayesian,schnurch2022point},
-and what this table adds is its magnitude under pre-registration.
+and what this table adds is whether, and by how much, the inversion recurs
+under pre-registration.
 \todo{result pending} \todo{the registered top-3 inversion count and the
 cluster-bootstrap interval for the correlation are not part of the
 generated table; report them in the text once computed}
 
 \subsection{H2: marginal coverage across the break}
 
-\begin{table}[htbp]\centering
+\begin{table}[p]\centering
 \caption{Empirical coverage of nominal 50/80/95\% central intervals and
 mean 95\% interval score, by family, mechanism and regime, with the number
 of cells behind each mean. Conformal mechanisms are scored at their
@@ -142,7 +144,7 @@ reported in the text or a companion fragment once the stable regime exists}
 
 \subsection{H3: joint path coverage}
 
-\begin{table}[htbp]\centering
+\begin{table}[p]\centering
 \caption{Marginal coverage of nominal 95\% intervals, pooled over horizons,
 against joint path coverage over the whole horizon set ($H=5$ in the shift
 and stable regimes, $H=9$ in the placebo), and their difference, by family,
@@ -180,7 +182,7 @@ counterparts are the same figure on those regimes' files.}
 
 \subsection{H4: where in age the intervals fail}
 
-\begin{table}[htbp]\centering
+\begin{table}[p]\centering
 \caption{Empirical coverage of nominal 95\% intervals within the age bands
 $0$--$24$, $25$--$64$ and $65$--$99$, by family, mechanism and regime.
 CBD is fit on ages 55--99: its $0$--$24$ entry is blank and its
@@ -227,7 +229,7 @@ calibration is population-clustered.}
 \inputtable{tab-pit}
 \end{table}
 
-\begin{table}[htbp]\centering
+\begin{table}[p]\centering
 \caption{Murphy decomposition of the Brier score of the 95\% interval-hit
 indicator into reliability, resolution and uncertainty, together with the
 reliability term of the PIT-scale decomposition against the uniform
@@ -279,19 +281,9 @@ and placebo counterparts are the same figure on those regimes' files.}
 
 \subsection{Forecast comparison: Diebold--Mariano and the model confidence set}
 
-\begin{table}[htbp]\centering
-\caption{Registered forecast-comparison tests from the analysis stage.
-Upper block: each model confidence set at 90\%---contrast name, loss used,
-arms retained, elimination $p$-values, and cells kept and dropped by the
-common-cell restriction. Lower block: pairwise Diebold--Mariano, native
-versus split conformal within each family---loss used, mean loss
-differential, wild-cluster-bootstrap $p$-value and number of clusters.
-Contrasts among distributional arms use CRPS on log rates; every contrast
-that includes a conformal arm uses the per-horizon 95\% interval score. A
-contrast that cannot be formed is listed with its recorded reason.}
-\label{tab:dm-mcs}
+% tab-dm-mcs is a page-spanning longtable fragment generated by
+% scripts/make_tables.py; it carries its own \caption and \label{tab:dm-mcs}.
 \inputtable{tab-dm-mcs}
-\end{table}
 
 Table~\ref{tab:dm-mcs} shows the two registered inference procedures, and
 its loss column is the reason it is one table: a contrast among
@@ -330,7 +322,7 @@ placeholder until the placebo results file and its sensitivities exist.}
 
 Table~\ref{tab:twin-crises} places the placebo and shift regimes side by
 side for each family--mechanism cell, on marginal 95\% coverage and joint
-path coverage, so that the pattern of interval failure at the earlier
+path coverage, so that the pattern of interval coverage at the earlier
 break can be compared with the pattern at the later one
 descriptively---without a transfer regression---with the caveat that the
 placebo joint column spans nine horizons and the shift column five. The

@@ -103,3 +103,14 @@ paper/tables/tab-*.tex
 paper/figures/*.pdf
 paper/figures/figures-manifest.json
 results/sensitivities.json
+
+# LaTeX build litter
+paper/*.log
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.out
+paper/*.toc
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz

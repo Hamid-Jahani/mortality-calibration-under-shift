@@ -8,7 +8,7 @@
 # Source        : https://www.mortality.org/Data/ZippedDataFiles (free registration)
 # HMD vintage   : Last modified 15 Jun 2026; Methods Protocol v6 (2017)
 # Retrieved     : 2026-08-25
-# Populations   : 49
+# Populations   : 50
 # Verify with   : sha256sum -c data/MANIFEST.sha256   (run from repo root)
 #
 9a27db2841c7d9e66af750b0c62880996ef7f9073e0a409ca90f8c0a3e2f623a *Dataset/births/Births/Births.txt
