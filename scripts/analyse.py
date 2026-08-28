@@ -64,7 +64,10 @@ def _mcs(df, arms, alpha, n_boot, loss, seed, ragged=False):
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("parquet", help="sweep output from scripts/run_regime.py")
+    p.add_argument("parquet", nargs="+",
+                   help="sweep output(s) from scripts/run_regime.py; pass the regime's "
+                        "pass-1 and pass-2 (GP) parquets together so GP arms enter the "
+                        "contrasts (rows are concatenated; duplicate cells abort)")
     p.add_argument("--out", required=True, help="analysis JSON path")
     p.add_argument("--loss", default="crps", choices=["crps", "logscore"])
     p.add_argument("--alpha", type=float, default=0.10, help="MCS level (registered: 90%%)")
@@ -72,7 +75,12 @@ def main(argv=None) -> int:
     p.add_argument("--seed", type=int, default=20260827)
     args = p.parse_args(argv)
 
-    df = pd.read_parquet(args.parquet)
+    df = pd.concat([pd.read_parquet(p_) for p_ in args.parquet], ignore_index=True)
+    key = ["regime", "pop", "sex", "origin", "model", "mechanism"]
+    dup = df.duplicated(key, keep=False)
+    if dup.any():
+        raise SystemExit(f"{int(dup.sum())} duplicate cells across the supplied parquets "
+                         f"(e.g. {df.loc[dup, key].iloc[0].to_dict()}); fix upstream, never average")
     n_err = int(df["error"].notna().sum()) if "error" in df else 0
     print(f"[analyse] {len(df)} rows, {n_err} error rows "
           f"({100 * n_err / max(len(df), 1):.1f}%)", flush=True)
