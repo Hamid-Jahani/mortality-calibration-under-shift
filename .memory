@@ -1,219 +1,85 @@
-# .memory — operational state, 2026-08-27
+# .memory — operational pick-up state (rewritten 2026-08-28 afternoon)
 
-Fast pick-up for a session that has lost context. The *scientific* ledger is
-`docs/STATUS.md`; this file is how to RUN things and what is currently
-in flight. Registered documents are the authority over both:
-`PREREGISTRATION.md` + addenda 1–3 and `docs/PRIOR-ART.md`, all hash-stamped.
+Fast orientation for a session that has lost context. The *scientific*
+ledger is `docs/STATUS.md` (chronological, authoritative on findings and
+deviations); this file is how to RUN things and what is in flight.
+Registered documents override both: `PREREGISTRATION.md` + addenda 1–3
+(hashes in their commits), `docs/PRIOR-ART.md`, `docs/GRID.md`.
 
-## Run it
+## Where the work runs
 
-```bash
-cd "h:/Mortality - Explainable AI"
-.venv/Scripts/python.exe -m pytest -q            # 159+ tests, ~100 s
-.venv/Scripts/python.exe scripts/check_parity.py # gate 2, StMoMo oracle
-```
+| what | where |
+|---|---|
+| Repo of record | `g:\Mortality - Explainable AI` (this tree; remote github sheperd007/mortality-calibration-under-shift, branch main) |
+| Python env for the laptop | `C:/Users/Gaming/venvs/mortcal-cpu/Scripts/python.exe` (CPU torch; use for everything here). The CUDA env `C:/Users/Gaming/venvs/mortcal` is for a future GPU hybrid only. The repo `.venv` is DEAD (zombie uv processes hold it) — delete after a reboot, never use. Never run plain `python`/`uv run`. |
+| Sweeps | compute node `tararis-ai3` = 192.168.1.47 (Ubuntu 24.04, 12 cores, 23 GB), reachable ONLY through the bastion `baazar` (= ai-server, 24 cores). Every command is nested: `/c/Windows/System32/OpenSSH/ssh.exe baazar 'ssh 192.168.1.47 "<cmd>"'`. Repo there: `~/mortality-calibration-under-shift` (arrived as a git bundle — no GitHub creds on the node; ship single files with `cat file \| ssh ... "cat > path"`). Env `.venv-server` (CPU torch 2.6.0, gpytorch 1.15.2). Data: `Dataset/` = the 7 sweep-relevant HMD files (281 MB, manifest-verified). |
+| SSH prerequisite | the Windows `ssh-agent` service must be running with `C:\Users\Gaming\.ssh\Tara\.ssh\Hamid` loaded (`ssh-add`, passphrase-protected; service set to Automatic on 2026-08-28). "Permission denied (publickey)" after a reboot = key not loaded. |
 
-The venv works directly — no PYTHONPATH workaround any more (rebuilt
-2026-08-27). `uv` lives at `~/.local/bin/uv.exe` and is NOT on PATH in a
-fresh shell: `export PATH="$USERPROFILE/.local/bin:$PATH"`.
-`uv sync --group neural` installs torch 2.6.0+cu124 + gpytorch 1.15.2.
+## Sweep state (node) — as of 2026-08-28 12:43 node time
 
-**`torch.cuda.is_available()` is False on this machine** despite CLAUDE.md
-claiming a local NVIDIA GPU. Everything runs CPU. If a sweep ever needs GPU,
-fix the driver — do not change the code for it.
+`scripts/launch_sweeps.sh shift placebo`, launched 2026-08-27 19:42 via
+`scripts/server_relaunch.sh` (JOBS=10, GP_JOBS=7, OMP/MKL/OPENBLAS threads
+pinned to 1 in the launch env). Detached (`setsid nohup`, PPID 1) — survives
+closing sessions. Shift pass 1 at 179/180 parts (SWE's last neural model
+running since 19:42; ISL took 10.3 h, NOR 7.2 h). Then: shift GP pass (~2–3 h),
+placebo pass 1 (one wave, ~8–12 h), placebo GP. Expect everything ~2026-08-29
+morning. Check:
+`ssh.exe baazar 'ssh 192.168.1.47 "ls ~/mortality-calibration-under-shift/results/shift.parts | wc -l; tail -2 ~/mortality-calibration-under-shift/results/logs/server_launch.out"'`
+Per-population wall times are ~2x the solo probe (single-thread torch).
+The run so far is CLEAN (QA gate on a 177-part snapshot: 0 machine-failure
+rows). The 20 shift CBD cells were re-run on the node after the copula NaN
+fix (all mechanisms now score 45 ages). STABLE regime NOT started: ~6 days on
+the node alone; user decision pending (bastion 24 cores would halve it).
 
-## Environment traps (cost real time before)
+## Post-sweep order (laptop, mortcal-cpu env) — read results only at step 7
 
-- `H:` repos need `git config --global --add safe.directory '<path>'` — the
-  tree was created under a Windows profile `C:\Users\Gaming` that no longer
-  exists. Same root cause broke the old venv (path baked into the uv
-  trampoline exe; patching `pyvenv.cfg` is NOT enough).
-- A killed `uv sync` leaves orphan uv processes holding the cache lock and a
-  half-written `.venv`. Recovery: kill all uv processes, `rm -rf .venv`, then
-  ONE clean `uv sync --group neural` in the background.
-- **Never run two `scripts/time_cells.py` at once** — they wrote the same
-  output file and silently interleaved results from different code states on
-  2026-08-27. The probe now takes an output path argument.
-
-## Current state
-
-Grid is the full 10x7: 50 primary + 4 secondary cells, transcribed cell by
-cell from `docs/GRID.md` into `runner.ADMISSIBLE`, with a `grid_secondary`
-column per row. Five classical families + GP, NeuralLC, CNN-LC, LSTM-on-k,
-NB head; mechanisms native / pboot / ensemble / dropout / split_conf /
-enbpi / copula_conf.
-
-Recent commits (newest first):
-```
-e4f63d7  conformal takes an age-restricted family; SVAR draw speed-up
-165abf1  multitask GP fits the real 100-age panel; analysis stage
-48b6d63  inference layer wired; one Poisson draw across scales
-28aa62a  neural/GP axis built, full 10x7 grid
-```
-
-## IN FLIGHT — nothing here is settled
-
-1. **Sweep-cost probe re-running** to `results/timings_clean.json`
-   (`scripts/time_cells.py`, SWE males = the 269-year panel, so upper
-   bounds). The earlier `results/timings.json` was DELETED as contaminated —
-   two overlapping runs mixed pre- and post-GP-fix numbers. Do not trust any
-   quoted timing that does not come from the clean file.
-   Reliable so far, same code state: classical cells 0.2–15 s; neural
-   ensembles ~640–830 s/cell; NB native ~85–120 s. `scripts/sweep_cost.py`
-   turns the file into per-regime wall time.
-2. **The full grid may not be affordable on this machine.** Classical 5x5 is
-   ~minutes per regime; the neural axis is 3 orders of magnitude worse and
-   `GP/split_conf` hit a 1.4 GB allocation failure at least once. Options
-   (reduce `n_median_samples` for GP, cap the GP's training window, run
-   neural on the high-RAM server, drop cells to secondary) are NOT decided.
-   If the GP window is capped: note a trailing 40-year window was measured
-   scoring BETTER than the full 269 (rmse 0.65 vs 1.19) **before** any cap
-   was chosen — so a cap justified by score would be outcome-driven. Justify
-   on feasibility and the source paper (Huynh–Ludkovski use 27 years) or not
-   at all, and disclose the prior observation.
-3. **Age-support comparability is an OPEN defect in the analysis stage.**
-   A synthetic end-to-end run put `CBD/native` alone in the MCS — CBD is fit
-   on ages 55+, so its CRPS mean is over 45 ages while LC/PLC average over
-   100. `losses_from_rows` restricts to common CELLS (addendum 3 §11) but
-   not to a common AGE SUPPORT. Cross-family score comparisons are not yet
-   apples-to-apples. Fix before any real-data ranking is reported.
+1. `bash scripts/server_pull.sh shift placebo` (pulls parquet + parts + logs; purges local snapshots first)
+2. `python scripts/final_qa.py results/shift.parquet results/shift_gp.parquet results/placebo.parquet results/placebo_gp.parquet` → must print QA PASS (machine=0)
+3. `python scripts/analyse.py results/shift.parquet results/shift_gp.parquet --out results/shift_analysis.json` (and placebo)
+4. `python scripts/sensitivities.py ...` → `results/sensitivities.json`
+5. `python scripts/make_tables.py --parquet ... (all four) --analysis ... --sensitivities results/sensitivities.json --out paper/tables --final`
+6. `python scripts/make_figures.py ...` → `paper/figures`
+7. compile: copy `paper/` to the scratchpad, `env -u ALL_PROXY <scratchpad>/tectonic/tectonic.exe -X compile --keep-logs main.tex`; check `grep -c '^!' main.log` = 0 and no "Float too large".
+Then commit the generated tables/figures deliberately (they are gitignored until final).
 
 ## Rules that are easy to break
 
-- Real-data runs need `allow_real=True` — the auditable act, kept
-  deliberately.
-- Never clip SVAR rates or Poisson means to rescue a divergent draw
-  (addendum 3 §7): rejection only, or divergence silently becomes a
-  flattering bounded interval.
-- `runner.py`'s `obs_full` keeps the 1e-10 rate floor ON PURPOSE — the
-  half-count there shifts ISL female 2020 e0 by −0.370 y, past gate 3's
-  0.15 y tolerance (addendum 3 §5 documents the split convention).
-- Losses are never imputed: `mortcal.inference` RAISES on non-finite input.
-  It used to invert the MCS silently under exactly the NaN pattern the
-  runner produces.
+- Real-data runs need `allow_real=True` (the CLI passes it) — the auditable act.
+- Never clip SVAR rates or Poisson means (addendum 3 §7): rejection only. The
+  rejection FIRES on real data (TWN 990–1000/1000 draws explosive; pboot
+  overflows on the longest panels) — that is a finding, recorded as
+  method-failure rows, reported in tab-infeasible.
+- Losses are never imputed: `mortcal.inference` raises on non-finite input and
+  on any attempt to rank conformal cells' placeholder crps/logscore — conformal
+  contrasts use `winkler95` (interval score). CBD (45 ages) never enters a
+  ranking with 100-age families.
+- Conformal cells have NO derived-quantity intervals (e0/e65/ä65 → n/a).
+- One device per regime; `device` column records it (all CPU so far).
 - Do NOT resume workflow `wf_75bb90b5-839` (dead; clobbers manual fixes).
-- Do not commit `results/parity/D_*.csv` / `E_*.csv` (raw HMD, gitignored).
+- Do not commit `results/parity/D_*.csv` / `E_*.csv` (raw HMD) or any
+  snapshot-derived number into .tex/.md. `results/_*` are local snapshots.
+- `pkill -f <pattern>` from an `ssh host "..."` one-liner matches the caller's
+  own command line — use `scripts/server_relaunch.sh` (bracket patterns).
+- `Start-Process -ArgumentList` joins elements without quoting — launch bash
+  via a wrapper script in a space-free path.
+
+## Environment traps (cost real time)
+
+- Windows: 12 workers importing the CUDA torch exceed the commit limit
+  (WinError 1455) — that is why sweeps left the laptop. Git Bash heredocs with
+  apostrophes/backslashes mangle — use the Write/Edit tools for files.
+- `uv sync` with torch: a killed sync leaves zombie uv.exe holding `.venv`.
+- Thread pinning belongs in the launch ENV, not a multiprocessing initializer
+  (OpenBLAS reads it at import; measured load 52 → 11).
 
 ## Numbers worth not re-deriving
 
-- Oracle parity after the weighted-fit rewrite: alpha 3.1e-15, beta 2.4e-14,
-  kappa 1.5e-13 vs R StMoMo.
-- Pre-addendum-2 coverage of a *correctly specified* model: 0.104 / 0.189 /
-  0.278 against nominal 0.50 / 0.80 / 0.95.
-- Conformal scored from sample quantiles vs its own bounds: marginal/joint
-  0.995/0.957 vs 0.960/0.740 — the H3 gap understated 6x.
-- Structural zeros in the shift training panel: 99 cells, 7 (pop,sex), ages
-  95–99, every one D=0 with Jan-1 population 0 at both Lexis corners.
-- Zero-death test cells 2020–24, sex-specific: ISL f 117 (23.4%), LUX f 110
-  (22.0%). NOT 52/10.4% — that was HMD's Total column, which is never
-  modelled.
-- Schnürch–Korn (2022) Table 3, the stable-regime prior art H2 must be
-  framed against: LC10 74.0, LC20 74.3, ACF 77.2, RNN 86.0, FFNN 97.0,
-  CNN 98.0 PICP at nominal 95%, ages 60–89, 2007–2016.
-
-## TRAP ADDED 2026-08-27 (afternoon) — drive letter G: vs H:
-
-The external volume mounts as **G:** in some sessions and **H:** in others.
-`.venv` bakes absolute paths; `uv run` (even `--no-sync`) sees a path
-mismatch, silently REMOVES the venv and recreates it EMPTY — that happened
-today and cost a full `uv sync --group neural`. Before anything: check
-`Get-PSDrive` and use the letter the venv was built under, or resync once.
-Also: uv here is 0.11.19 under the Gaming profile, not 0.12.5.
-GP/split_conf OOM (1.59 GB) reproduces SOLO — it is the wrapper's
-`n_median_samples=1000` rsample on the GP posterior, not contention.
-
-## LAUNCH PLAN (2026-08-27, afternoon) — how the real-data sweeps run
-
-`scripts/run_regime.py <regime> --out results/<regime>.parquet --jobs 12
---exclude-models GP` then a second pass `--models GP --jobs 2`. Reason: the
-per-cell probe timings are WALL seconds of a single multi-threaded process,
-so a serial sweep is 2.17 h/triple wall (shift = 87 h). Parallelism is per
-population (one process each, BLAS/torch pinned to ONE thread in
-_worker_init so 12 jobs on 12 cores do not oversubscribe — the 2.2x
-inflation in results/timings.json came from overlapping multi-threaded
-runs). GP cells need ~1.6 GB each on 15.7 GB RAM -> their own pass at low
-parallelism. Parts land in results/<regime>.parts/<POP>.parquet and a
-killed run resumes by skipping existing parts. Device: MORTCAL_DEVICE
-(default cpu); GPU only if the A/B probe (results/timings_gpu.json vs
-timings_cached.json) shows a real gain.
-
-## VENV LOCATION (2026-08-27, afternoon) — C:, not the repo
-
-`.venv` in the repo became UNDELETABLE (four zombie uv.exe processes, 0 MB
-working set, immune to taskkill/Stop-Process, holding handles under
-.venv/Lib/site-packages/torch). The working environment is now
-`C:/Users/Gaming/venvs/mortcal` built with
-`UV_PROJECT_ENVIRONMENT=C:/Users/Gaming/venvs/mortcal uv sync --group neural`.
-Use `MORTCAL_PY=C:/Users/Gaming/venvs/mortcal/Scripts/python.exe` for
-scripts/launch_sweeps.sh and that interpreter for pytest. After the next
-reboot: `rm -rf .venv` in the repo (leftover), keep using the C: env.
-
-## DEVICE NOTE (2026-08-27) — GPU is a different realization, not a bit-copy
-
-With identical weights and inputs (verified: weight diff 0.0, TF32 off), CPU
-and CUDA runs differ because `nn.Dropout` draws its masks from device-specific
-RNG streams: 4.9% max relative in the first train-mode forward pass, 1% in the
-3-step forecast; eval-mode forward passes agree to float32. `MORTCAL_DEVICE`
-therefore changes the realization of every dropout-trained family (NLC, CNN,
-LSTM, NB). RULE: one device per regime, recorded in the parquet (`device`
-column should be added to runner rows before any GPU sweep); never mix.
-
-## MEASURED 2026-08-27 evening — cache useless, GPU 5-8x, tonight on CPU
-
-timings_cached ≈ timings_solo: the `_subset_cache` gives NO speed-up (kept,
-harmless). GPU: NB 39.6→8.3 s, NLC 34.6→4.5, CNN 53.9→9.9, LSTM ~1x.
-Shift+placebo run CPU-only (12 workers, 1 thread each) — 12 CUDA contexts do
-not fit 4 GB VRAM and one serialized GPU is slower than 12 CPU workers for
-the neural axis. GPU hybrid is for STABLE, after probing 2–3 concurrent GPU
-processes. `device` is recorded per parquet row.
-
-## SWEEP WORKERS NEED CPU TORCH (2026-08-27 evening)
-
-12 workers importing the cu124 torch each map ~2 GB of CUDA DLLs ->
-`OSError: [WinError 1455] The paging file is too small` (15.7 GB RAM, small
-pagefile). Sweeps therefore run from `C:/Users/Gaming/venvs/mortcal-cpu`
-(default deps + PyPI torch==2.6.0, which is the CPU build on Windows, +
-gpytorch). The CUDA env `C:/Users/Gaming/venvs/mortcal` is for the GPU
-hybrid on STABLE only, at low parallelism. Also: `Start-Process
--ArgumentList` joins elements WITHOUT quoting — launch bash via a wrapper
-script in a space-free path (scratchpad/launch_detached.sh).
-
-## SERVER (2026-08-27 evening) — where the sweeps actually run
-
-Compute node `tararis-ai3` = 192.168.1.47 (Ubuntu 24.04, 12 cores, 23 GB
-RAM, 55 GB free), reachable ONLY via the bastion `baazar` (= ai-server,
-24 cores; ~/.ssh/config, SSH-over-TLS ProxyCommand, key loaded in the
-Windows ssh-agent by the user). The inner hop authenticates with the
-bastion's own ~/.ssh/id_ed25519, so from the laptop every command is
-nested:  ssh.exe baazar 'ssh 192.168.1.47 "<cmd>"'  (Windows OpenSSH
-ssh.exe, not Git's). Repo arrived as a git bundle (no GitHub creds on the
-node) at ~/mortality-calibration-under-shift; only the sweep-relevant HMD
-files were streamed (tar over both hops) into ~/mcs_dataset then moved to
-Dataset/. Env: .venv-server (uv, py3.12, CPU torch 2.6.0, gpytorch 1.15.2).
-Launch: scripts/server_setup.sh -> nohup scripts/launch_sweeps.sh shift
-placebo; logs in results/logs/server_launch.out; parts per (pop, model).
-
-## THREAD PINNING (2026-08-27 night) — env at launch, not the initializer
-
-First server launch ran at load 52 on 12 cores: `_worker_init` sets
-OMP/OPENBLAS vars after numpy is imported in the spawned worker, too late.
-scripts/launch_sweeps.sh now exports them before python starts (inherited
-env is read at BLAS load). Restarted with the 14 finished parts reused.
-
-## SWEEP STATE (2026-08-27 ~20:40)
-
-Main run (relaunch 19:42, JOBS=10, pinned) + a parallel re-run of KOR,HRV
-(jobs=2, log results/logs/shift_rerun_KOR_HRV.out) after their first-launch
-parts carried MemoryError / torch._dynamo rows. Final QA rule before any
-analysis: the concatenated parquet must have ZERO rows whose error mentions
-MemoryError or _dynamo; structural "panel too short" / explosive-draw rows
-are legitimate and stay. Pull with scripts/server_pull.sh shift (works;
-557 KB at 50 parts). Local results/shift.parts is a SNAPSHOT — the node is
-the source of truth until the run ends.
-CORRECTION 20:45: the poisoned rows were LAPTOP artifacts (18:43 launch),
-never on the node. server_pull.sh now purges the local parts dir first.
-
-## PIPELINE READY (2026-08-28 afternoon)
-Post-sweep order is in docs/STATUS.md (pull → final_qa → analyse → sensitivities
-→ make_tables --final → make_figures → compile). Generated paper artefacts are
-gitignored; commit them deliberately once final. Do not read snapshot rankings.
+- Oracle parity vs R StMoMo 0.4.1 (SWE males 1950–2000): beta rel diff 2.4e-14, identical loglik.
+- Training years to 2019: KOR 17, HRV 19, CHL 28, HKG 34, TWN 50 … SWE 269.
+  Design-floor cells: KOR split/EnbPI/copula/LSTM; HRV EnbPI/copula.
+- Zero-exposure rows (parser definition): 24,083 with E=0 for ≥1 sex, 15,494 both; ages ≥90.
+- Zero-death test cells 2020–24: ISL f 117 / m 68, LUX f 110 / m 72.
+- GPU A/B (solo): NB 39.6→8.3 s, NLC 34.6→4.5, CNN 53.9→9.9, LSTM ~1x; the
+  tensor cache gave NO speed-up; cross-device runs differ (dropout RNG).
+- Schnürch–Korn (2022) Table 3 PICP at nominal 95%, ages 60–89, 2007–2016:
+  LC10 74.0, LC20 74.3, ACF 77.2, RNN 86.0, FFNN 97.0, CNN 98.0.
