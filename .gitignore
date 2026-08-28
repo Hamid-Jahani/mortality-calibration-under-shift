@@ -90,3 +90,6 @@ results/logs/
 
 # server-side environment created by scripts/server_setup.sh
 .venv-server/
+
+# local snapshots of a running sweep (scripts/final_qa.py on partial pulls)
+results/_*
