@@ -260,3 +260,27 @@ nan-aware max and re-run the CBD cells (seconds) after the main sweep.
   identical for every family with all ages defined. Shipped to the node before
   placebo started; the 20 shift CBD cells re-run (seconds) so both regimes
   carry the same code for that cell.
+
+## 2026-08-28 afternoon — results-to-paper pipeline built and verified
+
+While the shift sweep finishes on the node: scripts/make_tables.py (12 hooks
+incl. tab-infeasible + appendix longtable), scripts/make_figures.py (4 figure
+types), scripts/sensitivities.py (addendum-1 strata/sensitivities, addendum-3
+§4/§11 reporting), scripts/final_qa.py (3 error classes). Methods text (§2–5)
+at the executed design; results skeleton (§6–7) framed hook by hook; two
+adversarial verifier waves closed (H5 conformal rows n/a, GP pending blocks,
+data-derived populations table, page overflows, BEL units, population count
+50, snapshot-derived claim removed, seed deviation in the ledger). Isolated
+compile: 0 errors / 0 overflows / 0 undefined refs. Generated tables/figures
+are gitignored until final.
+
+**Post-sweep command order (laptop, mortcal-cpu env):**
+1. `bash scripts/server_pull.sh shift placebo` (also pulls *_gp when present)
+2. `python scripts/final_qa.py results/shift.parquet results/shift_gp.parquet results/placebo.parquet results/placebo_gp.parquet`
+   — must print QA PASS (machine=0); method/structural tables feed tab-infeasible
+3. `python scripts/analyse.py results/shift.parquet --out results/shift_analysis.json`
+   (and placebo; merge GP parquet first if analyse.py takes one input — check)
+4. `python scripts/sensitivities.py ...` → results/sensitivities.json
+5. `python scripts/make_tables.py --parquet results/shift.parquet --parquet results/shift_gp.parquet --parquet results/placebo.parquet --parquet results/placebo_gp.parquet --analysis results/shift_analysis.json --analysis results/placebo_analysis.json --sensitivities results/sensitivities.json --out paper/tables --final`
+6. `python scripts/make_figures.py ...` → paper/figures
+7. compile (tectonic in scratchpad, ALL_PROXY unset) → read results ONLY now.
