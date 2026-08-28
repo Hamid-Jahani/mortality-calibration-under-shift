@@ -255,3 +255,8 @@ before the fix were disregarded, not recorded.
 Residual: `CBD/copula_conf` scores 35 ages vs 45 for split/EnbPI (NaN
 propagation in the copula path score over CBD's undefined ages) → fix with a
 nan-aware max and re-run the CBD cells (seconds) after the main sweep.
+- CBD × copula residual FIXED (nan-aware median/max in `CopulaPathConformal`;
+  45 scored ages verified on SWE males, first finite age 55); numerically
+  identical for every family with all ages defined. Shipped to the node before
+  placebo started; the 20 shift CBD cells re-run (seconds) so both regimes
+  carry the same code for that cell.

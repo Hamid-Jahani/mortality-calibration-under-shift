@@ -466,9 +466,10 @@ class CopulaPathConformal:
         s = np.empty((self.h_cal, n_ages))          # per-(h, band) residual scale
         for h in range(self.h_cal):
             for idx in band_idx:
-                s[h, idx] = max(float(np.median(res[:, h, idx])), 1e-12)
+                s[h, idx] = max(float(np.nanmedian(res[:, h, idx])), 1e-12)  # nan-aware: CBD ages < age_min are NaN
 
-        scores = np.max(res / s[None, :, :], axis=1)  # [K, ages] sup-norm per path
+        with np.errstate(invalid="ignore"):
+            scores = np.nanmax(res / s[None, :, :], axis=1)  # [K, ages] sup-norm per path; NaN only where ALL horizons undefined
         radius = np.empty((self.h_cal, n_ages))
         for idx in band_idx:
             q_band = _conformal_quantile(scores[:, idx], self.alpha)
