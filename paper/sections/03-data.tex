@@ -13,10 +13,12 @@ September 2025; the DOI, the download date (2026-08-25) and the SHA-256
 checksums of every input file in \texttt{data/MANIFEST.sha256} together pin
 the exact bytes. The data themselves are not redistributed, in keeping with
 the HMD user agreement, and any table in this paper can be reproduced from
-a fresh download that matches the manifest. The bulk file carries fifty
-population series: forty-one countries or areas plus the overlapping
-sub-population and civilian variants that HMD publishes for France, Germany,
-the United Kingdom and New Zealand. This is the first HMD vintage in which
+a fresh download that matches the manifest. The bulk deaths and exposures
+files each carry fifty distinct population codes (HMD's \texttt{PopName}),
+the count recorded in the manifest header: forty-one countries or areas,
+plus nine further codes for the overlapping sub-population and civilian
+variants that HMD publishes for Germany (two), France (one), the United
+Kingdom (four) and New Zealand (two). This is the first HMD vintage in which
 twenty of them carry \emph{final} single-age annual data through 2024,
 which is what makes the shift regime (Section~\ref{sec:design}) possible at
 $h=5$; one (DNK) already reaches 2025, which the shift regime does not use.
@@ -35,8 +37,10 @@ the rest, for three reasons. First, the published life tables smooth death
 rates at the oldest ages (a Kannisto fit above age~80 under Protocol~v6), so
 the old-age surface is partly model output rather than observation. Second,
 the open group needs a closure assumption that no forecasting family in the
-grid shares. Third, exposure vanishes: the vintage contains 15{,}496 cells
-with $E_{x,t}=0$, every one of them at age~90 or above, concentrated in the
+grid shares. Third, exposure vanishes: read with the study's own parser
+(\texttt{mortcal.data.hmd.read\_bulk\_1x1}), the vintage contains 24{,}083
+population--year--age rows with $E_{x,t}=0$ for at least one sex (15{,}494
+for both sexes), almost all at age~90 or above and concentrated in the
 small populations; a Poisson model with offset $\log E_{x,t}$ is undefined
 there. Sexes are modelled separately throughout; the \emph{Total} column is
 never used.
@@ -154,8 +158,10 @@ reach 2024 in this vintage: BEL, CHE, CHL, DNK, EST, FIN, HKG, HRV, ISL, JPN,
 KOR, LTU, LUX, LVA, NOR, PRT, SVK, SWE, TWN, USA. Every population trains on
 the maximal contiguous block of complete years ending in 2019, from its own
 first year (Addendum~3~\S2). The rule binds once: Belgium's 1914--1918
-deaths and exposures are missing at every age (the only genuinely missing
-data in the shift training panel), so BEL trains on 1919--2019; without the
+deaths and exposures are missing at every age---1{,}000 modelled cells,
+$100$ ages $\times$ $2$ sexes $\times$ $5$ years, the only genuinely missing
+data in the shift training panel (Addendum~3~\S2)---so BEL trains on
+1919--2019; without the
 rule a random-walk drift would treat 1913 to 1919 as one step and a
 positional cohort index would mislabel every cohort after 1913 by five
 years. The series lengths at the 2019 origin are very unequal, from
@@ -177,8 +183,12 @@ origin is reported alongside every stable-regime summary.
 \paragraph{Placebo break, 11 populations.} Those with continuous coverage
 over 1908--1922 and a start year no later than 1900: CHE, DNK, FIN, FRATNP,
 GBRTENW, GBR\_SCO, ISL, ITA, NLD, NOR, SWE. Belgium is excluded because its
-occupation-era rows for 1914--1918 are missing (555 cells); HMD's own
-documentation warns of the gap. FRACNP and GBRCENW are excluded as
+occupation-era data for 1914--1918 are missing at every age: 1{,}000
+modelled cells in the registered unit of Addendum~3~\S2 ($100$ ages
+$\times$ $2$ sexes $\times$ $5$ years), which appear in the raw $1\times1$
+file as 555 rows (111 ages including $110{+}$, one row per age-year, 5
+years) that are present but carry HMD's ``.'' missing marker in the Female,
+Male and Total columns; HMD's own documentation warns of the gap. FRACNP and GBRCENW are excluded as
 civilian-population variants overlapping FRATNP and GBRTENW; keeping both
 would double-count one country, and HMD additionally flags FRACNP's 1919
 denominators as implausible, so it is not used even as a sensitivity.

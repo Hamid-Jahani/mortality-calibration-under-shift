@@ -1,16 +1,21 @@
 """Paper tables: runner parquet(s) + analysis JSON(s) -> paper/tables/*.tex.
 
     python scripts/make_tables.py --parquet results/shift.parquet \
-        [--parquet results/placebo.parquet ...] \
+        [--parquet results/shift_gp.parquet] [--parquet results/placebo.parquet ...] \
         --analysis results/shift_analysis.json [--analysis ...] \
         [--sensitivities results/sensitivities.json] \
-        [--hmd-deaths data/Deaths_1x1.txt] --out paper/tables
+        [--hmd-deaths Dataset/deaths/Deaths_1x1/Deaths_1x1.txt] \
+        [--hmd-exposures Dataset/exposures/Exposures_1x1/Exposures_1x1.txt] \
+        --out paper/tables
 
 Consumes what ``scripts/final_qa.py`` has already gated and what
 ``scripts/analyse.py`` has already tested; refits nothing, re-tests nothing.
 Every file is a ``booktabs`` body wrapped in ``threeparttable`` so that
 ``\\inputtable{<name>}`` (paper/main.tex) drops it straight into a floating
-``table`` environment. ``tab-grid.tex`` is static and is never written here.
+``table`` environment (``\\footnotesize``, ``\\tabcolsep`` 2.5pt, notes in
+``\\scriptsize``). The one exception is ``tab-infeasible-full.tex``, a
+``longtable`` fragment for the appendix that must be input OUTSIDE a float.
+``tab-grid.tex`` is static and is never written here.
 
 Scoring discipline enforced in code, not by convention
 ------------------------------------------------------
@@ -19,10 +24,14 @@ Scoring discipline enforced in code, not by convention
   never enter a proper-score ranking, a PIT table or a PIT-Murphy column;
   they are compared on ``winkler_95`` / ``coverage_95`` only and their
   50 % / 80 % columns are printed as n/a (NaN by design in the runner).
+  Their e0 / e65 / annuity quantiles are likewise computed by the runner from
+  the uniform-in-interval filler samples, so ``tab-h5-actuarial`` prints
+  those rows as n/a and never tabulates them.
 * Arms with a different ``n_ages_scored`` are never averaged into the same
   ranking: CBD (ages 55-99) gets its own block with the support stated.
 * Error rows enter no mean. They are counted per cell (``n_err``) and
-  tabulated by QA class in ``tab-infeasible`` using the regexes of
+  tabulated by QA class in ``tab-infeasible`` (compact, main text) and
+  ``tab-infeasible-full`` (appendix longtable) using the regexes of
   ``scripts/final_qa.py``; a machine-failure row aborts table generation.
 * A ranking (tab-h1) is a contrast, so it is computed on the common-cell
   intersection of addendum 3 §11 and reports kept / dropped units. The
@@ -30,6 +39,13 @@ Scoring discipline enforced in code, not by convention
 * Absent regimes (no parquet supplied) are printed as explicit ``pending``
   placeholders, never dropped silently. Snapshot inputs stamp every file
   with a NOT FINAL first line.
+* The multi-output GP family runs in a SECOND pass (scripts/launch_sweeps.sh)
+  and lands in ``results/<regime>_gp.parquet``; pass it as an additional
+  ``--parquet`` and its rows merge by regime. Every family x mechanism table
+  carries an explicit GP block; a regime without GP rows prints
+  ``GP: pending (second-pass parquet)`` rather than omitting the family.
+* ``tab-populations`` is generated FROM THE DATA FILES (HMD bulk Deaths_1x1
+  and Exposures_1x1), never from a parquet, so it carries no snapshot stamp.
 """
 from __future__ import annotations
 
@@ -86,12 +102,22 @@ STRATA_ORDER = ("neutral", "belligerent", "civilian-only")
 RESTRICTED_AGE_FAMILIES: dict[str, str] = {"CBD": "ages 55--99"}
 
 UNIT_KEYS = ["regime", "pop", "sex", "origin"]
+CELL_KEYS = UNIT_KEYS + ["model", "mechanism"]
+
+#: The second-pass family (scripts/launch_sweeps.sh pass 2; results/<regime>_gp.parquet).
+GP_FAMILY = "GP"
+GP_PENDING = "GP: \\emph{pending} (second-pass parquet)"
 
 TABLE_NAMES = (
     "tab-populations", "tab-h1-rankings", "tab-h2-coverage", "tab-h3-joint",
     "tab-h4-age", "tab-h5-actuarial", "tab-murphy", "tab-pit", "tab-dm-mcs",
-    "tab-twin-crises", "tab-infeasible",
+    "tab-twin-crises", "tab-infeasible", "tab-infeasible-full",
 )
+
+#: Default HMD bulk files (data/MANIFEST.sha256 pins the vintage). Absent on a
+#: machine without the Dataset/ tree -> tab-populations prints pending cells.
+DEFAULT_HMD_DEATHS = ROOT / "Dataset" / "deaths" / "Deaths_1x1" / "Deaths_1x1.txt"
+DEFAULT_HMD_EXPOSURES = ROOT / "Dataset" / "exposures" / "Exposures_1x1" / "Exposures_1x1.txt"
 
 # ---------------------------------------------------------------------------
 # small formatting helpers
@@ -166,14 +192,25 @@ def is_snapshot_path(p: str | Path) -> bool:
 
 
 def load_rows(paths: list[str]) -> pd.DataFrame:
+    """Concatenate every runner parquet (pass-1 files and the second-pass
+    ``<regime>_gp.parquet`` alike); rows merge by their own ``regime`` column.
+    A cell present in two inputs would be double-counted in every mean, so
+    duplicates abort."""
     frames = []
     for p in paths:
         df = pd.read_parquet(p)
         df["_source"] = Path(p).name
         frames.append(df)
     if not frames:
-        return prepare_rows(pd.DataFrame(columns=UNIT_KEYS + ["model", "mechanism", "error"]))
-    return prepare_rows(pd.concat(frames, ignore_index=True))
+        return prepare_rows(pd.DataFrame(columns=CELL_KEYS + ["error"]))
+    df = pd.concat(frames, ignore_index=True)
+    keys = [k for k in CELL_KEYS if k in df]
+    dup = df.duplicated(keys, keep=False)
+    if dup.any():
+        srcs = sorted(df.loc[dup, "_source"].unique())
+        raise SystemExit(f"{int(dup.sum())} duplicate cell rows across inputs {srcs}; "
+                         "merge by regime refused -- fix the parquets, never average twins")
+    return prepare_rows(df)
 
 
 def prepare_rows(df: pd.DataFrame) -> pd.DataFrame:
@@ -290,21 +327,36 @@ class TableWriter:
         self.snapshot = snapshot
         self.written: list[Path] = []
 
-    def header(self) -> str:
+    def header(self, data_sources: list[str] | None = None) -> str:
+        """First-line comment(s). ``data_sources`` marks a fragment generated
+        from the HMD data files themselves (tab-populations): it is then not
+        snapshot-derived and carries no NOT FINAL stamp."""
         lines = []
+        today = _dt.date.today().isoformat()
+        if data_sources is not None:
+            lines.append("% GENERATED FROM THE DATA FILES (not snapshot-derived) by "
+                         f"scripts/make_tables.py on {today} from "
+                         f"{', '.join(data_sources)}; do not hand-edit.")
+            return "\n".join(lines)
         if self.snapshot:
-            regs = ", ".join(f"results/{r}.parquet" for r in EXPECTED_REGIMES)
+            regs = ", ".join(f"results/{r}.parquet + results/{r}_gp.parquet"
+                             for r in EXPECTED_REGIMES)
             lines.append(f"% GENERATED SNAPSHOT - NOT FINAL - regenerate from {regs}")
         lines.append("% GENERATED by scripts/make_tables.py on "
-                     f"{_dt.date.today().isoformat()} from "
+                     f"{today} from "
                      f"{', '.join(self.sources) or '(no inputs)'}; do not hand-edit.")
         return "\n".join(lines)
 
     def write(self, name: str, colspec: str, header_rows: list[str],
-              body_rows: list[str], notes: list[str], size: str = "\\small",
-              tabcolsep: str = "4pt") -> Path:
-        parts = [self.header(),
-                 f"\\begin{{threeparttable}}{size}\\setlength{{\\tabcolsep}}{{{tabcolsep}}}",
+              body_rows: list[str], notes: list[str], size: str = "\\scriptsize",
+              tabcolsep: str = "2.5pt", data_sources: list[str] | None = None) -> Path:
+        # \scriptsize + arraystretch 0.90: the family x mechanism x regime
+        # tables (~55 body rows plus notes) overflowed a page by 80-120 pt at
+        # \footnotesize (measured 2026-08-28); this brings them under a page
+        # without migrating captions out of the sections into longtables.
+        parts = [self.header(data_sources),
+                 f"\\begin{{threeparttable}}{size}\\renewcommand{{\\arraystretch}}{{0.90}}"
+                 f"\\setlength{{\\tabcolsep}}{{{tabcolsep}}}",
                  f"\\begin{{tabular}}{{@{{}}{colspec}@{{}}}}",
                  "\\toprule",
                  *header_rows,
@@ -312,9 +364,36 @@ class TableWriter:
                  *(body_rows or [f"\\multicolumn{{{_ncols(colspec)}}}{{l}}{{{PENDING}: no rows}} \\\\"]),
                  "\\bottomrule",
                  "\\end{tabular}",
-                 "\\begin{tablenotes}\\footnotesize"]
+                 "\\begin{tablenotes}\\scriptsize"]
         parts += [f"\\item {n}" for n in notes]
         parts += ["\\end{tablenotes}", "\\end{threeparttable}", ""]
+        path = self.out_dir / f"{name}.tex"
+        path.write_text("\n".join(parts), encoding="utf-8")
+        self.written.append(path)
+        return path
+
+    def write_longtable(self, name: str, colspec: str, header_rows: list[str],
+                        body_rows: list[str], notes: list[str], caption: str,
+                        label: str, size: str = "\\footnotesize",
+                        tabcolsep: str = "2.5pt") -> Path:
+        """Appendix fragment: a ``longtable`` (package ``longtable``) that must
+        be input outside any float. Notes follow as a ``\\scriptsize`` block."""
+        ncols = _ncols(colspec)
+        parts = [self.header(),
+                 f"{{{size}\\setlength{{\\tabcolsep}}{{{tabcolsep}}}",
+                 f"\\begin{{longtable}}{{@{{}}{colspec}@{{}}}}",
+                 f"\\caption{{{caption}}}\\label{{{label}}} \\\\",
+                 "\\toprule", *header_rows, "\\midrule", "\\endfirsthead",
+                 f"\\multicolumn{{{ncols}}}{{l}}{{\\emph{{(continued)}}}} \\\\",
+                 "\\toprule", *header_rows, "\\midrule", "\\endhead",
+                 f"\\midrule \\multicolumn{{{ncols}}}{{r}}{{\\emph{{continued on next page}}}} \\\\",
+                 "\\endfoot",
+                 "\\bottomrule", "\\endlastfoot",
+                 *(body_rows or [f"\\multicolumn{{{ncols}}}{{l}}{{{PENDING}: no rows}} \\\\"]),
+                 "\\end{longtable}",
+                 "\\begin{minipage}{\\linewidth}\\scriptsize"]
+        parts += [f"\\noindent {n}\\par" for n in notes]
+        parts += ["\\end{minipage}}", ""]
         path = self.out_dir / f"{name}.tex"
         path.write_text("\n".join(parts), encoding="utf-8")
         self.written.append(path)
@@ -333,6 +412,27 @@ def span_row(text: str, ncols: int, rule: bool = True) -> list[str]:
 def pending_row(regime: str, ncols: int, why: str = "no parquet supplied") -> str:
     return (f"\\multicolumn{{{ncols}}}{{l}}{{{tex(regime)} regime: {PENDING} "
             f"({why})}} \\\\")
+
+
+def gp_pending_cell(width: int) -> str:
+    """One regime block's worth of columns saying the GP pass is outstanding."""
+    return f"\\multicolumn{{{width}}}{{l}}{{{GP_PENDING}}}"
+
+
+def gp_present(df: pd.DataFrame) -> bool:
+    """True when the (regime) frame carries any GP row, valid or error."""
+    return bool(len(df)) and bool((df["model"] == GP_FAMILY).any())
+
+
+def gp_note(df: pd.DataFrame) -> str:
+    """Tablenote listing the regimes whose GP block is pending."""
+    missing = [r for r in EXPECTED_REGIMES
+               if not regime_frame(df, r).empty and not gp_present(regime_frame(df, r))]
+    if not missing:
+        return ("Multi-output GP rows come from the second-pass parquet "
+                "(\\texttt{results/<regime>\\_gp.parquet}) merged by regime.")
+    return ("Multi-output GP runs in a second pass (\\texttt{results/<regime>\\_gp.parquet}); "
+            f"no GP rows supplied for {', '.join(missing)}: {GP_PENDING}.")
 
 
 # ---------------------------------------------------------------------------
@@ -426,6 +526,10 @@ def block_table(df: pd.DataFrame, cols: list[str], col_heads: list[str],
         stats[r] = (per_block_stats or cell_stats)(valid_rows(f), f[f["error"].notna()], cols)
     cells = sort_cells((m, u) for s in stats.values() if s is not None
                        for m, u in zip(s["model"], s["mechanism"]))
+    # explicit GP block: the family is never silently absent (second pass)
+    gp_here = {r: gp_present(f) for r, f in frames.items()}
+    if not any(m == GP_FAMILY for m, _ in cells):
+        cells = sort_cells([*cells, (GP_FAMILY, "")])
     colspec = "ll"
     head1 = ["Family", "Mech."]
     head2 = ["", ""]
@@ -444,14 +548,17 @@ def block_table(df: pd.DataFrame, cols: list[str], col_heads: list[str],
     for m, u in cells:
         if last_fam is not None and m != last_fam:
             body.append("\\addlinespace[2pt]")
-        line = [fam(m) if m != last_fam else "", mech(u)]
+        line = [fam(m) if m != last_fam else "", mech(u) if u else "all arms"]
         last_fam = m
         for r in regimes:
             s = stats[r]
             if s is None:
                 line.append("--")
                 continue
-            row = _lookup(s, m, u)
+            if m == GP_FAMILY and not gp_here[r]:
+                line.append(gp_pending_cell(len(cols) + 2))
+                continue
+            row = _lookup(s, m, u) if u else None
             if row is None:
                 line += ["--"] * len(cols) + ["0", "0"]
                 continue
@@ -472,75 +579,124 @@ def fmt_levels(row, m, u, col):
 # the eleven tables
 # ---------------------------------------------------------------------------
 
-def hmd_years(path: str | None) -> dict[str, tuple[int, int]]:
-    """pop -> (first data year, training years to the shift origin) from an
-    HMD bulk Deaths_1x1 file, using the runner's contiguity rule (addendum 3
-    §2: maximal contiguous block of complete years ending at the origin).
-    Empty when no file is given."""
-    if not path:
+AGE_MAX = 99            # the study models ages 0..99 (mortcal.data.hmd.build_panel)
+ZERO_DEATH = 0.5        # addendum 3 §10: D < 0.5 is a zero-death cell
+
+
+def _training_years(years_present: list[int], origin: int) -> list[int]:
+    """Runner rule (addendum 3 §2): maximal contiguous block of years present
+    in the panel ending at the origin (a year is present when the pivot has
+    the column, i.e. any age carries D and E)."""
+    train = sorted(y for y in years_present if y <= origin)
+    gaps = np.flatnonzero(np.diff(np.asarray(train)) > 1)
+    if len(gaps):
+        train = train[gaps[-1] + 1:]
+    return train
+
+
+def population_facts(deaths_path: str | Path | None,
+                     exposures_path: str | Path | None,
+                     pops: tuple[str, ...] = SHIFT_POPS,
+                     regime=SHIFT) -> dict[str, dict]:
+    """Per population, straight from the HMD bulk files (no parquet):
+
+    first_year / last_year  -- first and last year of single-age data
+    n_train                 -- training years to the origin (min over sexes)
+    zero_E_{f,m}            -- zero-EXPOSURE cells (E == 0 or missing) at ages
+                               0..99 in the training panel, by sex
+    zero_D_{f,m}            -- zero-death cells (D < 0.5) at ages 0..99 in the
+                               test window, by sex (addendum 3 §10)
+
+    Empty when either file is missing (every cell is then printed pending).
+    """
+    if not deaths_path or not exposures_path:
+        return {}
+    if not Path(deaths_path).exists() or not Path(exposures_path).exists():
         return {}
     from mortcal.data.hmd import read_bulk_1x1
-    d = read_bulk_1x1(path, list(SHIFT_POPS))
-    d = d[d["age"] <= 99]
+    d = read_bulk_1x1(deaths_path, list(pops))
+    e = read_bulk_1x1(exposures_path, list(pops))
+    d = d[d["age"] <= AGE_MAX]
+    e = e[e["age"] <= AGE_MAX]
+    test = list(regime.test_years)
     out = {}
-    for p, g in d.groupby("pop"):
-        complete = g.groupby("year")[["female", "male"]].apply(lambda x: x.notna().all().all())
-        years = sorted(int(y) for y, ok in complete.items() if ok)
-        first = years[0] if years else None
-        train = [y for y in years if y <= SHIFT.train_max_year]
-        gaps = np.flatnonzero(np.diff(np.asarray(train)) > 1)
-        if len(gaps):
-            train = train[gaps[-1] + 1:]
-        out[p] = (first, len(train))
+    for p in sorted(set(d["pop"]) | set(e["pop"])):
+        dp, ep = d[d["pop"] == p], e[e["pop"] == p]
+        years = sorted(set(dp["year"].astype(int)) | set(ep["year"].astype(int)))
+        rec = {"first_year": years[0] if years else None,
+               "last_year": years[-1] if years else None}
+        n_train = []
+        for sex, tag in (("female", "f"), ("male", "m")):
+            m = dp[["year", "age", sex]].rename(columns={sex: "D"}).merge(
+                ep[["year", "age", sex]].rename(columns={sex: "E"}),
+                on=["year", "age"], how="outer")
+            present = m[m["D"].notna() & m["E"].notna()]
+            train = _training_years(sorted(set(present["year"].astype(int))),
+                                    regime.train_max_year)
+            n_train.append(len(train))
+            # training panel = every (year, age) of the block, so a row that is
+            # absent from the file altogether also counts as missing exposure
+            tr = m[m["year"].isin(train)] if train else m.iloc[0:0]
+            n_cells_expected = len(train) * (AGE_MAX + 1)
+            zero_e = int(((tr["E"].isna()) | (tr["E"] == 0)).sum()) + (n_cells_expected - len(tr))
+            rec[f"zero_E_{tag}"] = zero_e if train else None
+            te = m[m["year"].isin(test)]
+            rec[f"zero_D_{tag}"] = int((te["D"] < ZERO_DEATH).sum()) if len(te) else None
+        rec["n_train"] = min(n_train) if n_train else None
+        out[p] = rec
     return out
 
 
-def tab_populations(df: pd.DataFrame, w: TableWriter, hmd_deaths: str | None):
-    shift = regime_frame(df, "shift")
-    pops = list(SHIFT_POPS) if shift.empty else sorted(set(SHIFT_POPS) | set(shift["pop"]))
-    years = hmd_years(hmd_deaths)
+def tab_populations(w: TableWriter, hmd_deaths: str | Path | None,
+                    hmd_exposures: str | Path | None):
+    """Generated from the data files (paper/sections/03-data.tex caption):
+    no parquet, no snapshot stamp."""
+    facts = population_facts(hmd_deaths, hmd_exposures)
+    pops = list(SHIFT_POPS)
     body = []
+
+    def cell(rec, key):
+        return PENDING if rec is None or rec.get(key) is None else fint(rec[key])
+
     for p in pops:
-        sub = shift[shift["pop"] == p]
-        fy, ntr = years.get(p, (None, None))
-        zero = {}
-        for sex in ("female", "male"):
-            s = sub[sub["sex"] == sex]["n_zero_death_cells"] if not sub.empty else pd.Series(dtype=float)
-            zero[sex] = s.max() if len(s.dropna()) else np.nan
-        strat = PLACEBO_STRATA.get(p, "none")
-        elig = "yes" if p in PLACEBO_POPS else "no"
+        rec = facts.get(p)
         body.append(" & ".join([
-            tex(p),
-            fint(fy) if fy is not None else PENDING,
-            fint(ntr) if ntr is not None else PENDING,
-            fint(zero["female"]) if not sub.empty else PENDING,
-            fint(zero["male"]) if not sub.empty else PENDING,
-            elig, strat]) + " \\\\")
+            tex(p), cell(rec, "first_year"), cell(rec, "last_year"), cell(rec, "n_train"),
+            cell(rec, "zero_E_f"), cell(rec, "zero_E_m"), cell(rec, "zero_D_f"), cell(rec, "zero_D_m"),
+            "yes" if p in PLACEBO_POPS else "no", PLACEBO_STRATA.get(p, "none")]) + " \\\\")
     placebo_only = [p for p in PLACEBO_POPS if p not in pops]
     if placebo_only:
         body.append("\\midrule")
-        body += span_row("Placebo-only populations (train $\\le$1913, test 1914--1922)", 7, rule=False)
+        body += span_row("Placebo-only populations (train $\\le$1913, test 1914--1922)", 10, rule=False)
         for p in placebo_only:
-            body.append(" & ".join([tex(p), "--", "--", "--", "--", "yes",
+            body.append(" & ".join([tex(p), "--", "--", "--", "--", "--", "--", "--", "yes",
                                     PLACEBO_STRATA.get(p, "none")]) + " \\\\")
+    src = ("the HMD bulk \\texttt{Deaths\\_1x1} and \\texttt{Exposures\\_1x1} files "
+           "pinned in \\texttt{data/MANIFEST.sha256}" if facts
+           else f"{PENDING} until the HMD \\texttt{{Deaths\\_1x1}} and "
+                "\\texttt{Exposures\\_1x1} bulk files are supplied")
     notes = [
-        regime_note(df, "shift"),
-        "First data year and training years: maximal contiguous block of complete "
-        "years ending at the 2019 origin (addendum 3 \\S2; BEL trains 1919--2019)"
-        + (", from the HMD bulk file supplied via \\texttt{--hmd-deaths}." if years
-           else f"; {PENDING} until an HMD \\texttt{{Deaths\\_1x1}} file is supplied."),
-        "Zero-death cells: test-window 2020--2024 cells with $D<0.5$ on ages 0--99 "
-        "before any model age mask (addendum 3 \\S10), maximum over the population's "
-        "rows, by sex.",
+        f"Generated from the data files -- {src} -- not from any model output; "
+        f"shift populations per PREREGISTRATION.md ({len(pops)}).",
+        "First / last year: first and last year of single-age data for the population. "
+        "Train yrs: maximal contiguous block of years with data ending at the 2019 "
+        "origin, minimum over sexes (addendum 3 \\S2; BEL trains 1919--2019).",
+        f"Zero-$E$: training-panel cells at ages 0--{AGE_MAX} with $E=0$ or missing, by "
+        f"sex (addendum 3 \\S1). Zero-$D$: cells with $D<{ZERO_DEATH}$ at ages 0--{AGE_MAX} "
+        f"in the {SHIFT.test_years[0]}--{SHIFT.test_years[-1]} test window before any "
+        "model age mask, by sex (addendum 3 \\S10).",
         "Placebo eligibility and stratum per PREREGISTRATION-ADDENDUM-1 \\S A: "
         "neutral / register-based (CHE, DNK, FIN, ISL, NLD, NOR, SWE), belligerent "
         "total series (FRATNP, GBRTENW, ITA), civilian-only (GBR\\_SCO); BEL excluded "
         "(missing 1914--1918).",
     ]
-    w.write("tab-populations", "lrrrrll",
-            ["Pop. & First year & Train yrs $\\le$2019 & \\multicolumn{2}{c}{Zero-death cells 2020--24} & Placebo & Stratum \\\\",
-             " & & & F & M & & \\\\"],
-            body, notes)
+    data_sources = ([Path(hmd_deaths).name, Path(hmd_exposures).name] if facts
+                    else ["(HMD bulk files not supplied)"])
+    w.write("tab-populations", "lrrrrrrrll",
+            ["Pop. & First & Last & Train yrs & \\multicolumn{2}{c}{Zero-$E$ train} & "
+             "\\multicolumn{2}{c}{Zero-$D$ test} & Placebo & Stratum \\\\",
+             " & year & year & $\\le$2019 & F & M & F & M & & \\\\"],
+            body, notes, data_sources=data_sources)
 
 
 H1_COLS = ["rmse_logmx", "crps_logmx", "poisson_log_score"]
@@ -582,6 +738,12 @@ def tab_h1(df: pd.DataFrame, w: TableWriter):
         all_arms = sort_cells((m, u) for m, u in zip(ok["model"], ok["mechanism"]))
         main_arms = [a for a in all_arms if a[0] not in RESTRICTED_AGE_FAMILIES]
         body += span_row(f"\\textbf{{{r} regime}} -- full-age families (0--99), distributional mechanisms", ncols)
+        if not gp_present(sub):
+            body.append(f"\\multicolumn{{{ncols}}}{{l}}{{{fam(GP_FAMILY)} -- {GP_PENDING}; "
+                        f"ranks below exclude it}} \\\\")
+        elif not any(m == GP_FAMILY for m, _ in all_arms):
+            body.append(f"\\multicolumn{{{ncols}}}{{l}}{{{fam(GP_FAMILY)} -- no valid "
+                        "distributional cell (see tab-infeasible)}} \\\\")
         res, rep = _rank_block(sub[~sub["scores_secondary"]], main_arms)
         if res is None:
             body.append(pending_row(r, ncols, "no common cell across the distributional arms"))
@@ -629,6 +791,7 @@ def tab_h1(df: pd.DataFrame, w: TableWriter):
         "unweighted by exposure (addendum 3 \\S8).",
         "Conformal rows are excluded: their CRPS / log score are placeholders "
         "(addendum 2 \\S3). " + CBD_NOTE,
+        gp_note(df),
     ]
     w.write("tab-h1-rankings", "llrrrrrr",
             ["Family & Mech. & RMSE & rk & CRPS & rk & log score & rk \\\\"],
@@ -639,9 +802,9 @@ def tab_h2(df: pd.DataFrame, w: TableWriter):
     cols = ["coverage_50", "coverage_80", "coverage_95", "winkler_95"]
     colspec, head, body = block_table(df, cols, ["cov$_{50}$", "cov$_{80}$", "cov$_{95}$", "$\\IS_{95}$"], fmt_levels)
     notes = [regime_note(df, r) for r in EXPECTED_REGIMES]
-    notes += [DESCRIPTIVE_NOTE, CONFORMAL_NOTE, CBD_NOTE,
+    notes += [DESCRIPTIVE_NOTE, CONFORMAL_NOTE, CBD_NOTE, gp_note(df),
               "$\\IS_{95}$: mean Winkler / interval score of the 95\\% interval on log rates (negatively oriented)."]
-    w.write("tab-h2-coverage", colspec, head, body, notes, tabcolsep="3pt")
+    w.write("tab-h2-coverage", colspec, head, body, notes)
 
 
 def tab_h3(df: pd.DataFrame, w: TableWriter):
@@ -660,7 +823,7 @@ def tab_h3(df: pd.DataFrame, w: TableWriter):
               "joint path = share of scored ages whose whole $h=1\\ldots H$ trajectory "
               "lies inside the 95\\% band; gap = joint $-$ marginal. Conformal rows use "
               "the wrapper's own interval bounds (addendum 3 \\S6); the copula arm is the "
-              "only mechanism that constructs a joint band.", CBD_NOTE]
+              "only mechanism that constructs a joint band.", CBD_NOTE, gp_note(df)]
     w.write("tab-h3-joint", colspec, head, body, notes)
 
 
@@ -675,7 +838,8 @@ def tab_h4(df: pd.DataFrame, w: TableWriter):
               "below 55, so its 0--24 band is empty and its 25--64 band covers "
               "55--64 only.",
               "Registered direction (worse at 65--99 than 25--64) is contradicted "
-              "by Dowd et al.; a reversal is reported as informative (addendum 3 \\S8)."]
+              "by Dowd et al.; a reversal is reported as informative (addendum 3 \\S8).",
+              gp_note(df)]
     w.write("tab-h4-age", colspec, head, body, notes)
 
 
@@ -689,7 +853,16 @@ def _h5_stats(ok: pd.DataFrame, err: pd.DataFrame, cols_: list[str]) -> pd.DataF
         sub = ok[(ok["model"] == m) & (ok["mechanism"] == u)]
         rec = {"model": m, "mechanism": u, "n": len(sub),
                "n_err": int(((err["model"] == m) & (err["mechanism"] == u)).sum())}
+        # conformal rows: the runner's e0/e65/ann65 quantiles come from the
+        # uniform-in-interval filler samples, not a predictive distribution --
+        # never computed here, printed n/a (addendum 2 §3)
+        conformal = is_conformal(u) or (len(sub) > 0 and bool(sub["scores_secondary"].any()))
         for q in ("e0", "e65", "ann65"):
+            if conformal:
+                rec[f"{q}_cov"] = np.nan
+                rec[f"{q}_err"] = np.nan
+                rec[f"{q}_n"] = 0
+                continue
             lo, hi, ob, er = (sub.get(f"{q}_{s}", pd.Series(dtype=float)) for s in ("q025", "q975", "obs", "error"))
             fin = lo.notna() & hi.notna() & ob.notna()
             rec[f"{q}_cov"] = float(((lo[fin] <= ob[fin]) & (ob[fin] <= hi[fin])).mean()) if fin.any() else np.nan
@@ -699,24 +872,49 @@ def _h5_stats(ok: pd.DataFrame, err: pd.DataFrame, cols_: list[str]) -> pd.DataF
     return pd.DataFrame(recs)
 
 
+H5_CONFORMAL_NOTE = ("Conformal rows (split, EnbPI, copula) are n/a: derived-quantity "
+                     "intervals require predictive samples; conformal mechanisms yield "
+                     "interval bounds on $\\log m_x$ only (addendum 2 \\S3).")
+
+
+def _fmt_h5(row, m, u, c):
+    if is_conformal(u):
+        return "n/a"
+    return f3(row[c], 2 if c.endswith("_err") else 3)
+
+
 def tab_h5(df: pd.DataFrame, w: TableWriter):
     cols = ["e0_cov", "e0_err", "e65_cov", "e65_err", "ann65_cov", "ann65_err"]
     heads = ["$e_0$ cov", "err", "$e_{65}$ cov", "err", "$\\annuity$ cov", "err"]
-    colspec, head, body = block_table(df, cols, heads,
-                                      lambda row, m, u, c: f3(row[c], 2 if c.endswith("_err") else 3),
-                                      per_block_stats=_h5_stats)
+    colspec, head, body = block_table(df, cols, heads, _fmt_h5, per_block_stats=_h5_stats)
     notes = [regime_note(df, r) for r in EXPECTED_REGIMES]
     notes += [DESCRIPTIVE_NOTE,
               "cov = share of rows whose realised $e_0$, $e_{65}$ or $\\annuity$ (2\\%) "
               "lies inside the model's [2.5\\%, 97.5\\%] sample quantiles; err = mean "
               "(point $-$ observed), years for $e_x$, annuity units for $\\annuity$. "
               "Derived quantities are integrated from the LATENT predictive paths on "
-              "the maximal contiguous scored age block from age 0 (addendum 3 \\S3), "
-              "so conformal rows are included and unflagged.",
+              "the maximal contiguous scored age block from age 0 (addendum 3 \\S3).",
+              H5_CONFORMAL_NOTE,
               "CBD's block starts at age 55: $e_0$ is undefined (--) and $e_{65}$ / "
               "$\\annuity$ come from a 55--99 table. Rows whose bounds are missing "
-              "are excluded from that quantity's share only."]
-    w.write("tab-h5-actuarial", colspec, head, body, notes, tabcolsep="3pt")
+              "are excluded from that quantity's share only.", gp_note(df)]
+    # longtable: three regimes x every family/mechanism plus the notes overflow
+    # a single float page (measured +25 pt at \scriptsize, 2026-08-28), so the
+    # fragment spans pages and carries its own caption/label.
+    w.write_longtable(
+        "tab-h5-actuarial", colspec, head, body, notes,
+        caption=(r"Empirical coverage of the nominal 95\% interval---the share of "
+                 r"population--sex cells in which the realised value lies between the "
+                 r"2.5\% and 97.5\% sample quantiles---and the mean error (median of the "
+                 r"samples minus the realised value) for $e_0$, $e_{65}$ and $\annuity$ "
+                 r"at 2\%, by family, mechanism and regime, on the period table of the "
+                 r"first test year. Conformal rows are reported as not applicable: the "
+                 r"functionals require predictive sample paths, and conformal mechanisms "
+                 r"yield interval bounds on $\log m_{x,t}$ only (Addendum~2~\S3). CBD "
+                 r"(ages 55--99) has no $e_0$; its $e_{65}$ and $\annuity$ are exact on "
+                 r"the truncated table. Regime, population count and the age range of "
+                 r"the table are stated in the note."),
+        label="tab:h5-actuarial")
 
 
 def tab_murphy(df: pd.DataFrame, w: TableWriter):
@@ -737,7 +935,7 @@ def tab_murphy(df: pd.DataFrame, w: TableWriter):
               "one bin, so RES is 0 by construction and REL $=(0.95-\\bar{y})^2$; "
               "the decomposition becomes informative only across levels. PIT-REL "
               "is the reliability term of the PIT-histogram decomposition "
-              "(distributional rows only; n/a for conformal rows).", CBD_NOTE]
+              "(distributional rows only; n/a for conformal rows).", CBD_NOTE, gp_note(df)]
     w.write("tab-murphy", colspec, head, body, notes)
 
 
@@ -763,7 +961,7 @@ def tab_pit(df: pd.DataFrame, w: TableWriter):
               "KS $p$-value falls below 0.05. The $p$-value assumes independent "
               "draws; PIT values across ages and horizons within a population are "
               "dependent, so the share is descriptive (addendum 2 \\S4), never a test.",
-              CBD_NOTE]
+              CBD_NOTE, gp_note(df)]
     w.write("tab-pit", colspec, head, body, notes)
 
 
@@ -830,9 +1028,24 @@ def tab_dm_mcs(analyses: dict[str, dict], w: TableWriter):
         "intersection of the compared arms (addendum 3 \\S11). A contrast whose "
         "arms do not share an age support (CBD, 45 ages) is skipped, not forced.",
     ]
-    w.write("tab-dm-mcs", "llp{3.2cm}p{5.2cm}rr",
-            ["Contrast & Loss & In set / statistic & $p$-values & kept & dropped \\\\"],
-            body, notes, size="\\footnotesize", tabcolsep="3pt")
+    # longtable: the MCS and DM blocks with wrapped p{} columns overflow a
+    # float page by ~110 pt (measured 2026-08-28); the fragment spans pages
+    # and carries its own caption/label.
+    w.write_longtable(
+        "tab-dm-mcs", "llp{3.2cm}p{5.2cm}rr",
+        ["Contrast & Loss & In set / statistic & $p$-values & kept & dropped \\\\"],
+        body, notes,
+        caption=(r"Registered forecast-comparison tests from the analysis stage. "
+                 r"Upper block: each model confidence set at 90\%---contrast name, loss "
+                 r"used, arms retained, elimination $p$-values, and cells kept and "
+                 r"dropped by the common-cell restriction. Lower block: pairwise "
+                 r"Diebold--Mariano, native versus split conformal within each "
+                 r"family---loss used, mean loss differential, wild-cluster-bootstrap "
+                 r"$p$-value and number of clusters. Contrasts among distributional arms "
+                 r"use CRPS on log rates; every contrast that includes a conformal arm "
+                 r"uses the per-horizon 95\% interval score. A contrast that cannot be "
+                 r"formed is listed with its recorded reason."),
+        label="tab:dm-mcs")
 
 
 #: scripts/sensitivities.py slice names -> the addendum-1 stratum labels used here
@@ -895,6 +1108,9 @@ def tab_twin_crises(df: pd.DataFrame, sens: dict | None, w: TableWriter):
     strata_cols = [s for s in STRATA_ORDER if strata and s in strata]
     cells = sort_cells([(m, u) for s in (st_p, st_s) if s is not None
                         for m, u in zip(s["model"], s["mechanism"])])
+    gp_here = {"placebo": gp_present(placebo), "shift": gp_present(shift)}
+    if cells and not any(m == GP_FAMILY for m, _ in cells):
+        cells = sort_cells([*cells, (GP_FAMILY, "")])
     colspec = "ll" + ("rrr" if st_p is not None else "c") + ("rrr" if st_s is not None else "c") \
         + ("r" * len(strata_cols) if strata_cols else "c")
     head1 = ["Family", "Mech.",
@@ -912,18 +1128,24 @@ def tab_twin_crises(df: pd.DataFrame, sens: dict | None, w: TableWriter):
             body.append("\\addlinespace[2pt]")
         first_of_fam = (m != last)
         last = m
-        line = [fam(m) if first_of_fam else "", mech(u)]
-        for st in (st_p, st_s):
+        line = [fam(m) if first_of_fam else "", mech(u) if u else "all arms"]
+        for st, reg in ((st_p, "placebo"), (st_s, "shift")):
             if st is None:
                 line.append("--")
                 continue
-            row = _lookup(st, m, u)
+            if m == GP_FAMILY and not gp_here[reg]:
+                line.append(gp_pending_cell(3))
+                continue
+            row = _lookup(st, m, u) if u else None
             line += ([f3(row["coverage_95"]), f3(row["joint_path_coverage_95"]), fint(row["n"])]
                      if row is not None else ["--", "--", "0"])
         if strata_cols:
-            for s in strata_cols:
-                row = _lookup(strata[s], m, u)
-                line.append(f3(row["coverage_95"]) if row is not None else "--")
+            if m == GP_FAMILY and not gp_here["placebo"]:
+                line.append(gp_pending_cell(len(strata_cols)))
+            else:
+                for s in strata_cols:
+                    row = _lookup(strata[s], m, u) if u else None
+                    line.append(f3(row["coverage_95"]) if row is not None else "--")
         else:
             line.append("--")
         body.append(" & ".join(line) + " \\\\")
@@ -939,11 +1161,11 @@ def tab_twin_crises(df: pd.DataFrame, sens: dict | None, w: TableWriter):
              if strata_cols else
              f"Strata columns (addendum 1 \\S A): {PENDING} -- neither a sensitivities JSON "
              "with a computed \\texttt{strata.placebo} block nor a placebo parquet was supplied.",
-             "Classical families only are expected in the placebo regime (neural "
-             "families have no registered placebo arm); descriptive, no transfer "
-             "regression."]
+             "Every registered family runs in the placebo regime (PREREGISTRATION.md places "
+             "no family restriction on it; pass 1 = all families but GP, pass 2 = GP). "
+             "Descriptive, no transfer regression.", gp_note(df)]
     w.write("tab-twin-crises", colspec, [" & ".join(head1) + " \\\\", " & ".join(head2) + " \\\\"],
-            body, notes, tabcolsep="3pt")
+            body, notes)
 
 
 _NUM_RATIO = re.compile(r"\d+/\d+")
@@ -972,7 +1194,37 @@ def infeasible_table(df: pd.DataFrame) -> pd.DataFrame:
     return tab.sort_values(["regime_group", "_c", "pop", "_k"]).drop(columns=["_c", "_k"]).reset_index(drop=True)
 
 
+def infeasible_compact(tab: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate the per-population listing to (regime, model, mechanism,
+    class): populations affected (sorted codes), number of populations and
+    error rows."""
+    if tab.empty:
+        return pd.DataFrame(columns=["regime_group", "model", "mechanism", "error_class",
+                                     "pops", "n_pops", "n"])
+    g = tab.groupby(["regime_group", "model", "mechanism", "error_class"], sort=False)
+    out = g.agg(pops=("pop", lambda s: ", ".join(sorted(set(s)))),
+                n_pops=("pop", "nunique"), n=("n", "sum")).reset_index()
+    cls_rank = {"machine": 0, "structural": 1, "method": 2, "other": 3}
+    out["_c"] = out["error_class"].map(cls_rank)
+    out["_k"] = [_order_key(m, u) for m, u in zip(out["model"], out["mechanism"])]
+    return out.sort_values(["regime_group", "_c", "_k"]).drop(columns=["_c", "_k"]).reset_index(drop=True)
+
+
+INFEASIBLE_CLASS_NOTE = (
+    "Classes follow \\texttt{scripts/final\\_qa.py}: \\emph{structural} = design-floor "
+    "cell (panel too short for the mechanism's calibration window, admissibility "
+    "floor $n_{\\mathrm{train}}\\ge 15$, addendum 3 \\S4/\\S11) -- a property of the "
+    "design, tabulated and dropped by the common-cell restriction; \\emph{method} = "
+    "the family's own sampler refused to produce a predictive law (SVAR explosive "
+    "coefficient draws rejected, never clipped, addendum 3 \\S7; Poisson "
+    "composition overflow) -- a finding about the family; \\emph{machine} = a broken "
+    "run, which aborts table generation and is therefore always empty here.")
+
+
 def tab_infeasible(df: pd.DataFrame, w: TableWriter):
+    """Main-text fragment: compact (model, mechanism, class) aggregate with the
+    populations affected. The per-population listing is the appendix
+    longtable ``tab-infeasible-full``."""
     tab = infeasible_table(df)
     machine = tab[tab["error_class"] == "machine"]
     if len(machine):
@@ -980,40 +1232,73 @@ def tab_infeasible(df: pd.DataFrame, w: TableWriter):
             f"{int(machine['n'].sum())} machine-failure rows in the inputs "
             f"({machine[['pop', 'model']].drop_duplicates().values.tolist()}); "
             "run scripts/final_qa.py and re-run those parts -- tables are NOT generated.")
+    compact = infeasible_compact(tab)
     ncols = 6
     body = []
     counts = {}
+    for r in EXPECTED_REGIMES:
+        sub = compact[compact["regime_group"] == r]
+        if regime_frame(df, r).empty:
+            body.append(pending_row(r, ncols))
+            continue
+        body += span_row(f"\\textbf{{{r} regime}}", ncols)
+        if not gp_present(regime_frame(df, r)):
+            body.append(f"\\multicolumn{{{ncols}}}{{l}}{{{fam(GP_FAMILY)} -- {GP_PENDING}}} \\\\")
+        if sub.empty:
+            body.append(f"\\multicolumn{{{ncols}}}{{l}}{{no error rows}} \\\\")
+        for _, x in sub.iterrows():
+            body.append(" & ".join([fam(x["model"]), mech(x["mechanism"]), tex(x["error_class"]),
+                                    tex(x["pops"]), fint(x["n_pops"]), fint(x["n"])]) + " \\\\")
+        counts[r] = tab[tab["regime_group"] == r].groupby("error_class")["n"].sum().to_dict()
+    notes = [regime_note(df, r) for r in EXPECTED_REGIMES]
+    notes += [
+        INFEASIBLE_CLASS_NOTE,
+        "Populations: HMD codes of the populations with at least one error row in the "
+        "cell; \\#pop = their number; $n$ = error rows (populations, sexes and origins "
+        "pooled). The per-population listing with the error messages is "
+        "Table~\\ref{tab:infeasible-full} (appendix).",
+        "Totals by class: " + ("; ".join(
+            f"{r}: " + ", ".join(f"{c} {int(n)}" for c, n in sorted(cs.items())) if cs else f"{r}: none"
+            for r, cs in counts.items()) or PENDING) + ".",
+        gp_note(df),
+    ]
+    w.write("tab-infeasible", "llp{1.5cm}p{5.6cm}rr",
+            ["Family & Mech. & Class & Populations affected & \\#pop & $n$ \\\\"],
+            body, notes)
+    tab_infeasible_full(df, tab, w)
+
+
+def tab_infeasible_full(df: pd.DataFrame, tab: pd.DataFrame, w: TableWriter):
+    """Appendix longtable: every (population, family, mechanism) error cell
+    with its class and the first error message."""
+    ncols = 6
+    body = []
     for r in EXPECTED_REGIMES:
         sub = tab[tab["regime_group"] == r]
         if regime_frame(df, r).empty:
             body.append(pending_row(r, ncols))
             continue
         body += span_row(f"\\textbf{{{r} regime}}", ncols)
+        if not gp_present(regime_frame(df, r)):
+            body.append(f"\\multicolumn{{{ncols}}}{{l}}{{{fam(GP_FAMILY)} -- {GP_PENDING}}} \\\\")
         if sub.empty:
             body.append(f"\\multicolumn{{{ncols}}}{{l}}{{no error rows}} \\\\")
         for _, x in sub.iterrows():
             body.append(" & ".join([tex(x["pop"]), fam(x["model"]), mech(x["mechanism"]),
                                     tex(x["error_class"]), x["reason"], fint(x["n"])]) + " \\\\")
-        counts[r] = sub.groupby("error_class")["n"].sum().to_dict()
     notes = [regime_note(df, r) for r in EXPECTED_REGIMES]
-    notes += [
-        "Classes follow \\texttt{scripts/final\\_qa.py}: \\emph{structural} = design-floor "
-        "cell (panel too short for the mechanism's calibration window, admissibility "
-        "floor $n_{\\mathrm{train}}\\ge 15$, addendum 3 \\S4/\\S11) -- a property of the "
-        "design, tabulated and dropped by the common-cell restriction; \\emph{method} = "
-        "the family's own sampler refused to produce a predictive law (SVAR explosive "
-        "coefficient draws rejected, never clipped, addendum 3 \\S7; Poisson "
-        "composition overflow) -- a finding about the family; \\emph{machine} = a broken "
-        "run, which aborts table generation and is therefore always empty here.",
-        "Reason: first error message of the group, numerators/denominators of draw "
-        "counts abbreviated as k/N; $n$ = error rows (sexes and origins pooled).",
-        "Totals by class: " + ("; ".join(
-            f"{r}: " + ", ".join(f"{c} {int(n)}" for c, n in sorted(cs.items())) if cs else f"{r}: none"
-            for r, cs in counts.items()) or PENDING) + ".",
-    ]
-    w.write("tab-infeasible", "lllp{1.6cm}p{6.2cm}r",
-            ["Pop. & Family & Mech. & Class & Reason (excerpt) & $n$ \\\\"],
-            body, notes, size="\\footnotesize", tabcolsep="3pt")
+    notes += [INFEASIBLE_CLASS_NOTE,
+              "Reason: first error message of the group, numerators/denominators of draw "
+              "counts abbreviated as k/N; $n$ = error rows (sexes and origins pooled). "
+              "Compact aggregate in the main text: Table~\\ref{tab:infeasible}.",
+              gp_note(df)]
+    w.write_longtable("tab-infeasible-full", "lllp{1.6cm}p{6.2cm}r",
+                      ["Pop. & Family & Mech. & Class & Reason (excerpt) & $n$ \\\\"],
+                      body, notes,
+                      caption="Infeasible cells by population, family and mechanism "
+                              "(\\texttt{scripts/final\\_qa.py} classes); full listing "
+                              "behind Table~\\ref{tab:infeasible}.",
+                      label="tab:infeasible-full")
 
 
 # ---------------------------------------------------------------------------
@@ -1022,17 +1307,20 @@ def tab_infeasible(df: pd.DataFrame, w: TableWriter):
 
 def build_all(df: pd.DataFrame, analyses: dict[str, dict], sens: dict | None,
               out_dir: str | Path, sources: list[str] | None = None,
-              snapshot: bool = True, hmd_deaths: str | None = None) -> list[Path]:
+              snapshot: bool = True, hmd_deaths: str | Path | None = None,
+              hmd_exposures: str | Path | None = None) -> list[Path]:
     """Generate every table into out_dir; returns the written paths.
 
     Raises SystemExit before writing anything if a machine-failure row is
     present (the QA gate's rule: re-run, never analyse around).
+    ``hmd_deaths`` / ``hmd_exposures`` feed tab-populations only (generated
+    from the data files); None or a missing file prints pending cells.
     """
     df = prepare_rows(df)
     if (df["error_class"] == "machine").any():
         tab_infeasible(df, TableWriter(Path(out_dir), [], snapshot))  # raises
     w = TableWriter(Path(out_dir), sources or [], snapshot)
-    tab_populations(df, w, hmd_deaths)
+    tab_populations(w, hmd_deaths, hmd_exposures)
     tab_h1(df, w)
     tab_h2(df, w)
     tab_h3(df, w)
@@ -1050,13 +1338,19 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--parquet", action="append", default=[],
-                   help="runner parquet (repeatable; one per regime)")
+                   help="runner parquet (repeatable): results/<regime>.parquet and the "
+                        "second-pass results/<regime>_gp.parquet; rows merge by regime")
     p.add_argument("--analysis", action="append", default=[],
                    help="scripts/analyse.py JSON (repeatable; one per regime)")
     p.add_argument("--sensitivities", default=None,
-                   help="optional sibling JSON with placebo_strata; absent -> placeholder")
-    p.add_argument("--hmd-deaths", default=None,
-                   help="HMD bulk Deaths_1x1 file for first-year / training-years columns")
+                   help="optional scripts/sensitivities.py JSON; its strata.placebo key "
+                        "feeds the tab-twin-crises stratum columns; absent -> placeholder")
+    p.add_argument("--hmd-deaths", default=str(DEFAULT_HMD_DEATHS),
+                   help="HMD bulk Deaths_1x1 file (tab-populations is generated from the "
+                        "data files); default Dataset/deaths/Deaths_1x1/Deaths_1x1.txt")
+    p.add_argument("--hmd-exposures", default=str(DEFAULT_HMD_EXPOSURES),
+                   help="HMD bulk Exposures_1x1 file (zero-exposure training cells); "
+                        "default Dataset/exposures/Exposures_1x1/Exposures_1x1.txt")
     p.add_argument("--out", default=str(ROOT / "paper" / "tables"))
     p.add_argument("--final", action="store_true",
                    help="suppress the NOT FINAL stamp (refused if any input is a snapshot)")
@@ -1072,14 +1366,20 @@ def main(argv=None) -> int:
     sources = [Path(x).name for x in args.parquet + args.analysis]
     if args.sensitivities and sens is not None:
         sources.append(Path(args.sensitivities).name)
+    hmd_ok = Path(args.hmd_deaths).exists() and Path(args.hmd_exposures).exists()
     written = build_all(df, analyses, sens, args.out, sources=sources,
-                        snapshot=snapshot or not args.final, hmd_deaths=args.hmd_deaths)
+                        snapshot=snapshot or not args.final, hmd_deaths=args.hmd_deaths,
+                        hmd_exposures=args.hmd_exposures)
     for path in written:
         print(f"[make_tables] wrote {path}")
+    gp_regs = [r for r in present_regimes(df) if gp_present(regime_frame(df, r))]
     print(f"[make_tables] regimes present: {present_regimes(df) or 'none'}; "
+          f"GP rows in: {gp_regs or 'none (pending second-pass parquet)'}; "
           f"analyses: {sorted(analyses) or 'none'}; sensitivities: "
           f"{'yes' if sens else 'absent (placeholder)'}; "
-          f"stamp: {'SNAPSHOT - NOT FINAL' if (snapshot or not args.final) else 'final'}")
+          f"tab-populations: {'from the data files' if hmd_ok else 'pending (HMD bulk files not found)'}; "
+          f"stamp: {'SNAPSHOT - NOT FINAL' if (snapshot or not args.final) else 'final'} "
+          "(tab-populations carries no stamp: data-file derived)")
     return 0
 
 

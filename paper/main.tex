@@ -32,6 +32,7 @@
 \usepackage{xcolor}
 \usepackage{caption}
 \usepackage{threeparttable}
+\usepackage{longtable}
 \usepackage{array}
 \usepackage{enumitem}
 \usepackage[authoryear,round]{natbib}
@@ -54,12 +55,12 @@
   \marginpar{\color{red}\scriptsize\raggedright\textbf{TODO~\thetodocount.} #1}}
 
 % --- \inputtable{name}: pull a generated fragment, or a placeholder --------------
-% Tables are written by scripts/analyze.py (see tables/README.md). A missing
-% fragment renders as a placeholder so the draft always compiles.
+% Tables are written by scripts/make_tables.py (see tables/README.md). A
+% missing fragment renders as a placeholder so the draft always compiles.
 \newcommand{\inputtable}[1]{%
   \IfFileExists{tables/#1.tex}%
     {\input{tables/#1}}%
-    {\todoinline{table \texttt{#1} is produced by \texttt{scripts/analyze.py} from \texttt{results/*.parquet}; not yet generated}}}
+    {\todoinline{table \texttt{#1} is produced by \texttt{scripts/make\_tables.py} from \texttt{results/*.parquet}; not yet generated}}}
 
 % --- \inputfigure{name}: \includegraphics of a generated figure, or a placeholder
 % Figures are written by the analysis stage as figures/<name>.pdf. A missing
@@ -67,7 +68,7 @@
 % argument = width (default \textwidth).
 \newcommand{\inputfigure}[2][\textwidth]{%
   \IfFileExists{figures/#2.pdf}%
-    {\includegraphics[width=#1]{figures/#2.pdf}}%
+    {\includegraphics[width=#1,height=0.88\textheight,keepaspectratio]{figures/#2.pdf}}%
     {\todoinline{figure \texttt{#2.pdf} is produced by the analysis stage from \texttt{results/*.parquet}; not yet generated}}}
 
 % --- notation ------------------------------------------------------------------
@@ -193,5 +194,7 @@ only, DNK without 1921--1922.}
 
 \bibliographystyle{plainnat}
 \bibliography{references}
+
+\input{sections/appendix-infeasible}
 
 \end{document}

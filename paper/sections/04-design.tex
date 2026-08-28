@@ -452,6 +452,18 @@ defined in Section~\ref{sec:metrics-inference}.
   nat'', because the cell-feature networks' extrapolation plateau is the
   audited fragility rather than an implementation defect. Both dated in
   \texttt{docs/NEURAL-SPEC.md}.
+\item Seed derivation for ensemble members. Registered: member seed $=$
+  global seed $+$ member index. Implemented: the $j$-th member's seed is the
+  $j$-th child of the cell's \texttt{SeedSequence}, whose entropy is the
+  global seed plus stable hashes of the cell key (origin, population, sex,
+  family, mechanism), so that every cell can be re-run in isolation and
+  reproduce its row. The implemented rule keeps every property the
+  registration wanted from the additive one---member seeds are distinct,
+  deterministic given the global seed, and recorded per row in the results
+  metadata---while avoiding the seed collisions that an additive offset
+  produces between neighbouring cells. No result depends on the particular
+  integers; the change is recorded because the registered sentence is not
+  literally what the code does (\texttt{docs/NEURAL-SPEC.md}, rule~4).
 \item \todo{append every deviation that arises during the production sweeps
   and the analysis here with its date and reason; an empty list at
   submission is a claim, not a default}
