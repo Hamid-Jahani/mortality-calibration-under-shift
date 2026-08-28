@@ -212,3 +212,8 @@ are legitimate and stay. Pull with scripts/server_pull.sh shift (works;
 the source of truth until the run ends.
 CORRECTION 20:45: the poisoned rows were LAPTOP artifacts (18:43 launch),
 never on the node. server_pull.sh now purges the local parts dir first.
+
+## PIPELINE READY (2026-08-28 afternoon)
+Post-sweep order is in docs/STATUS.md (pull → final_qa → analyse → sensitivities
+→ make_tables --final → make_figures → compile). Generated paper artefacts are
+gitignored; commit them deliberately once final. Do not read snapshot rankings.
