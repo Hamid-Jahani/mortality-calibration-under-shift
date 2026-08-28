@@ -21,7 +21,13 @@ import pandas as pd
 
 MACHINE = re.compile(r"MemoryError|partially initialized module|Unable to allocate|paging file",
                      re.IGNORECASE)
-STRUCTURAL = re.compile(r"panel too short|need >|remain explosive|inadmissible|n_train", re.IGNORECASE)
+STRUCTURAL = re.compile(r"panel too short|need >|inadmissible|n_train", re.IGNORECASE)
+#: a family's own sampler refusing to produce a predictive law on that panel
+#: (addendum 3 §7: rejection only, never clipping). Real-data 2026-08-28:
+#: SVAR on TWN 990-1000/1000 draws explosive; bootstrap refits on the longest
+#: panels overflow Poisson composition ("lam value too large"). A finding
+#: about the family, reported as such - not a design-floor cell.
+METHOD = re.compile(r"remain explosive|lam value too large", re.IGNORECASE)
 
 
 def main(paths: list[str]) -> int:
@@ -34,10 +40,13 @@ def main(paths: list[str]) -> int:
     err = df[df["error"].notna()].copy()
     machine = err[err["error"].str.contains(MACHINE)]
     structural = err[err["error"].str.contains(STRUCTURAL) & ~err["error"].str.contains(MACHINE)]
-    other = err[~err.index.isin(machine.index) & ~err.index.isin(structural.index)]
+    method = err[err["error"].str.contains(METHOD) & ~err["error"].str.contains(MACHINE)
+                 & ~err.index.isin(structural.index)]
+    other = err[~err.index.isin(machine.index) & ~err.index.isin(structural.index)
+                & ~err.index.isin(method.index)]
 
     print(f"rows={len(df)}  error_rows={len(err)}  machine={len(machine)}  "
-          f"structural={len(structural)}  other={len(other)}")
+          f"structural={len(structural)}  method={len(method)}  other={len(other)}")
     print(f"devices={sorted(df['device'].dropna().unique().tolist())}  "
           f"regimes={sorted(df['regime'].unique().tolist())}  "
           f"pops={df['pop'].nunique()}  models={df['model'].nunique()}  mechs={df['mechanism'].nunique()}")

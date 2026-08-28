@@ -224,3 +224,21 @@ common-cell guards have run.
   was clean throughout. Local snapshot purged; `server_pull.sh` now clears
   the local parts dir before extracting. The KOR/HRV re-run on the node was
   unnecessary and harmless (regenerates identical parts).
+
+## 2026-08-28 09:00 node time — shift pass 1 at 177/180, QA on the snapshot
+
+- Node run is clean: zero machine-failure rows across 1,808 rows (the QA gate
+  now has three error classes: machine / structural design-floor / method).
+- **Method-failure finding — SVAR**: the registered rejection (addendum 3 §7)
+  fires hard on real data. TWN: 990–1000/1000 coefficient draws explosive on
+  the EnbPI/copula members and 712/1000 on split-conformal (the banded VAR is
+  non-stationary on that 50-year panel); USA/LUX/LVA: a few per mille on the
+  shorter EnbPI members; SVAR/pboot overflows Poisson composition ("lam value
+  too large") on CHE, FIN, ISL, LUX, SWE — the longest panels. Nothing is
+  clipped; these cells are error rows and SVAR's arms shrink accordingly under
+  the common-cell restriction. Report as a property of the family.
+- Per-population wall time 3.8–10.3 h (ISL 10.3, NOR 7.2; SWE still running at
+  13.3 h with CNN/LSTM/NB left): the single-thread torch penalty is ~2× the
+  solo probe. Revised ETA: shift pass 1 ≈ 11:00–13:00, GP pass +2–3 h,
+  placebo (one wave, bounded by the long Nordic panels) +8–12 h, placebo GP
+  +1–2 h → everything done around 2026-08-29 morning, node time.
