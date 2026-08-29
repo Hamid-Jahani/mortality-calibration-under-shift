@@ -15,7 +15,8 @@ Registered documents override both: `PREREGISTRATION.md` + addenda 1–3
 | Sweeps | compute node `tararis-ai3` = 192.168.1.47 (Ubuntu 24.04, 12 cores, 23 GB), reachable ONLY through the bastion `baazar` (= ai-server, 24 cores). Every command is nested: `/c/Windows/System32/OpenSSH/ssh.exe baazar 'ssh 192.168.1.47 "<cmd>"'`. Repo there: `~/mortality-calibration-under-shift` (arrived as a git bundle — no GitHub creds on the node; ship single files with `cat file \| ssh ... "cat > path"`). Env `.venv-server` (CPU torch 2.6.0, gpytorch 1.15.2). Data: `Dataset/` = the 7 sweep-relevant HMD files (281 MB, manifest-verified). |
 | SSH prerequisite | the Windows `ssh-agent` service must be running with `C:\Users\Gaming\.ssh\Tara\.ssh\Hamid` loaded (`ssh-add`, passphrase-protected; service set to Automatic on 2026-08-28). "Permission denied (publickey)" after a reboot = key not loaded. |
 
-## Sweep state (node) — as of 2026-08-28 12:43 node time
+## Sweep state (node) — SUPERSEDED by the 2026-08-29 note at the bottom
+(shift pass 1 complete; launcher killed; placebo pass 1 + capped GP pass running manually)
 
 `scripts/launch_sweeps.sh shift placebo`, launched 2026-08-27 19:42 via
 `scripts/server_relaunch.sh` (JOBS=10, GP_JOBS=7, OMP/MKL/OPENBLAS threads
