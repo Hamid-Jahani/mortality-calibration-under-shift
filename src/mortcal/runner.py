@@ -164,6 +164,9 @@ MODELS: dict[str, type] = {
 #: age-cap sensitivity), with samples NaN below 55 (masked in scoring).
 MODEL_KWARGS: dict[str, dict] = {
     "CBD": {"age_min": 55},
+    # PREREGISTRATION-ADDENDUM-4 (2026-08-29): the GP trains on the trailing
+    # 60 complete years under every mechanism - feasibility cap, see addendum.
+    "GP": {"max_years": 60},
 }
 
 #: All seven registered UQ mechanisms. "native" uses the model's own
