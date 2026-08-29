@@ -61,9 +61,29 @@ mechanism whose band is calibrated to be simultaneous over horizons.
 """
 from __future__ import annotations
 
+import ctypes
+import gc
 import math
+import sys
 
 import numpy as np
+
+
+def release_memory() -> None:
+    """Return freed heap pages to the OS between large fits (Linux only).
+
+    Measured 2026-08-29 (SWE males, GP with the 60-year cap): one exact-GP
+    fit peaks at ~2.5 GB RSS and the allocator keeps it after del+gc, so a
+    ten-member conformal wrapper climbs to ~8 GB and two workers swap a
+    23 GB node. glibc's malloc_trim(0) hands the freed arenas back; it
+    changes no number. No-op where libc is unavailable (Windows).
+    """
+    gc.collect()
+    if sys.platform.startswith("linux"):
+        try:
+            ctypes.CDLL("libc.so.6").malloc_trim(0)
+        except OSError:  # pragma: no cover - no glibc
+            pass
 
 #: Mondrian age bands (inclusive edges). The last band is open-ended above,
 #: so panels with more ages than the last edge still get a band.
@@ -237,6 +257,8 @@ def _trailing_block_residuals(base_factory, D: np.ndarray, E: np.ndarray,
         member = base_factory().fit(D[:, :t], E[:, :t])
         med = _median_log_forecast(member, h_cal, n_samples, rng)  # [h_cal, ages]
         res[i] = np.abs(obs[:, t:t + h_cal].T - med)
+        del member
+        release_memory()            # bounded footprint across the K member fits
     return res
 
 

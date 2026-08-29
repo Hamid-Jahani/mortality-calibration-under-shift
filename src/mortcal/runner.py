@@ -122,6 +122,7 @@ from .models import (CBD, CNNLC, LSTMKt, LeeCarterSVD, MultiOutputGP,
                      NBHead, NeuralLC, PoissonLeeCarter, RenshawHaberman,
                      SparseVAR)
 from .splits import Regime
+from .uq.conformal import release_memory
 from .uq import (CopulaPathConformal, DeepEnsemble, EnbPIMx, MCDropout,
                  PoissonBootstrap, SplitConformalMx)
 
@@ -821,6 +822,7 @@ def run_regime(
                             log(f"SKIP {r.name}/{pop}/{sex}/{origin}/"
                                 f"{model_name}/{mechanism}: {row['error']}")
                         rows.append(row)
+                        release_memory()      # bounded per-worker RSS across cells
 
     df = pd.DataFrame(rows)
     if "scores_secondary" in df.columns:
