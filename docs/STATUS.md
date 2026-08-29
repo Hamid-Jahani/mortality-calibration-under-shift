@@ -302,3 +302,14 @@ are gitignored until final.
   must be launched manually afterwards**: `run_regime.py placebo --out
   results/placebo_gp.parquet --models GP --jobs 2` (with the thread-pinning
   env, detached). Then pull → final_qa → analyse → tables.
+- **09:30 node time — GP memory even with the cap**: the two capped GP
+  workers reached 10.5 / 9.9 GB RSS (node at 20/23 GB with placebo running).
+  The cap fixed the kernel size, not the per-cell footprint (the conformal
+  wrappers perform ~24 GP fits per cell). GP pass restarted at jobs=1
+  (memory back to 2.9 GB used); ~14 h for the 14 remaining populations.
+  Local profiling of the footprint in progress; must be understood before
+  the placebo and stable GP passes.
+- **Compute authorization**: the user owns both machines; the bastion
+  `ai-server` (24 cores, 23 GB with ~8 GB free, load ~4 from its own
+  services, 75 GB disk, internet) is being set up as a second node for the
+  STABLE regime (JOBS≈8 there given RAM; the rest on .47 after placebo).
