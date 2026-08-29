@@ -284,3 +284,21 @@ are gitignored until final.
 5. `python scripts/make_tables.py --parquet results/shift.parquet --parquet results/shift_gp.parquet --parquet results/placebo.parquet --parquet results/placebo_gp.parquet --analysis results/shift_analysis.json --analysis results/placebo_analysis.json --sensitivities results/sensitivities.json --out paper/tables --final`
 6. `python scripts/make_figures.py ...` → paper/figures
 7. compile (tectonic in scratchpad, ALL_PROXY unset) → read results ONLY now.
+
+## 2026-08-29 09:30 node time — GP stall diagnosed; addendum 4; placebo running
+
+- Shift pass 1 COMPLETE (180/180). The second-pass GP sweep had stalled for
+  19 h: exact multitask GP on a 269-year panel = 5.8 GB kernel per fit, refit
+  10x by the conformal wrappers → one worker at 10.7 GB, node swapping, 14/20
+  populations untouched. Killed.
+- **Addendum 4 registered** (sha256 in commit 1c97c8f): GP trains on the
+  trailing 60 complete years under every mechanism (`MODEL_KWARGS["GP"]`).
+  60 = longest panel completed without a cap (LUX); the four completed
+  populations are unchanged; the 40-year-scores-better probe is disclosed.
+  Local check: SWE 269 → 60 years, 25 s fit. GP pass relaunched with the cap
+  at jobs=2 (`results/logs/shift_gp_capped.out`), 14 populations to run.
+- Placebo pass 1 launched MANUALLY (`results/logs/placebo_pass1.out`, jobs=9,
+  no GP) because the launcher was killed with the GP pass. **Placebo GP pass
+  must be launched manually afterwards**: `run_regime.py placebo --out
+  results/placebo_gp.parquet --models GP --jobs 2` (with the thread-pinning
+  env, detached). Then pull → final_qa → analyse → tables.
