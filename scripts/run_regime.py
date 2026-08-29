@@ -65,13 +65,20 @@ def admissible_pairs(models, mechs, include_secondary: bool) -> dict[str, list[s
     return out
 
 
-def _run_one_pop(pop, parts_dir, sub, regimes, pairs, n_samples, seed, log) -> str:
+def _part_name(pop: str, model: str, tag: str) -> str:
+    """Part file for (population, model[, origin subset]). The origin tag keeps
+    two processes that split one regime's origins (e.g. --origins on a second
+    machine) from overwriting each other's parts."""
+    return f"{pop}__{model}{tag}.parquet"
+
+
+def _run_one_pop(pop, parts_dir, sub, regimes, pairs, n_samples, seed, log, tag="") -> str:
     """All admissible cells of one population; one part per model; resumable."""
     pop_regimes = [r.__class__(**{**r.__dict__, "pops": (pop,)}) for r in regimes]
     parts_dir = Path(parts_dir)
     rows = errs = 0
     for model, mechs in pairs.items():
-        part = parts_dir / f"{pop}__{model}.parquet"
+        part = parts_dir / _part_name(pop, model, tag)
         if part.exists():
             continue
         df = runner.run_regime(
@@ -84,11 +91,11 @@ def _run_one_pop(pop, parts_dir, sub, regimes, pairs, n_samples, seed, log) -> s
 
 
 def _run_one_pop_task(task) -> str:
-    pop, parts_dir, sub, regimes, pairs, n_samples, seed = task
+    pop, parts_dir, sub, regimes, pairs, n_samples, seed, tag = task
     t0 = time.time()
     quiet = lambda m: None  # noqa: E731 — per-cell chatter stays in the worker
     try:
-        msg = _run_one_pop(pop, parts_dir, sub, regimes, pairs, n_samples, seed, quiet)
+        msg = _run_one_pop(pop, parts_dir, sub, regimes, pairs, n_samples, seed, quiet, tag)
     except Exception as exc:  # noqa: BLE001 — a population must never kill the pool
         msg = f"{pop}: FAILED {type(exc).__name__}: {exc}"
     return f"{msg} ({time.time() - t0:.0f}s)"
@@ -102,6 +109,9 @@ def main(argv=None) -> int:
     p.add_argument("--mechanisms", default="all", help="comma list of registry names or 'all'")
     p.add_argument("--n-samples", type=int, default=1000)
     p.add_argument("--pops", default=None, help="optional comma subset of the regime's populations")
+    p.add_argument("--origins", default=None,
+                   help="comma list of training-cutoff years (STABLE only) so one regime can be "
+                        "split across processes/machines; parts are then tagged __o<first>-<last>")
     p.add_argument("--exclude-models", default="", help="comma list of registry names to skip "
                    "(e.g. GP, so the 1.6 GB GP cells run in a separate low-parallel pass)")
     p.add_argument("--include-secondary", action="store_true",
@@ -116,6 +126,14 @@ def main(argv=None) -> int:
     pops = tuple(args.pops.split(",")) if args.pops else regimes[0].pops
     if args.pops:
         regimes = [r.__class__(**{**r.__dict__, "pops": pops}) for r in regimes]
+    tag = ""
+    if args.origins:
+        want = {int(y) for y in args.origins.split(",")}
+        regimes = [r for r in regimes if r.train_max_year in want]
+        if not regimes:
+            raise SystemExit(f"no origins of {args.regime} match --origins {args.origins}")
+        ys = sorted(r.train_max_year for r in regimes)
+        tag = f"__o{ys[0]}-{ys[-1]}"
 
     models = list(runner.MODELS) if args.models == "all" else args.models.split(",")
     excluded = {m for m in args.exclude_models.split(",") if m}
@@ -140,7 +158,7 @@ def main(argv=None) -> int:
     import pandas as pd  # local: keep module import cheap for --help
 
     todo = [pop for pop in pops
-            if any(not (parts_dir / f"{pop}__{m}.parquet").exists() for m in pairs)]
+            if any(not (parts_dir / _part_name(pop, m, tag)).exists() for m in pairs)]
     skipped = [pop for pop in pops if pop not in todo]
     if skipped:
         log(f"{len(skipped)} population(s) complete, skipping (resume): {','.join(skipped)}")
@@ -150,7 +168,7 @@ def main(argv=None) -> int:
     if jobs == 1:
         for pop in todo:
             log(_run_one_pop(pop, parts_dir, panel[panel["pop"] == pop], regimes, pairs,
-                             args.n_samples, args.seed, log))
+                             args.n_samples, args.seed, log, tag))
     else:
         # one process per population; each worker pins BLAS/torch to a single
         # thread (see _worker_init) so `jobs` workers on `jobs` cores do not
@@ -159,7 +177,7 @@ def main(argv=None) -> int:
         import multiprocessing as mp
         ctx = mp.get_context("spawn")
         tasks = [(pop, str(parts_dir), panel[panel["pop"] == pop], regimes, pairs,
-                  args.n_samples, args.seed) for pop in todo]
+                  args.n_samples, args.seed, tag) for pop in todo]
         with ctx.Pool(jobs, initializer=_worker_init) as pool:
             for msg in pool.imap_unordered(_run_one_pop_task, tasks):
                 log(msg)
