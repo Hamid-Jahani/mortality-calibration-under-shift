@@ -157,10 +157,12 @@ Section~\ref{sec:data}.
   with the scaled calendar year as input and ages as tasks, kernel
   $\mathrm{RBF}(\text{year})\otimes\mathrm{ICM}(\text{rank }5)$, Gaussian
   likelihood on the half-count log rate with a Poisson-level noise floor,
-  trained by marginal likelihood on the trailing block of at least forty
-  complete years (the Kronecker structure needs a complete year-by-age
-  block). Its native predictive is the joint posterior over the $h$ future
-  years.
+  trained by marginal likelihood on the trailing block of complete years
+  (the Kronecker structure needs a complete year-by-age block), at least
+  forty and---by Addendum~4, registered during the production sweeps---at
+  most sixty: the family trains on the trailing sixty complete years of
+  every panel under every mechanism (Section~\ref{sec:design-deviations}).
+  Its native predictive is the joint posterior over the $h$ future years.
 \item \textbf{Neural-LC.} The embedding network of \citet{richman2021neural}
   in per-panel form: an age embedding of dimension~5 concatenated with the
   scaled year, two hidden layers of 64 tanh units with dropout $0.05$, and a
@@ -464,7 +466,24 @@ defined in Section~\ref{sec:metrics-inference}.
   produces between neighbouring cells. No result depends on the particular
   integers; the change is recorded because the registered sentence is not
   literally what the code does (\texttt{docs/NEURAL-SPEC.md}, rule~4).
-\item \todo{append every deviation that arises during the production sweeps
-  and the analysis here with its date and reason; an empty list at
+\item Training window of the multi-output GP (Addendum~4, 2026-08-29,
+  registered during the production sweeps before any GP cell on a panel
+  longer than sixty years had produced a result). Registered: the GP trains
+  on the whole trailing block of complete years. Implemented: the trailing
+  sixty complete years, under every mechanism. Cause: the exact multitask
+  GP's kernel memory scales with $(\text{years}\times\text{ages})^2$---a
+  269-year panel is 26{,}900 points and a 5.8~GB kernel per fit, and the
+  EnbPI and copula-conformal mechanisms refit the family ten times per
+  cell---so the second-pass GP sweep stalled on the compute node after
+  nineteen hours with one worker at 10.7~GB, the machine swapping, and
+  fourteen of twenty populations untouched. Sixty is the longest panel the
+  arm had completed without a cap, so no computed cell changes; it exceeds
+  twice the 27-year window of the family's source paper
+  \citep{huynh2021multi}. Disclosure: before any cap was contemplated, a
+  single diagnostic on one population had shown a trailing forty-year window
+  scoring better than the full panel; the cap chosen is sixty, not forty,
+  and was not selected by score.
+\item \todo{append every further deviation that arises during the production
+  sweeps and the analysis here with its date and reason; an empty list at
   submission is a claim, not a default}
 \end{itemize}
