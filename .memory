@@ -90,3 +90,13 @@ Node runs: placebo pass 1 (jobs=9, log results/logs/placebo_pass1.out) and the
 shift GP pass with the addendum-4 cap (jobs=2, results/logs/shift_gp_capped.out).
 After both: launch placebo GP manually (see docs/STATUS.md 2026-08-29), then the
 post-sweep order. gp.py/runner.py on the node = commit 1c97c8f (shipped by cat).
+
+## 2026-08-29 10:20 — THREE machines' worth of runs in flight
+bastion (ssh baazar, repo ~/mortality-calibration-under-shift, env .venv-server):
+  stable halves a/b for SWE,DNK,ISL,BEL,NOR,CHE (--origins split; parts tagged).
+.47: placebo pass 1 (jobs 9) + shift GP pass (jobs 1, capped). TODO after
+placebo pass 1: placebo GP (jobs 1); stable on .47 for the other 14 pops
+(--pops list = all shift pops minus the bastion six; no --origins needed).
+Bastion sessions over the TLS proxy DROP on long commands: keep remote
+commands < ~60 s, never sleep inside them, always `(setsid nohup ... &)`.
+Pull stable from the bastion with a single-hop tar (server_pull.sh assumes .47).

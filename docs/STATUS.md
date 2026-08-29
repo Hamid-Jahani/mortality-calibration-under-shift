@@ -320,3 +320,11 @@ are gitignored until final.
   reference leak. Mitigation (numerically neutral): `malloc_trim(0)` after
   each member fit and each cell on Linux. Timing: ~20 min per population on
   the laptop, so the GP passes are hours, not days, once memory is bounded.
+- **10:20 node time — STABLE regime started on the bastion** (`ai-server`,
+  user-authorized): populations SWE, DNK, ISL, BEL, NOR, CHE (≈57 % of all
+  training years) as two origin halves via the new `--origins` CLI flag
+  (1990–2002 and 2004–2014; parts tagged `__o<first>-<last>`), 6 workers
+  each, logs `results/logs/stable_bastion_{a,b}.out`. The remaining 14
+  populations run on .47 after placebo pass 1; GP passes for stable run last
+  at one worker with `release_memory()`. Bastion load transiently ~30 while
+  its (unpinned) setup test suite finishes.
