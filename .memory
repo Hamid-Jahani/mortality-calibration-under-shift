@@ -83,3 +83,9 @@ Then commit the generated tables/figures deliberately (they are gitignored until
   tensor cache gave NO speed-up; cross-device runs differ (dropout RNG).
 - Schnürch–Korn (2022) Table 3 PICP at nominal 95%, ages 60–89, 2007–2016:
   LC10 74.0, LC20 74.3, ACF 77.2, RNN 86.0, FFNN 97.0, CNN 98.0.
+
+## 2026-08-29 — launcher is DEAD by design; two manual runs in flight
+Node runs: placebo pass 1 (jobs=9, log results/logs/placebo_pass1.out) and the
+shift GP pass with the addendum-4 cap (jobs=2, results/logs/shift_gp_capped.out).
+After both: launch placebo GP manually (see docs/STATUS.md 2026-08-29), then the
+post-sweep order. gp.py/runner.py on the node = commit 1c97c8f (shipped by cat).
