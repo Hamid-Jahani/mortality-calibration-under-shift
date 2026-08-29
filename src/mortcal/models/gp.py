@@ -48,7 +48,7 @@ class MultiOutputGP:
 
     def __init__(self, lr_grid=None, iters_grid=None, seed: int = 20260825,
                  rank: int = 5, min_years: int = 40,
-                 inner_val_years: int = 5):
+                 inner_val_years: int = 5, max_years: int | None = None):
         if lr_grid is not None:
             self.lr_grid = tuple(lr_grid)
         if iters_grid is not None:
@@ -57,6 +57,11 @@ class MultiOutputGP:
         self.rank = int(rank)
         self.min_years = int(min_years)
         self.inner_val_years = int(inner_val_years)
+        # PREREGISTRATION-ADDENDUM-4: cap on the trailing training window.
+        # Exact-GP kernel memory scales with (years x ages)^2 - a 269-year panel
+        # is a 5.8 GB kernel per fit and the conformal wrappers refit ten times;
+        # the production run stalled swapping. None = whole trailing block.
+        self.max_years = None if max_years is None else int(max_years)
 
     # ------------------------------------------------------------------ fit
     def fit(self, D: np.ndarray, E: np.ndarray) -> "MultiOutputGP":
@@ -76,6 +81,8 @@ class MultiOutputGP:
             raise ValueError(
                 f"trailing complete block has {T_full - start} years; "
                 f"MultiOutputGP needs >= {self.min_years}")
+        if self.max_years is not None:                     # addendum 4 window cap
+            start = max(start, T_full - self.max_years)
         self._start = start
         Y = logm[:, start:].T                              # [T, ages]
         self.T = Y.shape[0]
