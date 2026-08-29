@@ -313,3 +313,10 @@ are gitignored until final.
   `ai-server` (24 cores, 23 GB with ~8 GB free, load ~4 from its own
   services, 75 GB disk, internet) is being set up as a second node for the
   STABLE regime (JOBS≈8 there given RAM; the rest on .47 after placebo).
+- **GP footprint profiled (laptop, SWE males, 60-year cap)**: one fit peaks
+  at ~2.5 GB RSS (24 s); RSS is not returned after del+gc and climbs
+  2.8 → 5.2 (split) → 7.3 GB (EnbPI, 11 fits; 248 s). So ~8–10 GB per
+  conformal GP cell = allocator retention + a 2.5 GB per-fit peak, not a
+  reference leak. Mitigation (numerically neutral): `malloc_trim(0)` after
+  each member fit and each cell on Linux. Timing: ~20 min per population on
+  the laptop, so the GP passes are hours, not days, once memory is bounded.
