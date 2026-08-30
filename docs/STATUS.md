@@ -328,3 +328,25 @@ are gitignored until final.
   populations run on .47 after placebo pass 1; GP passes for stable run last
   at one worker with `release_memory()`. Bastion load transiently ~30 while
   its (unpinned) setup test suite finishes.
+
+## 2026-08-30 — SHIFT REGIME COMPLETE; first registered results read
+
+QA PASS (2,000 rows, 210 error rows all structural/method). Headlines
+(descriptive means over admissible pop-sex cells; formal tests = DM/MCS):
+- **H2**: nominal 95% under-covers severely for the classical cores through
+  COVID — LC/native 0.692, PLC 0.624, RH 0.654, CBD 0.799 — but NOT uniformly
+  for neural: NB/native 0.933, NB/dropout 0.972, CNN/dropout 0.962, GP/native
+  0.905, while LSTM (0.65–0.69) and NLC/ensemble (0.694) break like the
+  classicals. The registered neutral phrasing on neural-vs-classical was the
+  right call: the split is by family, not by "neural".
+- **H3**: joint path coverage collapses everywhere relative to marginal
+  (PLC 0.298 vs 0.624; LC 0.417 vs 0.692). Copula-conformal, calibrated for
+  the path, holds 0.81–0.93 joint.
+- **Conformal repair + the crossed design's attribution**: DM (winkler95,
+  wild cluster bootstrap): split conformal significantly better than native
+  for LC (+0.70, p=.018), PLC (+1.89, p=.004), RH (+1.04, p=.013), CBD
+  (+0.32, p=.017); significantly WORSE for NB (−1.02, p<.001), GP (−0.41,
+  p=.009), SVAR (−0.32, p<.001). Wrapping helps exactly the families whose
+  native law broke and costs the ones that were already calibrated.
+- MCS (classical full-age, CRPS): {LC/native, SVAR/native} at 90%.
+Placebo GP + both stable shares still running; tables regenerated non-final.
