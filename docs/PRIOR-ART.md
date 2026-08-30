@@ -219,3 +219,105 @@ distinction and names attenuation as the alternative being tested.
 2. **Stankevičiūtė, Alaa & van der Schaar (2021), CF-RNN** — the correct
    baseline against which the copula-conformal arm must be positioned; cited
    in the corpus only second-hand.
+
+---
+
+## Addendum (2026-08-30) — the owed conformal-mortality search: white-space item 2 REFUTED
+
+The idea-tournament critic demanded a web-scale search behind the claim that
+conformal prediction had never been applied to mortality forecasting; the
+verdict above ("conformal = 0 hits in any mortality text") was a corpus grep
+over 52 files, not a literature search. The search has now been run. **The
+field-wide claim is false and must never be used.** The corpus grep result
+itself remains true of the corpus.
+
+### Queries run (all on 2026-08-30)
+
+| # | Channel | Query | Outcome |
+|---|---|---|---|
+| 1 | Exa web search | conformal prediction applied to mortality forecasting / Lee–Carter / life tables / actuarial prediction intervals | **3 direct hits** (Shang line of work, below) |
+| 2 | Claude WebSearch | `"conformal prediction" "mortality forecasting" Lee-Carter` | no direct application beyond generic LC material |
+| 3 | arXiv API (curl, https) | `all:"conformal prediction" AND (all:mortality OR all:"Lee-Carter" OR all:actuarial OR all:"life table")`, 30 newest | 2 direct hits (2605.29296, 2603.10674); remainder clinical-ML mortality classifiers, out of scope |
+| 4 | Crossref API | `query=conformal prediction mortality forecasting` (20 rows) | no further application; surfaced `conformalForecast` CRAN pkg (Wang & Hyndman, general time series) |
+| 5 | Crossref API | `query=conformal prediction Lee-Carter mortality` (15 rows) | nothing further |
+| 6 | Crossref API | bibliographic query for Shang–Haberman | confirmed the SAJ record (below) |
+| 7 | Exa web search | EnbPI / adaptive conformal in demography, life expectancy, death counts | same Shang papers; the "sequential conformal" they use is Xu–Xie SPCI, the EnbPI successor — so even the narrower "EnbPI-family conformal has not touched mortality" is refuted |
+
+### What was found — the Shang (& Haberman) line, 2025–2026
+
+1. **Shang & Haberman (2025), "Constructing prediction intervals for the age
+   distribution of deaths", *Scandinavian Actuarial Journal***, published
+   online 2025-08-15, doi 10.1080/03461238.2025.2544265 (arXiv:2506.17953).
+   Split conformal intervals (absolute-residual quantile score) as one of two
+   calibration approaches for life-table death counts, Japanese data, suite of
+   functional time-series models. Appendices repeat the exercise on Australian
+   and Canadian log mortality rates. **Predates our preregistration by a
+   year, and is in one of our three target venues.**
+2. **Shang (2026), "Conformal prediction for functional time series:
+   application to age-specific mortality rates", *Journal of Population
+   Research***, online 2026-06-04, doi 10.1007/s12546-026-09422-4
+   (arXiv:2605.29296, 2026-05-28). Explicitly "our contribution is to
+   introduce conformal prediction for modeling and forecasting age-specific
+   mortality rates". Split + sequential (Xu–Xie SPCI) conformal on Australian
+   age- and sex-specific log mortality 1921–2021, Hyndman–Ullah functional
+   forecaster, ECP / CPD / mean interval score, expanding and rolling windows.
+3. **Shang (2026), "Conformal prediction for high-dimensional functional time
+   series: applications to subnational mortality"**, arXiv:2603.10674
+   (2026-03-11). Same two conformal variants on Japanese and Canadian
+   subnational log mortality 1975–2023; code at
+   `github.com/hanshang/conformal_prediction_OWFANOVA_FFM`.
+
+Adjacent, found and judged non-refuting: Hong (2023, conformal credibility)
+and Chen et al. (2024, conformal cat-bond pricing) — actuarial, not mortality
+forecasting; Duerst & Schöley (2024, *Pop. Health Metrics*) — empirical, not
+conformal, intervals for short-term mortality; Wang–Hyndman `conformalForecast`
+(CRAN 2025) — general multistep conformal, no mortality application. One
+unresolved lead: "Shang & Hernandez (2025)" cited inside item 3 for
+quantile-based intervals; not located, likely within the same line.
+
+### What survives
+
+None of the three papers: (a) audits conformal coverage across a designated
+structural break (item 2's data end 2021, item 3's 2023; neither isolates
+COVID as a test regime, and both evaluate in the Gibbs–Candès "ordinary
+years" sense); (b) places conformal beside native, bootstrap, ensemble, or
+dropout mechanisms — each uses a single functional-forecasting family with
+conformal as the only calibration device, i.e. exactly the confounding the
+crossed design exists to remove; (c) measures joint path coverage; (d)
+touches derived quantities (e_x, annuities). The grid is untouched: the
+conformal arms were registered as *audited arms*, never justified by being
+first.
+
+### Verdict and safe wording
+
+- **REFUTED, never use:** "conformal prediction has not previously been
+  applied to mortality forecasting", or any "first application of conformal
+  prediction to mortality" claim, marginal or otherwise.
+- **Safe:** "Conformal prediction entered mortality forecasting only in
+  2025–2026, through Shang and Haberman's introduction of split and
+  sequential conformal intervals for functional mortality forecasting; we
+  are aware of no prior work that audits conformal coverage across a
+  structural break, compares conformal against other uncertainty mechanisms
+  within a crossed design, or measures joint path coverage in mortality."
+- `paper/sections/02-related-work.tex` §"Conformal prediction" rewritten
+  accordingly on 2026-08-30 (cites all three; bib keys `shang2025intervals`,
+  `shang2026conformal`, `shang2026subnational`), and "the conformal arms" in
+  §"What is and is not prior art" narrowed to the arms inside the crossed
+  design and across the break.
+
+### Incidental finding, for the H3 owner
+
+**Li & Chan (2011), "Time-simultaneous prediction bands: a new look at the
+uncertainty involved in forecasting mortality", *IME* 49(1):81–88, doi
+10.1016/j.insmatheco.2011.02.006** (companion SOA Living-to-100 essay: Li &
+Chan, US/Canada). Constructs *ex-ante, model-implied* simultaneous bands for
+LC and CBD trajectories (Kolsrud adjusted intervals + Chebyshev bands) and
+demonstrates that pointwise bands understate trajectory uncertainty. This is
+not in the 52-text corpus and it weakens the H3 sentence "the field names the
+dependence and measures marginals anyway": the field has *constructed* joint
+bands. What it does not do is measure realized joint coverage against
+outcomes (no backtest, no break). H3's safe wording is unchanged in substance
+— "first *measurement* of the marginal-to-joint coverage gap … first across a
+structural break" — but Li & Chan must be cited wherever joint bands are
+discussed, and the Addendum-3 comparator (model-implied joint coverage) should
+acknowledge that its construction is essentially theirs.

@@ -227,9 +227,21 @@ functional bands from a scaled supremum-norm score. \citet{sun2025conformal}
 address change points directly. \citet{angelopoulos2023gentle} is the
 standard primer.
 
-We found no application of conformal prediction to mortality forecasting:
-in the 52-paper corpus of the prior-art map, ``conformal'' has no hit in any
-mortality text, and neither do ``Monte Carlo dropout'' or ``deep
+Conformal prediction reached mortality forecasting only recently, in a
+2025--2026 line of work that predates this study:
+\citet{shang2025intervals} use split conformal intervals as one calibration
+device when forecasting the age distribution of deaths,
+\citet{shang2026conformal} introduces split and sequential conformal
+prediction for age-specific mortality rates, and
+\citet{shang2026subnational} extends both to subnational mortality. All
+three introduce the mechanism under a single functional forecasting family
+and evaluate its coverage in ordinary years; none audits conformal coverage
+across a designated structural break, places conformal beside other
+uncertainty mechanisms, or measures joint path coverage. Beyond that line
+of work, a web-scale search recorded in the prior-art map found no
+application of conformal prediction to mortality forecasting; in the
+52-paper corpus itself, ``conformal'' has no hit in any mortality text, and
+neither do ``Monte Carlo dropout'' or ``deep
 ensemble''. Three conformal mechanisms enter our grid as \emph{audited
 arms}, on the same footing as the native and ensemble mechanisms; the
 joint-path arm is positioned against \citet{stankeviciute2021conformal}
@@ -280,7 +292,8 @@ registered direction is contradicted by \citet{dowd2010backtesting}; and
 \Hfive's construction is prior art while an ex-post coverage audit of the
 derived quantities is not found. The white space that remains, and that
 this paper occupies, is the crossed family-by-mechanism design, the
-conformal arms, the marginal-to-joint gap, the derived-quantity coverage
+conformal arms inside that design and across the break, the
+marginal-to-joint gap, the derived-quantity coverage
 audit, and the out-of-sample pandemic test the field declined for lack of
 data. Two items are still unread at the time of writing and are named so
 that their absence is visible: the online supplement of

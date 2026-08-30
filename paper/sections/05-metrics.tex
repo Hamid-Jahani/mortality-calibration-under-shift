@@ -171,11 +171,14 @@ $C^{\mathrm{marg}}-C^{\mathrm{joint}}$ is still reported as the descriptive
 measurement that no mortality paper has made. Only the copula conformal
 mechanism targets the joint level by construction; for that arm
 $C^{\mathrm{joint}}$ is read from its simultaneous band and no
-model-implied value exists. \todo{the runner's column contract carries
-\texttt{joint\_path\_coverage\_95} but not the model-implied joint
-coverage; the harness must emit it (or the analysis must recompute it from
-stored bands and paths) before \Hthree\ can be tested as registered in
-Addendum~3~\S8}
+model-implied value exists. One gap in the production pipeline is stated
+rather than silently carried: the runner's column contract carries the
+realised joint coverage but does not yet emit $C^{\mathrm{impl}}$, so the
+registered paired test of Addendum~3~\S8 awaits a recomputation of the
+implied coverage from each cell's reproducible sample paths (seeds are
+recorded per row), and until that column exists the joint-versus-marginal
+results of Section~\ref{sec:results} are the descriptive measurement, not
+the registered test of \Hthree.
 
 \subsection{Randomised probability integral transform}
 
@@ -219,20 +222,29 @@ For a proper score $S$ the mean score decomposes as
 uncertainty of the outcome minus resolution of the forecasts plus
 miscalibration \citep{murphy1973new,pohle2020murphy}. It separates
 \emph{why} a forecaster scores badly: a well-calibrated but vague
-forecaster has low RES; a sharp but wrong one has high MCB. We compute
-Murphy's original partition of the Brier score in two forms. The first
-takes as outcome the 95\% interval-hit indicator of each cell and as
-forecast the nominal level $0.95$ that every cell asserts; with a constant
-forecast the partition degenerates to
+forecaster has low RES; a sharp but wrong one has high MCB. Two
+decompositions are emitted per cell. The first is Murphy's original
+partition of the Brier score, taking as outcome the 95\% interval-hit
+indicator of each cell and as forecast the nominal level $0.95$ that every
+cell asserts; with a constant forecast a single bin is occupied, the
+three-term identity is exact, and the partition degenerates to
 $\mathrm{MCB}=(0.95-\text{empirical coverage})^2$ and $\mathrm{RES}=0$,
 so it restates the coverage gap on the Brier scale and is reported for
-that reason only. The second applies the partition, with ten equal-width
-bins, to the PIT values, which use the whole predictive distribution rather
-than one level and are where resolution can be seen. The within-bin
-variance and covariance terms that make the three-term identity exact under
-binning are computed and reported with it. The isotonic (CORP) estimator of
-\citet{dimitriadis2021stable} is the stable alternative and is not used
-here; the decomposition is descriptive, and no hypothesis rests on it.
+that reason only. The second is the divergence form of the decomposition
+\citep{broecker2009reliability} applied on the PIT scale with the uniform
+distribution as reference: the ten-bin PIT histogram is scored against
+the flat claim every calibrated forecaster makes, and the emitted
+miscalibration term is the squared distance of the histogram from
+uniformity---the departure a single level's coverage gap cannot see.
+Under this reference the reliability and resolution terms coincide
+numerically, because the PIT transform standardises every forecaster to
+the same claim and discards sharpness; no resolution component with
+independent content is emitted, since one would require a sample-based
+partition such as the rank-histogram CRPS decomposition of
+\citet{hersbach2000decomposition}, which is out of scope. The isotonic
+(CORP) estimator of \citet{dimitriadis2021stable} is the stable
+alternative and is not emitted; the decomposition is descriptive, and no
+hypothesis rests on it.
 
 \subsection{Actuarial functionals}
 \label{sec:metrics-actuarial}

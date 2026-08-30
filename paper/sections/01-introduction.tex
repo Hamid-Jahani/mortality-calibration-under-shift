@@ -41,11 +41,10 @@ test is informative only where the truth is allowed to surprise the model.
 From the mid-1950s until 2019 the mortality surfaces of the high-income
 populations in the Human Mortality Database (HMD) improved smoothly enough
 that almost any trend extrapolation looked calibrated in sample. The years
-2020--2024 broke that surface: period life expectancy fell in 2020 and 2021
-in most HMD countries \citep{aburto2022quantifying}
-\todo{verify magnitude and country coverage against Aburto et al.\ (2022)
-before quoting any figure}, and the subsequent recovery was uneven by country
-and by age. Any prediction interval constructed from data ending in 2019 was,
+2020--2024 broke that surface: life expectancy at birth fell from 2019 to
+2020 in 27 of the 29 countries analysed by \citet{aburto2022quantifying},
+and the subsequent recovery was uneven by country and by age. Any
+prediction interval constructed from data ending in 2019 was,
 for the first time in the modern record, put to a genuine out-of-sample test
 by reality.
 
@@ -83,13 +82,18 @@ the correction is stated.
   mortality falls inside the intervals it draws. The same authors note, of
   \citet{schnurch2022point}, that the intervals there are ``not based on the
   endogenous randomness \ldots\ but on the exogenous randomness driven by the
-  random seed for the NN'': variance across seeds, which measures nothing
-  about predictive coverage.
-  \todo{Schn\"urch and Korn (2022) not yet read; confirm this characterisation
-  and whether they tabulate coverage}
+  random seed for the NN''. The characterisation of the construction is
+  accurate---those intervals are the spread across independently seeded
+  trainings---but \citet{schnurch2022point} do check them, tabulating
+  empirical coverage of 74.0--98.0\% against a nominal 95\% across 54
+  populations, and so belong to the next item
+  (Section~\ref{sec:related} treats them at length).
 \item \emph{Where coverage is reported, it is reported without a sharpness
-  penalty.} \citet{marino2023neural} is, to our knowledge, the one neural
-  Lee--Carter paper that computes interval coverage. It reports the
+  penalty.} \citet{schnurch2022point} report coverage beside mean width but
+  adopt a one-sided pass rule---minimise width subject to coverage at or
+  above nominal---under which over-coverage is fulfilment.
+  \citet{marino2023neural} is the other neural Lee--Carter paper that
+  computes interval coverage. It reports the
   prediction-interval coverage probability (PICP) and the mean interval width
   (MPIW) as two separate indicators and treats $\mathrm{PICP}=1$ as the best
   outcome: the LSTM ``offers always a greater probability coverage, in most
@@ -111,18 +115,26 @@ the correction is stated.
   reasonableness of their fan charts; there is no PIT, no coverage
   computation, no proper score and no held-out evaluation.
   \citet{dowd2010backtesting} do backtest multi-period-ahead density
-  forecasts ex post, for six classical models on English and Welsh males.
-  \todo{VERIFY against Dowd et al.\ (2010b) once read: which backtests, whether
-  hit rates or PIT values are tabulated, horizons, ages, and the verdict}
+  forecasts ex post, for six classical models on English and Welsh males,
+  by locating realised mortality within the prediction intervals of
+  forecasts made from earlier origins
+  (Section~\ref{sec:related} gives the precise description).
   That work is the direct ancestor of the present audit; it is confined to
   one population, to models with native intervals, and to a period without a
   break.
 \item \emph{Absent from mortality forecasting, so far as we can find:} PIT or
-  rank histograms; conformal prediction; joint (path) coverage over horizons;
-  and, with the single exception of \citet{shang2018model}, formal
+  rank histograms; measured joint (path) coverage over horizons; and, with
+  the single exception of \citet{shang2018model}, formal
   forecast-comparison testing (Diebold--Mariano, model confidence sets).
-  \todo{Crossref/Scholar search for ``conformal'' + ``mortality'' before
-  submission; the library sweep was arXiv-biased}
+  Conformal prediction was absent from the library but is no longer absent
+  from the field: because the library sweep was arXiv-biased, a wider search
+  was run and is recorded in the prior-art map, and it found the 2025--2026
+  line of work in which split and sequential conformal intervals enter
+  functional mortality forecasting
+  \citep{shang2025intervals,shang2026conformal,shang2026subnational}. None
+  of that work crosses a designated structural break, compares conformal
+  against other uncertainty mechanisms, or measures joint path coverage
+  (Section~\ref{sec:related}).
 \end{itemize}
 
 The principle that the literature's coverage practice violates is old and

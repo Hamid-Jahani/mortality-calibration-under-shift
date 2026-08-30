@@ -350,3 +350,21 @@ QA PASS (2,000 rows, 210 error rows all structural/method). Headlines
   native law broke and costs the ones that were already calibrated.
 - MCS (classical full-age, CRPS): {LC/native, SVAR/native} at 90%.
 Placebo GP + both stable shares still running; tables regenerated non-final.
+
+## 2026-08-30 (later) — discussion/conclusion drafted; conformal prior-art claim REFUTED and repaired
+
+The owed literature search (Exa, WebSearch, arXiv, Crossref; queries dated in
+docs/PRIOR-ART.md) found Shang & Haberman (SAJ 2025, doi
+10.1080/03461238.2025.2544265) and two further Shang papers (2025–26)
+applying split/EnbPI-family conformal prediction to mortality rates. The
+related-work text now says conformal entered mortality forecasting in
+2025–2026 through that line and states our actual delta (break audit,
+crossed model x mechanism grid, joint path coverage, derived-quantity
+coverage — none of which those papers do). Discussion (§8) and conclusion
+(§9) drafted from the shift results with the family-split framed as an
+observed association; H5 extras computed (annuity 97.5% shortfall
+frequencies: LSTM ensemble 0.605, LC native 0.425, NB ensemble 0.000 upper
+side; H1 rho CIs [0.771, 0.965] vs CRPS, [-0.162, 0.214] vs log score).
+Todo triage: sections 1–5 and the appendix are todo-free; the remaining
+markers in §6/§7 are pending-regime items only. Verifier's one defect
+(interval-score superlative unbounded) fixed. Compile: 0 errors, 64 pages.

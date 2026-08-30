@@ -139,9 +139,21 @@ point-accuracy league table and a density-forecast league table of the
 same arms over the same break are close to unrelated, which is the
 inversion the published literature reports
 \citep{barigou2023bayesian,goes2025bayesian,schnurch2022point} recurring
-under pre-registration. \todo{the wild-cluster-bootstrap interval for the
-rank correlation is not part of the generated table; add it to the
-analysis stage or report the correlation as descriptive}
+under pre-registration.
+% Intervals: results/h5_extras.json (scripts/h5_extras.py) -- cluster
+% bootstrap resampling populations with replacement on the tab-h1
+% common-cell block, B = 2000, seed 20260830.
+Both correlations carry the cluster-bootstrap interval of
+Section~\ref{sec:metrics-inference}, obtained by resampling with
+replacement the thirteen populations that survive the common-cell
+restriction and recomputing the block's means, ranks and correlations in
+each of 2{,}000 replicates: $[0.77, 0.96]$ for $\rho(\text{RMSE},
+\text{CRPS})$ and $[-0.16, 0.21]$ for $\rho(\text{RMSE}, \text{log
+score})$. The first interval excludes one, so the registered
+below-one clause does not depend on which populations entered the
+block; the second contains zero, so at the resolution thirteen
+correlated clusters afford, the log-score ordering is indistinguishable
+from one unrelated to the RMSE ordering.
 
 \subsection{H2: marginal coverage across the break}
 
