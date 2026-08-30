@@ -96,7 +96,7 @@
   \large A Pre-Registered Calibration Audit of Ten Forecasting Families and
   Seven Uncertainty Mechanisms Across the COVID-19 Break}
 \author{Hamid Jahani\thanks{Affiliation to be determined.}}
-\date{Draft of \today{} --- pre-results skeleton; no empirical numbers yet}
+\date{Draft of \today{} --- shift-regime results final; placebo and stable pending}
 
 \begin{document}
 \maketitle
@@ -130,9 +130,24 @@ the architecture or to the uncertainty machinery attached to it, a separation
 no previous mortality study makes. The audit protocol---a synthetic-truth
 validated harness, oracle parity with \pkg{StMoMo}, a pre-registration hash
 committed before the first fit, and cluster-bootstrap forecast-comparison
-inference that respects the single common shock---is itself the reusable
-contribution. This draft is the pre-results skeleton: hypotheses, data,
-design and metrics are fixed; all result tables are placeholders.
+inference that respects the single common shock---is itself a reusable
+contribution. This draft reports the shift regime; the stable control and
+the placebo break follow under the same registered design. One registered
+direction---under-coverage for \emph{every} family---is refuted in strong
+form. The classical cores fail badly: nominal 95\% intervals built from
+data through 2019 cover between 62\% and 80\% of realised 2020--2024
+outcomes (Poisson Lee--Carter 0.62, Renshaw--Haberman 0.65, Lee--Carter
+0.69, CBD 0.80). But the failure is not a neural-versus-classical split:
+the negative-binomial distributional head (0.93 native, 0.97 under
+dropout), the dropout CNN (0.96) and the Gaussian process (0.905) hold
+near-nominal marginal coverage through the break, while the LSTM
+(0.65--0.69) and the ensembled neural Lee--Carter (0.69) break alongside
+the classical cores. Joint path coverage collapses relative to marginal for
+every family (0.30 against 0.62 for Poisson Lee--Carter) except under the
+copula conformal band, the one mechanism calibrated for the path
+(0.81--0.93 joint). Split conformal wrapping repairs exactly the families
+whose native law broke and measurably worsens the ones that were already
+calibrated---the attribution the crossed design was built to deliver.
 \end{abstract}
 
 \noindent\textbf{Keywords:} mortality forecasting; longevity risk;

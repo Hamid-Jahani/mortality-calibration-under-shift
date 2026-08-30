@@ -1,9 +1,12 @@
 \section{Actuarial impact}
 \label{sec:actuarial}
 
-\noindent\textit{Skeleton; the table is a generated fragment and every
-result-dependent statement is a placeholder. Nothing is quoted from a
-partial-sweep snapshot.}
+\noindent\textit{The shift column of Table~\ref{tab:h5-actuarial} is final:
+it is generated from the QA-passed shift results files and every shift
+number quoted below is read from that fragment. The stable and placebo
+columns are pending---no results file for either regime has passed the QA
+gate---and no stable- or placebo-derived statement is made in this
+section.}
 
 \subsection{H5: propagation into life expectancy and annuity factors}
 
@@ -18,17 +21,78 @@ factor at 65 and 2\%, each computed on the period table of the first test
 year from the cell's own sample paths and compared with the same functional
 of the observed rates. The functionals are taken from the latent rate paths
 of every distributional cell, before the Poisson composition that the
-rate-scale scores use. Conformal cells have no such paths---their samples
-are uniform draws inside a band, a convention for interval metrics only---so
-their derived-quantity rows are not applicable and the table marks them
-\emph{n/a} rather than tabulating a distributional claim. \Hfive\ is
+rate-scale scores use. Three conventions of the table govern its reading.
+Conformal cells have no such paths---their samples are uniform draws inside
+a band, a convention for interval metrics only---so their derived-quantity
+rows are not applicable and the table marks them \emph{n/a} rather than
+tabulating a distributional claim. CBD is fit on ages 55--99: it
+contributes no $e_0$, and its $e_{65}$ and $\annuity$ are exact on the
+truncated 55--99 table, so its rows are not on the same footing as the
+full-age families'. And the sparse VAR, multi-output GP and LSTM rows carry
+fewer than the forty (population, sex, origin) units of the shift design
+because their error rows (Table~\ref{tab:infeasible}) are excluded from
+every mean; $n$ and $n_{\mathrm{err}}$ are tabulated per cell. \Hfive\ is
 restricted by Addendum~3 (\S8) to the ex-post coverage of these derived
 intervals, with the attenuation alternative---that life-table integration
-averages a rate-surface failure away---as the named competitor. Both
-outcomes are informative: the first says the reserve is wrong, the second
-says the audit's headline is a statement about rates rather than about
-liabilities. \todo{result pending} \todo{attach the citation for the
-attenuation alternative named in Addendum~3 \S8}
+averages a rate-surface failure away \citep{cairns2011mortality}---as the
+named competitor. Both outcomes are informative: the first says the
+reserve is wrong, the second says the audit's headline is a statement
+about rates rather than about liabilities.
+
+\Hfive\ was registered as: \emph{interval miscalibration propagates to
+derived quantities---empirical coverage of 95\% intervals for $e_{65}$ and
+the annuity factor $\annuity$ at 2\% departs from nominal by more than the
+corresponding stable-regime departure}. The registered contrast therefore
+needs the stable column, which is pending; what the shift column settles
+is the shift half of the comparison, and it settles it in a form that
+leaves the verdict depending only on how close to nominal the stable
+regime turns out to be.
+
+In the shift regime, no distributional arm attains nominal coverage on any
+of the three functionals. Coverage of the nominal 95\% interval for
+$e_{65}$ runs from 0.275 (neural-LC ensemble) to 0.925 (CBD with the
+Poisson bootstrap); for $\annuity$ from 0.289 (LSTM ensemble) to 0.850
+(CBD under either mechanism); for $e_0$ from 0.263 (LSTM ensemble) to
+0.875 (NB-head ensemble). Outside CBD's truncated table no arm exceeds
+0.750 on either registered functional---the NB head under MC dropout, at
+0.750 on both, is the best full-age cell---and the classical full-age
+cores sit at 0.425--0.600 on $e_{65}$. In departure-from-nominal terms:
+at least 0.200 for every full-age arm on both registered functionals, and
+0.025 ($e_{65}$) and 0.100 ($\annuity$) even for CBD on its own 55--99
+table. The mean errors are two-sided across families: on $\annuity$ they
+run from $-0.45$ annuity units (LSTM ensemble) to $+0.39$ (NB-head
+ensemble), and on $e_{65}$ from $-0.68$ years (LSTM ensemble) to $+0.60$
+(NB-head ensemble), with half-year misses of $e_{65}$ ordinary among the
+full-age families ($-0.57$ for SVD Lee--Carter, $+0.50$ for neural-LC).
+CBD is the exception in location as well as coverage: its $e_{65}$ errors
+are $-0.01$ and $+0.02$ and its $\annuity$ errors $-0.04$ and $-0.03$, an
+order of magnitude smaller than any full-age family's.
+
+The attenuation alternative is answered by reading this table beside
+Table~\ref{tab:h2-coverage}: for every distributional arm except CBD,
+coverage of the derived quantities lies \emph{below} the same arm's
+marginal coverage on log rates. Integration does not average the
+shift-regime failure away; it concentrates it. The mechanism is the one
+\Hthree\ measures on the horizon axis, here acting on the age axis: a
+period functional integrates the whole scored age range of one test year,
+so a common-factor miss that leaves many single-age intervals near but
+inside their bounds still displaces the functional, and one displaced
+functional is one uncovered cell. A derived quantity behaves as a joint
+coverage statement across ages, not a marginal one, and the pandemic
+year's miss is exactly the common-factor kind. CBD, the one family whose
+derived coverage exceeds its rate-scale coverage, is also the one fit and
+integrated on ages 55--99 only; whether its behaviour is a property of
+the family or of its truncated support is not separable in this design,
+and its rows are read with that caveat.
+
+Under the registered wording, then, the shift half of \Hfive\ is
+established quantitatively---departures from nominal of at least 0.200 on
+both registered functionals for every full-age arm---and the hypothesis is
+supported exactly where the stable-regime departure of the same arm comes
+in smaller. The stable files do not yet exist, so that per-arm comparison,
+and with it the registered verdict on \Hfive, is pending; the placebo
+column, whose first-pass file lacks its GP arm and has not passed the
+data-quality gate, is pending in the same sense.
 
 \subsection{Reading a coverage shortfall in balance-sheet terms}
 
@@ -37,14 +101,22 @@ translates directly into an interval on the best-estimate liability of a
 unit annuitant. A nominal 95\% interval that covers the realised
 $\annuity$ in materially fewer than 95\% of population--sex cells is, in
 Solvency~II language, an internal model whose longevity distribution is
-too narrow; the shortfall of the model's 97.5\% quantile of $\annuity$
+too narrow; in the shift column of Table~\ref{tab:h5-actuarial} that is
+every distributional arm---0.850 at best, on CBD's truncated table, and at
+most 0.750 for any full-age family. The direction of the central miss is
+not the single-signed pandemic effect a uniform mortality margin would
+absorb: SVD Lee--Carter, CNN-LC and the LSTM sit below the realised
+$\annuity$ on average (mean errors $-0.24$ to $-0.45$), understating the
+liability implied by the realised 2020 table even in a pandemic year,
+while RH, neural-LC and the NB-head ensemble sit above it ($+0.24$ to
+$+0.39$). The shortfall of the model's 97.5\% quantile of $\annuity$
 below the realised value, where it occurs, is the amount by which the
-implied capital at that level is understated. We report this quantity as a
-proportion of the central $\annuity$ so that it is portable across
+implied capital at that level is understated; we report this quantity as
+a proportion of the central $\annuity$ so that it is portable across
 populations and interest-rate assumptions. \todo{compute from the
-$\annuity$ point, upper-quantile and realised columns of the results files
-once Table~\ref{tab:h5-actuarial} exists; decide whether a worked example
-on a hypothetical portfolio adds anything}
+$\annuity$ point, upper-quantile and realised columns of the results
+files; decide whether a worked example on a hypothetical portfolio adds
+anything}
 
 \subsection{The longevity tail}
 
@@ -68,5 +140,7 @@ apart, or whether the pandemic years are distinctive---or whether neither
 event moves the derived intervals off nominal; the comparison is
 descriptive, and the
 placebo's first test year is 1914, before the influenza wave, which the
-reading must respect. \todo{result pending; gated on the placebo sweep and
-its data-quality check}
+reading must respect. The placebo column is pending: the first-pass
+placebo results file lacks its GP arm and has not passed the data-quality
+gate, and no placebo-derived number appears in this paper until both
+exist.
