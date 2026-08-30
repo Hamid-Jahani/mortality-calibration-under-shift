@@ -77,3 +77,7 @@ tests/         50 tests; synthetic-truth calibration gates included
 ```
 
 Run the suite: `uv run pytest -q` (Python pinned 3.12 via uv).
+
+## License
+
+Released under the [MIT License](LICENSE).
