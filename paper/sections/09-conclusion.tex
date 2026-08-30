@@ -1,25 +1,55 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-Mortality prediction intervals are priced, reserved against and hedged. The
-literature that produces them has, with few exceptions, evaluated them by
-the accuracy of their centres, and where it has looked at their coverage it
-has looked without a sharpness penalty and without a break in the data. The
-COVID-19 years supply the break, the June 2026 HMD vintage supplies the
-final data through 2024, and the pre-registered design set out here
-supplies the audit: ten families crossed with seven uncertainty mechanisms,
-scored through one code path by proper scores, interval scores, marginal
-and joint path coverage, PIT, a Murphy decomposition and the life-table
-functionals an actuary values, with inference that treats a pandemic as one
-event rather than as thousands of independent cells.
+Mortality prediction intervals are priced, reserved against and hedged,
+and until now none had been scored against a realised structural break.
+This paper pre-registered a calibration audit---ten forecasting families
+crossed with seven uncertainty mechanisms, fifty admissible cells, one
+sampling interface, one scoring path---and has now run its primary regime:
+every interval built strictly from data through 2019, held against
+realised 2020--2024 mortality in twenty populations of the first HMD
+vintage with final data through 2024.
 
-Whatever the tables turn out to hold, three things will be true of them.
-The hypotheses they test were fixed before the data were touched. The
-harness that produced them recovered nominal coverage on synthetic truth
-and matched the reference implementation to machine precision. And every
-failure they document can be attributed---to the architecture, to the
-uncertainty mechanism, or to the two together---because the design crossed
-them. That attribution, and the protocol that makes it possible, is what
-this study adds; the repair belongs to the models that come after.
-\todo{rewrite the closing paragraph once the results exist; it must state
-the findings, not the design}
+On the shift regime the registered hypotheses read as follows. \Hone,
+demoted in advance to a harness-validity check, is supported: the RMSE and
+CRPS orderings disagree with the registered top-three inversion, and
+against the Poisson log score the point-accuracy ordering nearly dissolves
+($\rho=0.12$). The universal clause of \Htwo\ is refuted in strong form:
+the classical cores under their own predictive law covered 62--80\% at a
+nominal 95\% (Poisson Lee--Carter 0.624, Renshaw--Haberman 0.654, SVD
+Lee--Carter 0.692, CBD 0.799), but the NB distributional head
+(0.933--0.972), the dropout CNN (0.962) and the sixty-year-window GP
+(0.905) held near-nominal coverage through the break while the LSTM
+(0.647--0.685) and the ensembled neural-LC (0.694) broke alongside the
+classical cores; the failure is a property of the family--mechanism pair,
+not of an architecture class. The registered direction of \Hthree\ holds
+in every one of the fifty admissible arms: joint path coverage collapses
+relative to marginal (0.298 against 0.624 for Poisson Lee--Carter), and
+only the copula band, the one mechanism calibrated for the path, holds
+0.805--0.927 joint. \Hfour\ is refuted as a universal: the old-age
+concentration it registered is real but belongs to the index-extrapolating
+families, while other arms are age-flat or reverse it. The shift half of
+\Hfive\ is established---coverage of the registered $e_{65}$ and
+$\annuity$ intervals departs from nominal by at least 0.200 for every
+full-age distributional arm, and integration concentrates the rate-surface
+failure rather than averaging it away. The comparative clauses of \Htwo\
+and \Hfive\ await the stable control, and the 1914--1922 placebo supplies
+the second event; both run under the same registered design and no claim
+here rests on them.
+
+The crossed design delivered the attribution it was built for: split
+conformal wrapping significantly improves the interval score of exactly
+the four classical cores whose native law broke and significantly worsens
+exactly the three families whose native law had held. That sign pattern,
+not any single coverage number, is the study's central result, and it is
+the kind of result only a design that separates architecture from
+uncertainty mechanism can produce.
+
+The remaining contribution is the protocol itself: a pre-registration
+hash-stamped before the first fit, a harness that recovered nominal
+coverage on synthetic truth and matched the reference implementation to
+machine precision, one predictive-sample interface for every family, and
+cluster-bootstrap forecast-comparison inference that treats a pandemic as
+one event rather than thousands of cells. The next break will not announce
+itself either; the protocol is built to score it. The repair belongs to
+the models that come after.

@@ -1,11 +1,123 @@
 \section{Discussion}
 \label{sec:discussion}
 
-The limitations below are pre-committed: they were written before any
-result was read, so that none can be selected after the fact to excuse a
-finding or to inflate one.
+\subsection{What the family-level split is evidence of}
+\label{sec:discussion-split}
 
-\subsection{The effective sample size is one}
+The registration deliberately declined a directional claim on
+neural-versus-classical ordering (Section~\ref{sec:design-status}), and the
+working conjecture that motivated the audit---that coverage degradation
+across the break would be larger for the neural families---is refuted in
+its strong form by Table~\ref{tab:h2-coverage}. The split the shift regime
+actually produced runs through the middle of the neural group. The arms
+that held near-nominal marginal coverage through the break are the NB head
+under all three of its mechanisms (0.933--0.972), CNN-LC under dropout
+(0.962), the multi-output GP (0.905) and---on the cells its own rejection
+rule admits, a selection caveat carried from
+Table~\ref{tab:infeasible}---the sparse VAR (0.937--0.938). The arms that
+broke are the four classical cores (0.624--0.799), LSTM-$\kappa_t$ under
+both its mechanisms (0.647--0.685) and the neural-LC ensemble (0.694).
+
+The two groups differ along a line the design did not manipulate. Every
+broken arm forecasts through an extrapolated low-dimensional period
+index---$\kappa_t$ and its cohort or CBD companions, the LSTM's learned
+continuation of $\kappa_t$, the year feature that neural-LC evaluates at
+future dates---and equips the extrapolation with intervals that propagate
+the \emph{process risk} of that index: an innovation variance estimated
+from pre-2020 residuals, drift-estimation uncertainty, and, for the
+ensembles, variance across training seeds. Every arm that held carries its
+uncertainty somewhere else: a count likelihood with a fitted dispersion
+(the NB head), a posterior over functions of calendar time (the GP),
+stochastic perturbation of the fitted map itself (dropout), a cross-age
+innovation covariance with coefficient draws (the sparse VAR). When the
+surface broke, the intervals that survived were the ones whose width came
+from a distributional head or from integrating over the model's own
+parameters, not from the historical smoothness of an index.
+
+This is an observed association, not an established mechanism. The grid
+crossed family with mechanism; it did not cross ``index extrapolation''
+with ``distributional head'' as manipulated factors, and the families on
+the two sides of the line differ in architecture, likelihood, feature set
+and width at once. Four readings within the grid nevertheless discipline
+the association. First, the mechanism moves coverage with the architecture
+held fixed: on the same CNN-LC architecture, dropout covers 0.962 against
+the ensemble's 0.882, and on neural-LC, 0.811 against 0.694
+(Section~\ref{sec:results-contrasts}). Second, the family moves coverage
+with the mechanism held fixed: under the same deep-ensemble mechanism the
+NB head covers 0.956 where neural-LC covers 0.694 and the LSTM 0.647.
+Third, the held arms are not simply vaguer: NB native and CNN-LC dropout
+carry the two smallest 95\% interval scores among the distributional arms
+(1.684 and 1.677; only the interval-constructing EnbPI wrappers of SVD-LC
+and the LSTM, scored from their bounds, sit lower at 1.615 and 1.631),
+while the one arm that visibly buys coverage with width---neural-LC
+dropout, 0.811 at an interval score of 5.559---is identified by the width
+penalty exactly as it should be. Fourth, adding parameter uncertainty to
+the classical cores barely moves them (SVD-LC 0.692 to 0.727 and CBD
+0.799 to 0.830 under the Poisson bootstrap): what the broken intervals
+lacked at this break was not parameter risk, which is consistent with the
+missing risk being a break in the process the index extrapolates. The age
+resolution agrees: the families whose miss concentrates at ages
+65--99---where the pandemic's excess mortality was---are the index
+extrapolators (Table~\ref{tab:h4-age}), the pattern a level-and-drift miss
+of one common factor loaded onto all ages would produce, while the
+calibrated arms are near-flat in age. Agreement is not proof. Establishing
+the mechanism would need designs this grid does not contain---a
+distributional head grafted onto a classical core, or the NB head's
+likelihood replaced while its features are kept---and that is a follow-on
+study, not a reading of this one.
+
+\subsection{Reading the conformal attribution}
+\label{sec:discussion-conformal}
+
+The Diebold--Mariano block of Table~\ref{tab:dm-mcs} is the crossed
+design's attribution finding, and its sign pattern admits a one-sentence
+practitioner reading: \emph{wrap what is broken; do not wrap what is
+calibrated}. A conformal band is not a free safety layer laid over a
+model's own uncertainty; it replaces that uncertainty with a
+residual-quantile geometry, and the replacement is signed. It is
+significantly better on the 95\% interval score for exactly the four
+classical cores whose native law broke, and significantly worse for
+exactly the three families whose native law had held---a premium paid in
+width by a model whose own dispersion was already right. Conformalisation
+here behaves as insurance: it pays out precisely when the model's own
+uncertainty was wrong and costs a premium precisely when it was right,
+and which side of the line a family falls on is a property of the
+family--mechanism pair, not of the wrapper.
+
+Three cautions temper the reading. First, the repair is empirical, not
+guaranteed. Exchangeability between calibration and test years is violated
+by design in the shift regime, so the finite-sample conformal guarantee
+does not apply across the break; the wrappers held 95\% coverage of
+0.848--0.981 anyway, which the coverage-gap bounds of
+\citet{barber2023conformal} permit but do not promise. A practitioner who
+adopts the wrapper for the next break inherits the same asterisk. Second,
+the wrapper equalises the marginal level, not everything an actuary needs:
+split and EnbPI bands that cover marginally still lose the path (joint
+coverage 0.692--0.862 for the split arm), and the copula band that holds
+the path (0.805--0.927) pays for it at the single level, where the
+interval-score confidence sets of Table~\ref{tab:dm-mcs} eliminate it in
+five families. The choice among wrappers is a choice of which quantity is
+to be calibrated---the level or the trajectory---and
+Section~\ref{sec:results-contrasts} prices that choice without
+adjudicating it. Third, a conformal cell has no distributional paths, so
+it contributes nothing to the derived-quantity audit of
+Section~\ref{sec:actuarial}: a practitioner who needs an interval on
+$e_{65}$ or $\annuity$ from a wrapped model must first decide what a band
+on log rates means for a functional across ages, a construction this
+study did not register.
+
+\subsection{Limitations}
+\label{sec:discussion-limitations}
+
+The limitations in this subsection, through the itemised list below, were
+written and committed before any shift-regime result was read, so that
+none could be selected after the fact to excuse a finding or to inflate
+one. They are retained in substance; where a pre-committed limitation now
+bears on a specific result, the cross-reference is added and nothing is
+removed. Two further limitations arose during the production sweeps and
+the analysis and are stated, dated, at the end.
+
+\subsubsection{The effective sample size is one}
 
 Every shift-regime number in this paper is a statement about one pandemic
 observed in twenty places. Clustering by population and imposing the null
@@ -17,7 +129,7 @@ intervals survive the next break?''. A reader who wants the last question
 answered wants a different study, one that we cannot run until there is a
 next break.
 
-\subsection{The grid is ragged, so claims are contrasts}
+\subsubsection{The grid is ragged, so claims are contrasts}
 
 Ten families by seven mechanisms is seventy cells on paper and fifty in
 fact. Main effects over a ragged grid confound the factor with the pattern
@@ -27,7 +139,7 @@ finding that conformal wrapping changes coverage for classical families
 says nothing about neural families unless the neural sub-grid shows it
 too, and we will not average across the two.
 
-\subsection{Conformal cells carry secondary proper scores}
+\subsubsection{Conformal cells carry secondary proper scores}
 
 A conformal band is an interval, not a distribution. Drawing uniformly
 inside it keeps the single interface honest for coverage, width and
@@ -38,7 +150,7 @@ with a native cell's CRPS is comparing a convention with a forecast.
 Conformal predictive systems that output a full calibrated distribution
 would remove this limitation and are noted as future work.
 
-\subsection{2024 may be revised}
+\subsubsection{2024 may be revised}
 
 HMD does not flag provisional years; it re-issues whole series at each
 release, so the 2024 values are final only in the sense that this release
@@ -52,7 +164,7 @@ provisional; if a later vintage appears before submission, the shift regime
 is re-run on it and any change in the headline coverage is reported as a
 vintage-revision effect.
 
-\subsection{SVD Lee--Carter is over-dispersed by construction}
+\subsubsection{SVD Lee--Carter is over-dispersed by construction}
 
 Validation gate~1 found that the classical two-stage SVD Lee--Carter
 produces intervals slightly wider than nominal on data simulated from a
@@ -63,21 +175,28 @@ would predict, not a harness artefact, and it has a direct consequence for
 reading the results: an SVD-LC row that appears better calibrated than
 Poisson-LC in the stable regime may be so partly because it is vaguer, and
 the interval score and Murphy resolution term---not coverage---are the
-columns that tell the two apart.
+columns that tell the two apart. In the shift tables this is visible as
+SVD-LC's 0.692 native coverage against Poisson Lee--Carter's 0.624 on the
+same panels: part of that gap is width, and the interval-score column is
+the one that prices it.
 
-\subsection{Other limitations}
+\subsubsection{Other pre-committed limitations}
 
 \begin{itemize}
 \item \emph{Exchangeability is violated by design.} Conformal calibration
   residuals come from pre-cutoff years, and the test years are precisely
   the years chosen to differ from them. \citet{barber2023conformal} bound the
   resulting coverage gap; we measure it rather than assume it away. The
-  conformal arms are audited, not endorsed.
+  conformal arms are audited, not endorsed
+  (Section~\ref{sec:discussion-conformal}).
 \item \emph{Neural families are budget-limited.} Ensembles of ten over
-  thirteen origins, twenty populations and two sexes fix the hyperparameter
-  search to what fits the GPU budget; the inner time split is small (five
-  years). A better-tuned network might do better on point accuracy; whether
-  it would be better calibrated is exactly what is not known.
+  the origins, populations and sexes of three regimes fix the
+  hyperparameter search to small pre-specified grids; the inner time split
+  is small (five years). A better-tuned network might do better on point
+  accuracy; whether it would be better calibrated is exactly what is not
+  known, and the audited fragility of the year-feature extrapolation
+  (Section~\ref{sec:design-families}) is a property of the specification,
+  not a tuning accident.
 \item \emph{Data quality in the placebo window.} Military deaths are
   reconstructed in the belligerent series and excluded in the civilian-only
   one. Placebo results are descriptive, are reported pooled and by the
@@ -95,14 +214,78 @@ columns that tell the two apart.
   code is public.
 \end{itemize}
 
+\subsubsection{Limitations recorded during the sweeps and analysis}
+
+\begin{itemize}
+\item \emph{The GP rows audit a sixty-year-window variant} (Addendum~4,
+  registered 2026-08-29, during the production sweeps and before any GP
+  cell on a panel longer than sixty years had produced a result). The
+  exact multitask GP was infeasible on the long panels at the available
+  memory, so the family trains on the trailing sixty complete years under
+  every mechanism; the cause, the memory figures and the disclosure of an
+  earlier forty-year diagnostic are in
+  Section~\ref{sec:design-deviations}. Every GP number in this paper is
+  therefore a statement about the sixty-year-window GP, not about the
+  registered full-panel specification; the four populations whose panels
+  were already within the cap are unchanged, and the GP's contrasts stay
+  inside its own sub-grid.
+\item \emph{The 99.5\% longevity tail is not computable from the persisted
+  results} (recorded 2026-08-30, at analysis). The runner persists the
+  2.5\% and 97.5\% sample quantiles of the derived quantities, not the
+  99.5\% quantile, so the empirical frequency of a nominally
+  once-in-200-year $\annuity$ exceedance described in
+  Section~\ref{sec:actuarial} cannot be evaluated from the results files
+  as they stand. It was descriptive, not registered; filling it requires
+  re-scoring the cells with a persisted 99.5\% column, and until that run
+  exists the paper makes no tail-frequency claim.
+\end{itemize}
+
+\subsection{What the stable and placebo regimes will and will not settle}
+\label{sec:discussion-pending}
+
+Two of the three registered regimes are still running, and this draft
+asserts nothing derived from them. What their arrival can and cannot
+change is fixed by the registration, and is stated here as design, not as
+prediction.
+
+The stable regime supplies the reference level. The comparative clause of
+\Htwo---the departure $|\text{coverage}-\text{nominal}|$ grows from the
+stable to the shift regime, per family and mechanism---and the registered
+verdict on \Hfive---the shift-regime departure on $e_{65}$ and $\annuity$
+exceeds the stable-regime departure, per arm---are computable only when
+the stable files exist; the shift-side quantities in
+Tables~\ref{tab:h2-coverage} and~\ref{tab:h5-actuarial} are already in the
+form those comparisons need. The stable half of \Htwo\ is labelled a
+replication arm (Section~\ref{sec:design-regimes}) because stable-window
+miscalibration of particular arms is already in the literature. What the
+stable regime cannot do is alter any shift-regime number, and it cannot
+convert the event study into a sample of events: a shift-minus-stable
+difference is a statement about calibration at one break relative to
+calibration at none, with the first limitation above intact.
+
+The placebo regime is a second event, used descriptively by registration.
+Its side-by-side (Table~\ref{tab:twin-crises}) can show whether the
+patterns found here---the family-level split, the joint-path collapse, the
+old-age concentration of the index extrapolators' miss---recur at a break
+of different cause and different age profile, over a nine-year horizon, in
+data a century older; the pre-specified strata carry the data-quality
+reading, and its first test year, 1914, precedes the influenza wave. What
+it cannot do: it supports no transfer regression and no formal test of
+COVID-specificity, its eleven populations overlap only partly with the
+shift regime's twenty, and recurrence or non-recurrence at two events
+leaves the effective-sample-size limitation exactly where it is.
+
 \subsection{What this paper does not do}
 
 It does not propose a model, a repair, or a recommendation about which
-family to use. If the audit finds that a mechanism restores coverage at the
-break, that is a finding about the mechanism to be stated as a contrast; it
-is not a method contribution and will not be presented as one. If the audit
-finds that nothing holds nominal coverage, that is the finding, and the
-actuarial reading in Section~\ref{sec:actuarial} is its consequence.
-Explainability of the neural families---which features drive their
-forecasts and whether the explanations are stable across the break---is a
-separate question deferred to a companion paper that reuses these fits.
+family to use. The audit did find a mechanism that restores marginal
+coverage at the break; it is stated as a signed contrast within the
+registered sub-grids (Table~\ref{tab:dm-mcs},
+Section~\ref{sec:results-contrasts}), with its cost to the calibrated
+families stated in the same table, and it is not presented as a method
+contribution. The practitioner reading of
+Section~\ref{sec:discussion-conformal} is the content of that contrast,
+not an endorsement of any family or wrapper. Explainability of the neural
+families---which features drive their forecasts and whether the
+explanations are stable across the break---is a separate question deferred
+to a companion paper that reuses these fits.

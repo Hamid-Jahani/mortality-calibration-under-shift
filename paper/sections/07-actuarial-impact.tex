@@ -113,10 +113,29 @@ $+0.39$). The shortfall of the model's 97.5\% quantile of $\annuity$
 below the realised value, where it occurs, is the amount by which the
 implied capital at that level is understated; we report this quantity as
 a proportion of the central $\annuity$ so that it is portable across
-populations and interest-rate assumptions. \todo{compute from the
-$\annuity$ point, upper-quantile and realised columns of the results
-files; decide whether a worked example on a hypothetical portfolio adds
-anything}
+populations and interest-rate assumptions.
+% Numbers: results/h5_extras.json (scripts/h5_extras.py), from the
+% ann65_point / ann65_q025 / ann65_q975 / ann65_obs columns of the shift
+% parquets; error rows and conformal (scores_secondary) rows excluded.
+Computed that way, the understating arms breach their own upper quantile
+at many times its nominal $2.5\%$ frequency: the realised $\annuity$
+exceeds the $97.5\%$ quantile in 0.605 of the LSTM ensemble's 38
+admissible cells, 0.474 of LSTM dropout's, 0.425 of SVD Lee--Carter's 40
+under its native law and 0.325 of CNN-LC dropout's, with mean shortfalls
+over the breached cells of 3.4\%, 3.8\%, 4.3\% and 2.5\% of the central
+$\annuity$ respectively---capital set at the model's $97.5\%$ quantile
+is understated by two to four percent of the best-estimate liability in
+roughly half the population--sex cells, against a nominal one in forty.
+The overstating arms fail on the other side: the NB-head ensemble and
+dropout never breach their upper quantile, but the realised value falls
+below their $2.5\%$ quantile in 0.550 and 0.250 of cells (mean excess
+2.0\% and 1.6\% of the central $\annuity$), and the neural-LC ensemble
+in 0.625 (2.3\%)---reserves set too high rather than capital set too
+low. CBD is again the outlier in magnitude: upper breaches in
+0.050--0.075 of cells with mean shortfall below 0.5\%. Because the
+quantity is reported relative to the central $\annuity$, a worked
+example on a hypothetical portfolio would only rescale these figures,
+and we do not add one.
 
 \subsection{The longevity tail}
 
