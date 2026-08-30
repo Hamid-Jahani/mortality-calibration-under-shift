@@ -183,25 +183,51 @@ from nominal by more than the corresponding stable-regime departure.
 \end{hypothesis}
 
 No directional claim is registered about neural-versus-classical ordering;
-the crossed design estimates it.
+the crossed design estimates it. The shift-regime results reward that
+neutrality: the coverage split runs through the middle of the neural group,
+not between neural and classical (Section~\ref{sec:results}).
 
 \subsection{Contributions}
 
-This paper proposes no new mortality model. Its contributions are:
+This paper proposes no new mortality model. Its contributions, stated here
+with the shift-regime results in hand (the stable control and the placebo
+break are forthcoming under the same registered design), are:
 \begin{enumerate}
 \item \emph{The audit.} The first evaluation of probabilistic mortality
   forecasts---classical, neural and conformal---against realised 2020--2024
   mortality across twenty populations, with every interval constructed
-  strictly from pre-2020 data.
+  strictly from pre-2020 data. Its headline: the nominal 95\% intervals of
+  the classical cores covered between 62\% and 80\% of realised outcomes
+  (Poisson Lee--Carter 0.62, Renshaw--Haberman 0.65, Lee--Carter 0.69,
+  CBD 0.80).
 \item \emph{The crossed design.} Model family and uncertainty mechanism as
   separate factors, so that a coverage failure can be attributed to the
   architecture, to the mechanism, or to their interaction. Claims are stated
   as contrasts within admissible sub-grids, never as main effects over a
-  ragged grid.
-\item \emph{Resolution of the failure.} By horizon (marginal versus joint
-  path coverage, \Hthree), by age (\Hfour) and in economic terms (life
-  expectancy and annuity-factor intervals, \Hfive), with the 1914--1922
-  placebo as a second event.
+  ragged grid. The design delivers its attribution: the failure is not a
+  neural-versus-classical split. The negative-binomial distributional head
+  (0.93 native, 0.97 under dropout), the dropout CNN (0.96) and the
+  Gaussian process (0.905) held near-nominal marginal coverage through the
+  break, while the LSTM (0.65--0.69) and the ensembled neural Lee--Carter
+  (0.69) broke alongside the classical cores. The universal clause of
+  \Htwo---under-coverage for \emph{every} family---is thereby refuted in
+  strong form on the shift data alone (its stable-regime comparison clause
+  awaits the stable runs). Consistently, split conformal wrapping
+  significantly improves the 95\% interval score for exactly the four
+  families whose native law broke (LC, Poisson LC, Renshaw--Haberman, CBD;
+  Diebold--Mariano with wild cluster bootstrap, $p \le .018$) and
+  significantly worsens it for arms that were already calibrated (the
+  negative-binomial head, the Gaussian process, the sparse VAR,
+  $p \le .009$).
+\item \emph{Resolution of the failure.} By horizon: joint path coverage
+  over $h=1,\dots,5$ collapses relative to marginal for every family
+  (0.30 against 0.62 for Poisson Lee--Carter, 0.42 against 0.69 for
+  Lee--Carter), except under the copula conformal band, the one mechanism
+  calibrated for the path, which holds 0.81--0.93 joint (\Hthree). By age
+  (\Hfour) and in economic terms (life expectancy and annuity-factor
+  intervals, \Hfive), reported in Sections~\ref{sec:results}
+  and~\ref{sec:actuarial}; the 1914--1922 placebo, still to be completed,
+  supplies the second event.
 \item \emph{The protocol.} A pre-registered, synthetic-truth-validated,
   oracle-parity-checked evaluation harness in which every model emits
   predictive samples through one interface and is scored through one code
@@ -215,6 +241,7 @@ Section~\ref{sec:data} describes the data and the conventions that make
 Poisson scoring of fractional deaths well defined. Section~\ref{sec:design}
 sets out the regimes, the grid, the interface and the validation gates.
 Section~\ref{sec:metrics} defines every metric. Sections~\ref{sec:results}
-and~\ref{sec:actuarial} are the results and their actuarial reading; both
-are placeholders in this draft. Section~\ref{sec:discussion} pre-commits the
+and~\ref{sec:actuarial} report the shift-regime results and their actuarial
+reading; the stable-control and placebo columns remain pending and no claim
+in this draft rests on them. Section~\ref{sec:discussion} pre-commits the
 limitations and Section~\ref{sec:conclusion} concludes.
