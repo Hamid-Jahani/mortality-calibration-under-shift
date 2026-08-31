@@ -8,7 +8,7 @@
   "shift"
  ],
  "mcs_classical_native": {
-  "skipped": "arms do not share an age support: CBD/native=[45], LC/native=[100], PLC/native=[100], RH/native=[100], SVAR/native=[100]. The per-horizon loss columns are means over each family's OWN scored ages, so these are not comparable. Restrict the arms, re-run the others under the same age restriction, or pass allow_ragged_age_support=True to accept the caveat."
+  "skipped": "arms do not share an age support within cell(s) [('shift', 'BEL', 'female', 2019), ('shift', 'BEL', 'male', 2019), ('shift', 'CHE', 'female', 2019)]...: CBD/native=[45], LC/native=[100], PLC/native=[100], RH/native=[100], SVAR/native=[100]. The per-horizon loss columns are means over each family's OWN scored ages, so these are not comparable. Restrict the arms, re-run the others under the same age restriction, or pass allow_ragged_age_support=True to accept the caveat."
  },
  "mcs_classical_native_full_age": {
   "in_set": [
@@ -129,7 +129,8 @@
      100
     ]
    },
-   "ragged_age_support": false
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": false
   }
  },
  "mcs_conformal_CBD": {
@@ -199,7 +200,8 @@
      45
     ]
    },
-   "ragged_age_support": false
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": false
   }
  },
  "mcs_conformal_CNN": {
@@ -281,7 +283,8 @@
      100
     ]
    },
-   "ragged_age_support": false
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": false
   }
  },
  "mcs_conformal_GP": {
@@ -393,7 +396,8 @@
      100
     ]
    },
-   "ragged_age_support": false
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": false
   }
  },
  "mcs_conformal_LC": {
@@ -470,7 +474,8 @@
      100
     ]
    },
-   "ragged_age_support": false
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": false
   }
  },
  "mcs_conformal_LSTM": {
@@ -571,7 +576,8 @@
      100
     ]
    },
-   "ragged_age_support": false
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": false
   }
  },
  "mcs_conformal_NB": {
@@ -648,7 +654,8 @@
      100
     ]
    },
-   "ragged_age_support": false
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": false
   }
  },
  "mcs_conformal_NLC": {
@@ -725,7 +732,8 @@
      100
     ]
    },
-   "ragged_age_support": false
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": false
   }
  },
  "mcs_conformal_PLC": {
@@ -802,7 +810,8 @@
      100
     ]
    },
-   "ragged_age_support": false
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": false
   }
  },
  "mcs_conformal_RH": {
@@ -872,7 +881,8 @@
      100
     ]
    },
-   "ragged_age_support": false
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": false
   }
  },
  "mcs_conformal_SVAR": {
@@ -1027,7 +1037,8 @@
      100
     ]
    },
-   "ragged_age_support": false
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": false
   }
  },
  "dm_native_vs_split": {
@@ -1041,6 +1052,9 @@
     "CBD/native",
     "CBD/split_conf"
    ],
+   "loss": "winkler95",
+   "favours": "CBD/split_conf",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
    "intersection": {
     "n_units": 190,
     "n_arms": 2,
@@ -1079,7 +1093,8 @@
       45
      ]
     },
-    "ragged_age_support": false
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
    }
   },
   "GP": {
@@ -1092,6 +1107,9 @@
     "GP/native",
     "GP/split_conf"
    ],
+   "loss": "winkler95",
+   "favours": "GP/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
    "intersection": {
     "n_units": 160,
     "n_arms": 2,
@@ -1167,7 +1185,8 @@
       100
      ]
     },
-    "ragged_age_support": false
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
    }
   },
   "LC": {
@@ -1180,6 +1199,9 @@
     "LC/native",
     "LC/split_conf"
    ],
+   "loss": "winkler95",
+   "favours": "LC/split_conf",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
    "intersection": {
     "n_units": 190,
     "n_arms": 2,
@@ -1218,7 +1240,8 @@
       100
      ]
     },
-    "ragged_age_support": false
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
    }
   },
   "NB": {
@@ -1231,6 +1254,9 @@
     "NB/native",
     "NB/split_conf"
    ],
+   "loss": "winkler95",
+   "favours": "NB/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
    "intersection": {
     "n_units": 190,
     "n_arms": 2,
@@ -1269,7 +1295,8 @@
       100
      ]
     },
-    "ragged_age_support": false
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
    }
   },
   "PLC": {
@@ -1282,6 +1309,9 @@
     "PLC/native",
     "PLC/split_conf"
    ],
+   "loss": "winkler95",
+   "favours": "PLC/split_conf",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
    "intersection": {
     "n_units": 190,
     "n_arms": 2,
@@ -1320,7 +1350,8 @@
       100
      ]
     },
-    "ragged_age_support": false
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
    }
   },
   "RH": {
@@ -1333,6 +1364,9 @@
     "RH/native",
     "RH/split_conf"
    ],
+   "loss": "winkler95",
+   "favours": "RH/split_conf",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
    "intersection": {
     "n_units": 190,
     "n_arms": 2,
@@ -1371,7 +1405,8 @@
       100
      ]
     },
-    "ragged_age_support": false
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
    }
   },
   "SVAR": {
@@ -1384,6 +1419,9 @@
     "SVAR/native",
     "SVAR/split_conf"
    ],
+   "loss": "winkler95",
+   "favours": "SVAR/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
    "intersection": {
     "n_units": 140,
     "n_arms": 2,
@@ -1483,7 +1521,992 @@
       100
      ]
     },
-    "ragged_age_support": false
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  }
+ },
+ "dm_ensemble_vs_dropout": {
+  "NLC": {
+   "mean_diff": -1.2381952194911556,
+   "se": 0.296227598562844,
+   "t": -4.1798779907688965,
+   "p_value": 0.0,
+   "n_clusters": 20,
+   "arms": [
+    "NLC/ensemble",
+    "NLC/dropout"
+   ],
+   "loss": "winkler95",
+   "favours": "NLC/ensemble",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 200,
+    "n_arms": 2,
+    "n_cells_kept": 40,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "NLC/dropout": [
+      100
+     ],
+     "NLC/ensemble": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  },
+  "CNN": {
+   "mean_diff": 0.061823830051055885,
+   "se": 0.14461631403033673,
+   "t": 0.4275024603246827,
+   "p_value": 0.7385477095419084,
+   "n_clusters": 20,
+   "arms": [
+    "CNN/ensemble",
+    "CNN/dropout"
+   ],
+   "loss": "winkler95",
+   "favours": "CNN/dropout",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 200,
+    "n_arms": 2,
+    "n_cells_kept": 40,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "CNN/dropout": [
+      100
+     ],
+     "CNN/ensemble": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  },
+  "LSTM": {
+   "mean_diff": 0.2236625631467976,
+   "se": 0.05920969597688203,
+   "t": 3.7774651508787502,
+   "p_value": 0.000600120024004801,
+   "n_clusters": 19,
+   "arms": [
+    "LSTM/ensemble",
+    "LSTM/dropout"
+   ],
+   "loss": "winkler95",
+   "favours": "LSTM/dropout",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 190,
+    "n_arms": 2,
+    "n_cells_kept": 38,
+    "n_cells_dropped": 2,
+    "dropped_cells": [
+     [
+      "shift",
+      "KOR",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "KOR",
+      "male",
+      2019
+     ]
+    ],
+    "arms_with_failures": [
+     "LSTM/dropout",
+     "LSTM/ensemble"
+    ],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "LSTM/dropout": [
+      100
+     ],
+     "LSTM/ensemble": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  },
+  "NB": {
+   "mean_diff": 0.05496111741678199,
+   "se": 0.03562931689919482,
+   "t": 1.542581284179042,
+   "p_value": 0.13862772554510902,
+   "n_clusters": 20,
+   "arms": [
+    "NB/ensemble",
+    "NB/dropout"
+   ],
+   "loss": "winkler95",
+   "favours": "NB/dropout",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 200,
+    "n_arms": 2,
+    "n_cells_kept": 40,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "NB/dropout": [
+      100
+     ],
+     "NB/ensemble": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  }
+ },
+ "dm_pboot_vs_native": {
+  "LC": {
+   "mean_diff": -0.11158067292134077,
+   "se": 0.02574627487751626,
+   "t": -4.333856973568712,
+   "p_value": 0.0,
+   "n_clusters": 20,
+   "arms": [
+    "LC/pboot",
+    "LC/native"
+   ],
+   "loss": "winkler95",
+   "favours": "LC/pboot",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 200,
+    "n_arms": 2,
+    "n_cells_kept": 40,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "LC/native": [
+      100
+     ],
+     "LC/pboot": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  },
+  "PLC": {
+   "mean_diff": -0.11497521854685616,
+   "se": 0.015466799224332087,
+   "t": -7.433678867828014,
+   "p_value": 0.0,
+   "n_clusters": 20,
+   "arms": [
+    "PLC/pboot",
+    "PLC/native"
+   ],
+   "loss": "winkler95",
+   "favours": "PLC/pboot",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 200,
+    "n_arms": 2,
+    "n_cells_kept": 40,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "PLC/native": [
+      100
+     ],
+     "PLC/pboot": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  },
+  "CBD": {
+   "mean_diff": 0.020820253942684944,
+   "se": 0.04634033613942242,
+   "t": 0.449290093193192,
+   "p_value": 0.6811362272454491,
+   "n_clusters": 20,
+   "arms": [
+    "CBD/pboot",
+    "CBD/native"
+   ],
+   "loss": "winkler95",
+   "favours": "CBD/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 200,
+    "n_arms": 2,
+    "n_cells_kept": 40,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "CBD/native": [
+      45
+     ],
+     "CBD/pboot": [
+      45
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  },
+  "RH": {
+   "mean_diff": -0.10053500252070142,
+   "se": 0.02448182202618442,
+   "t": -4.106516353773615,
+   "p_value": 0.00020004000800160032,
+   "n_clusters": 20,
+   "arms": [
+    "RH/pboot",
+    "RH/native"
+   ],
+   "loss": "winkler95",
+   "favours": "RH/pboot",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 200,
+    "n_arms": 2,
+    "n_cells_kept": 40,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "RH/native": [
+      100
+     ],
+     "RH/pboot": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  },
+  "SVAR": {
+   "mean_diff": 0.168282448666399,
+   "se": 0.04318171837938801,
+   "t": 3.897076239252338,
+   "p_value": 0.0008001600320064013,
+   "n_clusters": 13,
+   "arms": [
+    "SVAR/pboot",
+    "SVAR/native"
+   ],
+   "loss": "winkler95",
+   "favours": "SVAR/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 110,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 18,
+    "dropped_cells": [
+     [
+      "shift",
+      "CHE",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "CHE",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "CHL",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "CHL",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "FIN",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "HKG",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "HKG",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "HRV",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "HRV",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "ISL",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "ISL",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "JPN",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "JPN",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "KOR",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "KOR",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "LUX",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "SWE",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "TWN",
+      "male",
+      2019
+     ]
+    ],
+    "arms_with_failures": [
+     "SVAR/native",
+     "SVAR/pboot"
+    ],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "SVAR/native": [
+      100
+     ],
+     "SVAR/pboot": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  }
+ },
+ "dm_ensemble_vs_dropout_crps": {
+  "NLC": {
+   "mean_diff": -0.040821850203865556,
+   "se": 0.005003933656162771,
+   "t": -8.15795192519988,
+   "p_value": 0.0,
+   "n_clusters": 20,
+   "arms": [
+    "NLC/ensemble",
+    "NLC/dropout"
+   ],
+   "loss": "crps",
+   "favours": "NLC/ensemble",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 200,
+    "n_arms": 2,
+    "n_cells_kept": 40,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "crps",
+    "age_support": {
+     "NLC/dropout": [
+      100
+     ],
+     "NLC/ensemble": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  },
+  "CNN": {
+   "mean_diff": -0.018844735632558358,
+   "se": 0.004783292294783015,
+   "t": -3.9396997865072376,
+   "p_value": 0.0008001600320064013,
+   "n_clusters": 20,
+   "arms": [
+    "CNN/ensemble",
+    "CNN/dropout"
+   ],
+   "loss": "crps",
+   "favours": "CNN/ensemble",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 200,
+    "n_arms": 2,
+    "n_cells_kept": 40,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "crps",
+    "age_support": {
+     "CNN/dropout": [
+      100
+     ],
+     "CNN/ensemble": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  },
+  "LSTM": {
+   "mean_diff": 0.002895621131674758,
+   "se": 0.00071254972379411,
+   "t": 4.063746058670065,
+   "p_value": 0.000600120024004801,
+   "n_clusters": 19,
+   "arms": [
+    "LSTM/ensemble",
+    "LSTM/dropout"
+   ],
+   "loss": "crps",
+   "favours": "LSTM/dropout",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 190,
+    "n_arms": 2,
+    "n_cells_kept": 38,
+    "n_cells_dropped": 2,
+    "dropped_cells": [
+     [
+      "shift",
+      "KOR",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "KOR",
+      "male",
+      2019
+     ]
+    ],
+    "arms_with_failures": [
+     "LSTM/dropout",
+     "LSTM/ensemble"
+    ],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "crps",
+    "age_support": {
+     "LSTM/dropout": [
+      100
+     ],
+     "LSTM/ensemble": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  },
+  "NB": {
+   "mean_diff": -0.013185590467931534,
+   "se": 0.0027398192607062917,
+   "t": -4.812576748048866,
+   "p_value": 0.00020004000800160032,
+   "n_clusters": 20,
+   "arms": [
+    "NB/ensemble",
+    "NB/dropout"
+   ],
+   "loss": "crps",
+   "favours": "NB/ensemble",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 200,
+    "n_arms": 2,
+    "n_cells_kept": 40,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "crps",
+    "age_support": {
+     "NB/dropout": [
+      100
+     ],
+     "NB/ensemble": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  }
+ },
+ "dm_pboot_vs_native_crps": {
+  "LC": {
+   "mean_diff": 0.005966570829761261,
+   "se": 0.0011614061748121019,
+   "t": 5.137367924470147,
+   "p_value": 0.0,
+   "n_clusters": 20,
+   "arms": [
+    "LC/pboot",
+    "LC/native"
+   ],
+   "loss": "crps",
+   "favours": "LC/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 200,
+    "n_arms": 2,
+    "n_cells_kept": 40,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "crps",
+    "age_support": {
+     "LC/native": [
+      100
+     ],
+     "LC/pboot": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  },
+  "PLC": {
+   "mean_diff": -0.0018949510993293561,
+   "se": 0.0002895809420715184,
+   "t": -6.543770062262441,
+   "p_value": 0.0,
+   "n_clusters": 20,
+   "arms": [
+    "PLC/pboot",
+    "PLC/native"
+   ],
+   "loss": "crps",
+   "favours": "PLC/pboot",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 200,
+    "n_arms": 2,
+    "n_cells_kept": 40,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "crps",
+    "age_support": {
+     "PLC/native": [
+      100
+     ],
+     "PLC/pboot": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  },
+  "CBD": {
+   "mean_diff": 0.003381917743700921,
+   "se": 0.002036501133096789,
+   "t": 1.6606510493604467,
+   "p_value": 0.07281456291258252,
+   "n_clusters": 20,
+   "arms": [
+    "CBD/pboot",
+    "CBD/native"
+   ],
+   "loss": "crps",
+   "favours": "CBD/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 200,
+    "n_arms": 2,
+    "n_cells_kept": 40,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "crps",
+    "age_support": {
+     "CBD/native": [
+      45
+     ],
+     "CBD/pboot": [
+      45
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  },
+  "RH": {
+   "mean_diff": 0.0005384411851741807,
+   "se": 0.00048491192388224163,
+   "t": 1.1103896576998558,
+   "p_value": 0.27905581116223244,
+   "n_clusters": 20,
+   "arms": [
+    "RH/pboot",
+    "RH/native"
+   ],
+   "loss": "crps",
+   "favours": "RH/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 200,
+    "n_arms": 2,
+    "n_cells_kept": 40,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "crps",
+    "age_support": {
+     "RH/native": [
+      100
+     ],
+     "RH/pboot": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  },
+  "SVAR": {
+   "mean_diff": 0.004404630643610249,
+   "se": 0.002586149197683657,
+   "t": 1.7031618467934317,
+   "p_value": 0.11922384476895379,
+   "n_clusters": 13,
+   "arms": [
+    "SVAR/pboot",
+    "SVAR/native"
+   ],
+   "loss": "crps",
+   "favours": "SVAR/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 110,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 18,
+    "dropped_cells": [
+     [
+      "shift",
+      "CHE",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "CHE",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "CHL",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "CHL",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "FIN",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "HKG",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "HKG",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "HRV",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "HRV",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "ISL",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "ISL",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "JPN",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "JPN",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "KOR",
+      "female",
+      2019
+     ],
+     [
+      "shift",
+      "KOR",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "LUX",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "SWE",
+      "male",
+      2019
+     ],
+     [
+      "shift",
+      "TWN",
+      "male",
+      2019
+     ]
+    ],
+    "arms_with_failures": [
+     "SVAR/native",
+     "SVAR/pboot"
+    ],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "loss": "crps",
+    "age_support": {
+     "SVAR/native": [
+      100
+     ],
+     "SVAR/pboot": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
    }
   }
  },

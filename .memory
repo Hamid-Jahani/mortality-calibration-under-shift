@@ -35,6 +35,10 @@ the node alone; user decision pending (bastion 24 cores would halve it).
 ## Post-sweep order (laptop, mortcal-cpu env) — read results only at step 7
 
 1. `bash scripts/server_pull.sh shift placebo` (pulls parquet + parts + logs; purges local snapshots first)
+1b. `python scripts/patch_obs_lifetable.py results/<regime>.parquet results/<regime>_gp.parquet`
+    — the server runners predate the observed-lifetable fix (2026-08-31):
+    recomputes {e0,e65,ann65}_obs/_error via the fixed code path. REQUIRED
+    for stable when it lands; shift/placebo already patched locally.
 2. `python scripts/final_qa.py results/shift.parquet results/shift_gp.parquet results/placebo.parquet results/placebo_gp.parquet` → must print QA PASS (machine=0)
 3. `python scripts/analyse.py results/shift.parquet results/shift_gp.parquet --out results/shift_analysis.json` (and placebo)
 4. `python scripts/sensitivities.py ...` → `results/sensitivities.json`
@@ -53,7 +57,9 @@ Then commit the generated tables/figures deliberately (they are gitignored until
 - Losses are never imputed: `mortcal.inference` raises on non-finite input and
   on any attempt to rank conformal cells' placeholder crps/logscore — conformal
   contrasts use `winkler95` (interval score). CBD (45 ages) never enters a
-  ranking with 100-age families.
+  ranking with 100-age families. Age-support rule (fixed 2026-08-31): arms
+  must agree on `n_ages_scored` PER CELL; cross-cell raggedness (placebo
+  98/99/100 by population) is allowed and reported.
 - Conformal cells have NO derived-quantity intervals (e0/e65/ä65 → n/a).
 - One device per regime; `device` column records it (all CPU so far).
 - Do NOT resume workflow `wf_75bb90b5-839` (dead; clobbers manual fixes).
@@ -127,6 +133,16 @@ throwaway parsing is
 `C:/Users/ASUS/AppData/Roaming/uv/python/cpython-3.12.13-windows-x86_64-none/python.exe`
 (bare, no project deps). Rebuild a real env before running anything from
 `src/` here.
+
+### 2026-08-31 (Gaming machine, later) — placebo COMPLETE end-to-end
+
+Placebo pulled, QA PASS, analysed, sensitivities, tables, figures
+(`make_figures.py --regimes shift placebo --source shift=results/shift.parquet,results/shift_gp.parquet --source placebo=...` — NOT `--shift/--placebo`),
+compile 0 errors / 0 float-too-large / 71 pp. Twin-crises §6 written from
+real numbers. Guard fix in `mortcal/inference.py` (per-cell age support) —
+shift analysis verified numerically identical under it. `tab-infeasible` +
+`tab-h1-rankings` are longtables now; `tab-h5-actuarial` is stacked
+(regimes as rows). Only STABLE outstanding — see below.
 
 ### Sweep state observed 2026-08-31 07:40 (read-only check, nothing changed)
 

@@ -37,6 +37,9 @@ from mortcal.inference import (dm_wild_cluster, losses_from_rows,   # noqa: E402
 from mortcal.runner import CONFORMAL_MECHANISMS                     # noqa: E402
 
 CLASSICAL = ("LC", "PLC", "CBD", "RH", "SVAR")
+#: families whose native cell is inadmissible (docs/GRID.md): the ensemble and
+#: dropout mechanisms exist only on these rows.
+NEURAL = ("NLC", "CNN", "LSTM", "NB")
 #: loss for any contrast that includes a conformal arm (addendum 2 §3): the
 #: per-horizon Winkler/interval score at the construction level.
 INTERVAL_LOSS = "winkler95"
@@ -58,6 +61,42 @@ def _mcs(df, arms, alpha, n_boot, loss, seed, ragged=False):
     out = model_confidence_set(L, groups, alpha=alpha, n_boot=n_boot,
                                names=names, rng=np.random.default_rng(seed))
     out["intersection"] = rep
+    return out
+
+
+def _dm_pair(df, fam, arm_a, arm_b, loss, seed, n_boot=4999):
+    """Diebold-Mariano on one within-family arm pair.
+
+    ``mean_diff`` is mean(loss[arm_a] - loss[arm_b]); losses are negatively
+    oriented, so a NEGATIVE mean_diff favours ``arm_a``. The sign convention
+    is recorded in the result so a reader never has to reconstruct it.
+    """
+    pair = [(fam, arm_a), (fam, arm_b)]
+    try:
+        L, groups, names, rep = losses_from_rows(df, loss=loss, arms=pair)
+    except ValueError as exc:
+        return {"skipped": str(exc)}
+    a, b = names.index(f"{fam}/{arm_a}"), names.index(f"{fam}/{arm_b}")
+    out = dm_wild_cluster(L[:, a], L[:, b], groups, n_boot=n_boot,
+                          rng=np.random.default_rng(seed))
+    out["arms"] = [names[a], names[b]]
+    out["loss"] = loss
+    out["favours"] = names[a] if out["mean_diff"] < 0 else names[b]
+    out["sign_convention"] = ("mean_diff = mean(loss[arms[0]] - loss[arms[1]]); "
+                              "losses negatively oriented, so negative favours arms[0]")
+    out["intersection"] = rep
+    return out
+
+
+def _dm_family_block(df, present, arm_a, arm_b, families, loss, seed):
+    """One DM per family that has BOTH arms; families lacking either are
+    absent from the block rather than recorded as a skip, so a missing key
+    means 'not applicable' and a 'skipped' value means 'applicable but not
+    computable' (e.g. no common cells)."""
+    out = {}
+    for fam in families:
+        if (fam, arm_a) in present and (fam, arm_b) in present:
+            out[fam] = _dm_pair(df, fam, arm_a, arm_b, loss, seed)
     return out
 
 
@@ -121,26 +160,36 @@ def main(argv=None) -> int:
             res[f"mcs_conformal_{fam}"] = _mcs(df, conf, args.alpha,
                                                args.n_boot, INTERVAL_LOSS, args.seed)
 
-    # --- 3. pairwise DM: native vs split conformal, per family --------------
-    dm = {}
-    for fam in sorted({m for m, _ in present}):
-        pair = [(fam, "native"), (fam, "split_conf")]
-        if not all(c in present for c in pair):
-            continue
-        try:
-            # native vs conformal: mixed arms -> interval score, not crps
-            L, groups, names, rep = losses_from_rows(df, loss=INTERVAL_LOSS, arms=pair)
-        except ValueError as exc:
-            dm[fam] = {"skipped": str(exc)}
-            continue
-        a, b = names.index(f"{fam}/native"), names.index(f"{fam}/split_conf")
-        out = dm_wild_cluster(L[:, a], L[:, b], groups, n_boot=4999,
-                              rng=np.random.default_rng(args.seed))
-        out["arms"] = [names[a], names[b]]
-        out["intersection"] = rep
-        dm[fam] = out
-    if dm:
-        res["dm_native_vs_split"] = dm
+    # --- 3. registered paired mechanism contrasts, within family ------------
+    # All three are the same test on different arm pairs: Diebold-Mariano on
+    # the loss differential with a wild cluster bootstrap over populations.
+    # Within-family by construction, so the compared arms share an age
+    # support automatically and losses_from_rows' guard never fires on a
+    # ragged support here (it still enforces the addendum 3 §11 common-cell
+    # restriction, which DOES bite: mechanisms fail on different cells).
+    for key, arm_a, arm_b, fams in (
+        ("dm_native_vs_split", "native", "split_conf",
+         sorted({m for m, _ in present})),
+        # "Ensemble versus Monte Carlo dropout, neural families only"
+        ("dm_ensemble_vs_dropout", "ensemble", "dropout", NEURAL),
+        # "Bootstrap versus native, classical families only"
+        ("dm_pboot_vs_native", "pboot", "native", CLASSICAL),
+    ):
+        block = _dm_family_block(df, present, arm_a, arm_b, fams,
+                                 INTERVAL_LOSS, args.seed)
+        if block:
+            res[key] = block
+    # Secondary, distributional arms only: the two contrasts whose arms both
+    # emit a genuine predictive law may also be read on CRPS. Not available
+    # for native-vs-conformal, whose conformal crps is a flagged placeholder.
+    for key, arm_a, arm_b, fams in (
+        ("dm_ensemble_vs_dropout_crps", "ensemble", "dropout", NEURAL),
+        ("dm_pboot_vs_native_crps", "pboot", "native", CLASSICAL),
+    ):
+        block = _dm_family_block(df, present, arm_a, arm_b, fams,
+                                 args.loss, args.seed)
+        if block:
+            res[key] = block
 
     # --- 4. descriptive calibration tables (H2, H3, H4) ---------------------
     ok = df[df["error"].isna()] if "error" in df else df

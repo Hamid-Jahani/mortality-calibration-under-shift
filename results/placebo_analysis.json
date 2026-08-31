@@ -1,0 +1,2634 @@
+{
+ "source": "['results/placebo.parquet', 'results/placebo_gp.parquet']",
+ "loss": "crps",
+ "alpha": 0.1,
+ "n_rows": 1100,
+ "n_error_rows": 136,
+ "regimes": [
+  "placebo"
+ ],
+ "mcs_classical_native": {
+  "skipped": "no cells have all 5 arms: nothing to compare (addendum 3 \u00a711 leaves an empty intersection)"
+ },
+ "mcs_classical_native_full_age": {
+  "skipped": "no cells have all 4 arms: nothing to compare (addendum 3 \u00a711 leaves an empty intersection)"
+ },
+ "mcs_conformal_CBD": {
+  "in_set": [
+   "CBD/copula_conf",
+   "CBD/enbpi",
+   "CBD/split_conf"
+  ],
+  "eliminated": [],
+  "p_values": {
+   "CBD/copula_conf": 0.1085,
+   "CBD/enbpi": 1.0,
+   "CBD/split_conf": 1.0
+  },
+  "intersection": {
+   "n_units": 198,
+   "n_arms": 3,
+   "n_cells_kept": 22,
+   "n_cells_dropped": 0,
+   "dropped_cells": [],
+   "arms_with_failures": [],
+   "horizons": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "loss": "winkler95",
+   "age_support": {
+    "CBD/copula_conf": [
+     43,
+     44,
+     45
+    ],
+    "CBD/enbpi": [
+     43,
+     44,
+     45
+    ],
+    "CBD/split_conf": [
+     43,
+     44,
+     45
+    ]
+   },
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": true
+  }
+ },
+ "mcs_conformal_CNN": {
+  "in_set": [
+   "CNN/enbpi"
+  ],
+  "eliminated": [
+   [
+    "CNN/split_conf",
+    0.0145
+   ],
+   [
+    "CNN/copula_conf",
+    0.0915
+   ]
+  ],
+  "p_values": {
+   "CNN/split_conf": 0.0145,
+   "CNN/copula_conf": 0.0915,
+   "CNN/enbpi": 1.0
+  },
+  "intersection": {
+   "n_units": 189,
+   "n_arms": 3,
+   "n_cells_kept": 21,
+   "n_cells_dropped": 1,
+   "dropped_cells": [
+    [
+     "placebo",
+     "ITA",
+     "female",
+     1913
+    ]
+   ],
+   "arms_with_failures": [
+    "CNN/copula_conf",
+    "CNN/enbpi"
+   ],
+   "horizons": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "loss": "winkler95",
+   "age_support": {
+    "CNN/copula_conf": [
+     98,
+     99,
+     100
+    ],
+    "CNN/enbpi": [
+     98,
+     99,
+     100
+    ],
+    "CNN/split_conf": [
+     98,
+     99,
+     100
+    ]
+   },
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": true
+  }
+ },
+ "mcs_conformal_GP": {
+  "in_set": [
+   "GP/copula_conf",
+   "GP/enbpi"
+  ],
+  "eliminated": [
+   [
+    "GP/split_conf",
+    0.042
+   ]
+  ],
+  "p_values": {
+   "GP/split_conf": 0.042,
+   "GP/copula_conf": 0.9805,
+   "GP/enbpi": 1.0
+  },
+  "intersection": {
+   "n_units": 117,
+   "n_arms": 3,
+   "n_cells_kept": 13,
+   "n_cells_dropped": 9,
+   "dropped_cells": [
+    [
+     "placebo",
+     "CHE",
+     "female",
+     1913
+    ],
+    [
+     "placebo",
+     "CHE",
+     "male",
+     1913
+    ],
+    [
+     "placebo",
+     "FIN",
+     "female",
+     1913
+    ],
+    [
+     "placebo",
+     "FIN",
+     "male",
+     1913
+    ],
+    [
+     "placebo",
+     "ISL",
+     "female",
+     1913
+    ],
+    [
+     "placebo",
+     "ISL",
+     "male",
+     1913
+    ],
+    [
+     "placebo",
+     "ITA",
+     "female",
+     1913
+    ],
+    [
+     "placebo",
+     "ITA",
+     "male",
+     1913
+    ],
+    [
+     "placebo",
+     "SWE",
+     "male",
+     1913
+    ]
+   ],
+   "arms_with_failures": [
+    "GP/copula_conf",
+    "GP/enbpi",
+    "GP/split_conf"
+   ],
+   "horizons": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "loss": "winkler95",
+   "age_support": {
+    "GP/copula_conf": [
+     100
+    ],
+    "GP/enbpi": [
+     100
+    ],
+    "GP/split_conf": [
+     100
+    ]
+   },
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": false
+  }
+ },
+ "mcs_conformal_LC": {
+  "in_set": [
+   "LC/copula_conf",
+   "LC/enbpi"
+  ],
+  "eliminated": [
+   [
+    "LC/split_conf",
+    0.004
+   ]
+  ],
+  "p_values": {
+   "LC/split_conf": 0.004,
+   "LC/enbpi": 0.7705,
+   "LC/copula_conf": 1.0
+  },
+  "intersection": {
+   "n_units": 198,
+   "n_arms": 3,
+   "n_cells_kept": 22,
+   "n_cells_dropped": 0,
+   "dropped_cells": [],
+   "arms_with_failures": [],
+   "horizons": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "loss": "winkler95",
+   "age_support": {
+    "LC/copula_conf": [
+     98,
+     99,
+     100
+    ],
+    "LC/enbpi": [
+     98,
+     99,
+     100
+    ],
+    "LC/split_conf": [
+     98,
+     99,
+     100
+    ]
+   },
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": true
+  }
+ },
+ "mcs_conformal_LSTM": {
+  "in_set": [
+   "LSTM/copula_conf",
+   "LSTM/enbpi",
+   "LSTM/split_conf"
+  ],
+  "eliminated": [],
+  "p_values": {
+   "LSTM/split_conf": 0.216,
+   "LSTM/copula_conf": 1.0,
+   "LSTM/enbpi": 1.0
+  },
+  "intersection": {
+   "n_units": 198,
+   "n_arms": 3,
+   "n_cells_kept": 22,
+   "n_cells_dropped": 0,
+   "dropped_cells": [],
+   "arms_with_failures": [],
+   "horizons": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "loss": "winkler95",
+   "age_support": {
+    "LSTM/copula_conf": [
+     98,
+     99,
+     100
+    ],
+    "LSTM/enbpi": [
+     98,
+     99,
+     100
+    ],
+    "LSTM/split_conf": [
+     98,
+     99,
+     100
+    ]
+   },
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": true
+  }
+ },
+ "mcs_conformal_NB": {
+  "in_set": [
+   "NB/copula_conf",
+   "NB/enbpi"
+  ],
+  "eliminated": [
+   [
+    "NB/split_conf",
+    0.0115
+   ]
+  ],
+  "p_values": {
+   "NB/split_conf": 0.0115,
+   "NB/copula_conf": 0.302,
+   "NB/enbpi": 1.0
+  },
+  "intersection": {
+   "n_units": 198,
+   "n_arms": 3,
+   "n_cells_kept": 22,
+   "n_cells_dropped": 0,
+   "dropped_cells": [],
+   "arms_with_failures": [],
+   "horizons": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "loss": "winkler95",
+   "age_support": {
+    "NB/copula_conf": [
+     98,
+     99,
+     100
+    ],
+    "NB/enbpi": [
+     98,
+     99,
+     100
+    ],
+    "NB/split_conf": [
+     98,
+     99,
+     100
+    ]
+   },
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": true
+  }
+ },
+ "mcs_conformal_NLC": {
+  "in_set": [
+   "NLC/copula_conf",
+   "NLC/enbpi"
+  ],
+  "eliminated": [
+   [
+    "NLC/split_conf",
+    0.0025
+   ]
+  ],
+  "p_values": {
+   "NLC/split_conf": 0.0025,
+   "NLC/copula_conf": 0.2155,
+   "NLC/enbpi": 1.0
+  },
+  "intersection": {
+   "n_units": 198,
+   "n_arms": 3,
+   "n_cells_kept": 22,
+   "n_cells_dropped": 0,
+   "dropped_cells": [],
+   "arms_with_failures": [],
+   "horizons": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "loss": "winkler95",
+   "age_support": {
+    "NLC/copula_conf": [
+     98,
+     99,
+     100
+    ],
+    "NLC/enbpi": [
+     98,
+     99,
+     100
+    ],
+    "NLC/split_conf": [
+     98,
+     99,
+     100
+    ]
+   },
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": true
+  }
+ },
+ "mcs_conformal_PLC": {
+  "in_set": [
+   "PLC/copula_conf",
+   "PLC/enbpi"
+  ],
+  "eliminated": [
+   [
+    "PLC/split_conf",
+    0.023
+   ]
+  ],
+  "p_values": {
+   "PLC/split_conf": 0.023,
+   "PLC/enbpi": 0.5375,
+   "PLC/copula_conf": 1.0
+  },
+  "intersection": {
+   "n_units": 198,
+   "n_arms": 3,
+   "n_cells_kept": 22,
+   "n_cells_dropped": 0,
+   "dropped_cells": [],
+   "arms_with_failures": [],
+   "horizons": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "loss": "winkler95",
+   "age_support": {
+    "PLC/copula_conf": [
+     98,
+     99,
+     100
+    ],
+    "PLC/enbpi": [
+     98,
+     99,
+     100
+    ],
+    "PLC/split_conf": [
+     98,
+     99,
+     100
+    ]
+   },
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": true
+  }
+ },
+ "mcs_conformal_RH": {
+  "in_set": [
+   "RH/copula_conf",
+   "RH/enbpi"
+  ],
+  "eliminated": [
+   [
+    "RH/split_conf",
+    0.001
+   ]
+  ],
+  "p_values": {
+   "RH/split_conf": 0.001,
+   "RH/enbpi": 0.7465,
+   "RH/copula_conf": 1.0
+  },
+  "intersection": {
+   "n_units": 198,
+   "n_arms": 3,
+   "n_cells_kept": 22,
+   "n_cells_dropped": 0,
+   "dropped_cells": [],
+   "arms_with_failures": [],
+   "horizons": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "loss": "winkler95",
+   "age_support": {
+    "RH/copula_conf": [
+     98,
+     99,
+     100
+    ],
+    "RH/enbpi": [
+     98,
+     99,
+     100
+    ],
+    "RH/split_conf": [
+     98,
+     99,
+     100
+    ]
+   },
+   "ragged_age_support": false,
+   "ragged_age_support_across_cells": true
+  }
+ },
+ "mcs_conformal_SVAR": {
+  "skipped": "no cells have all 3 arms: nothing to compare (addendum 3 \u00a711 leaves an empty intersection)"
+ },
+ "dm_native_vs_split": {
+  "CBD": {
+   "mean_diff": -0.47594967872988125,
+   "se": 0.26031580019672884,
+   "t": -1.8283549380029607,
+   "p_value": 0.07141428285657131,
+   "n_clusters": 11,
+   "arms": [
+    "CBD/native",
+    "CBD/split_conf"
+   ],
+   "loss": "winkler95",
+   "favours": "CBD/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "CBD/native": [
+      43,
+      44,
+      45
+     ],
+     "CBD/split_conf": [
+      43,
+      44,
+      45
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "GP": {
+   "mean_diff": -0.17227289870904985,
+   "se": 0.5629517919397329,
+   "t": -0.30601714245452233,
+   "p_value": 0.8027605521104221,
+   "n_clusters": 7,
+   "arms": [
+    "GP/native",
+    "GP/split_conf"
+   ],
+   "loss": "winkler95",
+   "favours": "GP/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 117,
+    "n_arms": 2,
+    "n_cells_kept": 13,
+    "n_cells_dropped": 9,
+    "dropped_cells": [
+     [
+      "placebo",
+      "CHE",
+      "female",
+      1913
+     ],
+     [
+      "placebo",
+      "CHE",
+      "male",
+      1913
+     ],
+     [
+      "placebo",
+      "FIN",
+      "female",
+      1913
+     ],
+     [
+      "placebo",
+      "FIN",
+      "male",
+      1913
+     ],
+     [
+      "placebo",
+      "ISL",
+      "female",
+      1913
+     ],
+     [
+      "placebo",
+      "ISL",
+      "male",
+      1913
+     ],
+     [
+      "placebo",
+      "ITA",
+      "female",
+      1913
+     ],
+     [
+      "placebo",
+      "ITA",
+      "male",
+      1913
+     ],
+     [
+      "placebo",
+      "SWE",
+      "male",
+      1913
+     ]
+    ],
+    "arms_with_failures": [
+     "GP/native",
+     "GP/split_conf"
+    ],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "GP/native": [
+      100
+     ],
+     "GP/split_conf": [
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": false
+   }
+  },
+  "LC": {
+   "mean_diff": -0.09125568068194065,
+   "se": 0.21509287767412738,
+   "t": -0.42426174994132504,
+   "p_value": 0.6889377875575114,
+   "n_clusters": 11,
+   "arms": [
+    "LC/native",
+    "LC/split_conf"
+   ],
+   "loss": "winkler95",
+   "favours": "LC/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "LC/native": [
+      98,
+      99,
+      100
+     ],
+     "LC/split_conf": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "NB": {
+   "mean_diff": -0.46141918615208455,
+   "se": 0.18817175891130392,
+   "t": -2.452117091436541,
+   "p_value": 0.008201640328065612,
+   "n_clusters": 11,
+   "arms": [
+    "NB/native",
+    "NB/split_conf"
+   ],
+   "loss": "winkler95",
+   "favours": "NB/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "NB/native": [
+      98,
+      99,
+      100
+     ],
+     "NB/split_conf": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "PLC": {
+   "mean_diff": -0.3679530516299242,
+   "se": 0.22697835104841108,
+   "t": -1.6210931568158469,
+   "p_value": 0.1270254050810162,
+   "n_clusters": 11,
+   "arms": [
+    "PLC/native",
+    "PLC/split_conf"
+   ],
+   "loss": "winkler95",
+   "favours": "PLC/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "PLC/native": [
+      98,
+      99,
+      100
+     ],
+     "PLC/split_conf": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "RH": {
+   "mean_diff": -0.1331627131702469,
+   "se": 0.22113451781856688,
+   "t": -0.6021796799697378,
+   "p_value": 0.5631126225245049,
+   "n_clusters": 11,
+   "arms": [
+    "RH/native",
+    "RH/split_conf"
+   ],
+   "loss": "winkler95",
+   "favours": "RH/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "RH/native": [
+      98,
+      99,
+      100
+     ],
+     "RH/split_conf": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "SVAR": {
+   "skipped": "no cells have all 2 arms: nothing to compare (addendum 3 \u00a711 leaves an empty intersection)"
+  }
+ },
+ "dm_ensemble_vs_dropout": {
+  "NLC": {
+   "mean_diff": 0.1730770125115344,
+   "se": 0.08713487319113117,
+   "t": 1.9863116358921913,
+   "p_value": 0.07181436287257452,
+   "n_clusters": 11,
+   "arms": [
+    "NLC/ensemble",
+    "NLC/dropout"
+   ],
+   "loss": "winkler95",
+   "favours": "NLC/dropout",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "NLC/dropout": [
+      98,
+      99,
+      100
+     ],
+     "NLC/ensemble": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "CNN": {
+   "mean_diff": 0.5311024128473173,
+   "se": 0.12390263874473986,
+   "t": 4.286449572244195,
+   "p_value": 0.00020004000800160032,
+   "n_clusters": 11,
+   "arms": [
+    "CNN/ensemble",
+    "CNN/dropout"
+   ],
+   "loss": "winkler95",
+   "favours": "CNN/dropout",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "CNN/dropout": [
+      98,
+      99,
+      100
+     ],
+     "CNN/ensemble": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "LSTM": {
+   "mean_diff": 0.042625318587807284,
+   "se": 0.054906336360159236,
+   "t": 0.7763278596518558,
+   "p_value": 0.47809561912382476,
+   "n_clusters": 11,
+   "arms": [
+    "LSTM/ensemble",
+    "LSTM/dropout"
+   ],
+   "loss": "winkler95",
+   "favours": "LSTM/dropout",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "LSTM/dropout": [
+      98,
+      99,
+      100
+     ],
+     "LSTM/ensemble": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "NB": {
+   "mean_diff": -0.044730924640672125,
+   "se": 0.04740002919373523,
+   "t": -0.9436898120430719,
+   "p_value": 0.4234846969393879,
+   "n_clusters": 11,
+   "arms": [
+    "NB/ensemble",
+    "NB/dropout"
+   ],
+   "loss": "winkler95",
+   "favours": "NB/ensemble",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "NB/dropout": [
+      98,
+      99,
+      100
+     ],
+     "NB/ensemble": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  }
+ },
+ "dm_pboot_vs_native": {
+  "LC": {
+   "mean_diff": -0.01726390341050545,
+   "se": 0.02501855347236352,
+   "t": -0.6900440279081618,
+   "p_value": 0.5423084616923385,
+   "n_clusters": 11,
+   "arms": [
+    "LC/pboot",
+    "LC/native"
+   ],
+   "loss": "winkler95",
+   "favours": "LC/pboot",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "LC/native": [
+      98,
+      99,
+      100
+     ],
+     "LC/pboot": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "PLC": {
+   "mean_diff": -0.008450432539581445,
+   "se": 0.010785801598034791,
+   "t": -0.7834774692240901,
+   "p_value": 0.4990998199639928,
+   "n_clusters": 11,
+   "arms": [
+    "PLC/pboot",
+    "PLC/native"
+   ],
+   "loss": "winkler95",
+   "favours": "PLC/pboot",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "PLC/native": [
+      98,
+      99,
+      100
+     ],
+     "PLC/pboot": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "CBD": {
+   "mean_diff": 0.22540901265236246,
+   "se": 0.053367950654623214,
+   "t": 4.223677504709196,
+   "p_value": 0.001200240048009602,
+   "n_clusters": 11,
+   "arms": [
+    "CBD/pboot",
+    "CBD/native"
+   ],
+   "loss": "winkler95",
+   "favours": "CBD/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "CBD/native": [
+      43,
+      44,
+      45
+     ],
+     "CBD/pboot": [
+      43,
+      44,
+      45
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "RH": {
+   "mean_diff": -0.020522935747471417,
+   "se": 0.015901283293893075,
+   "t": -1.2906465074647968,
+   "p_value": 0.22724544908981797,
+   "n_clusters": 11,
+   "arms": [
+    "RH/pboot",
+    "RH/native"
+   ],
+   "loss": "winkler95",
+   "favours": "RH/pboot",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "winkler95",
+    "age_support": {
+     "RH/native": [
+      98,
+      99,
+      100
+     ],
+     "RH/pboot": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "SVAR": {
+   "skipped": "no cells have all 2 arms: nothing to compare (addendum 3 \u00a711 leaves an empty intersection)"
+  }
+ },
+ "dm_ensemble_vs_dropout_crps": {
+  "NLC": {
+   "mean_diff": -0.009144286272652687,
+   "se": 0.002264536888458558,
+   "t": -4.0380381168694885,
+   "p_value": 0.00020004000800160032,
+   "n_clusters": 11,
+   "arms": [
+    "NLC/ensemble",
+    "NLC/dropout"
+   ],
+   "loss": "crps",
+   "favours": "NLC/ensemble",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "crps",
+    "age_support": {
+     "NLC/dropout": [
+      98,
+      99,
+      100
+     ],
+     "NLC/ensemble": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "CNN": {
+   "mean_diff": -0.002469329873024153,
+   "se": 0.0029626608960960136,
+   "t": -0.8334838037920784,
+   "p_value": 0.42968593718743747,
+   "n_clusters": 11,
+   "arms": [
+    "CNN/ensemble",
+    "CNN/dropout"
+   ],
+   "loss": "crps",
+   "favours": "CNN/ensemble",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "crps",
+    "age_support": {
+     "CNN/dropout": [
+      98,
+      99,
+      100
+     ],
+     "CNN/ensemble": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "LSTM": {
+   "mean_diff": -0.0017416725411514766,
+   "se": 0.001297394457259825,
+   "t": -1.3424387096812436,
+   "p_value": 0.22504500900180036,
+   "n_clusters": 11,
+   "arms": [
+    "LSTM/ensemble",
+    "LSTM/dropout"
+   ],
+   "loss": "crps",
+   "favours": "LSTM/ensemble",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "crps",
+    "age_support": {
+     "LSTM/dropout": [
+      98,
+      99,
+      100
+     ],
+     "LSTM/ensemble": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "NB": {
+   "mean_diff": -0.0034243322832233102,
+   "se": 0.0014405591675197497,
+   "t": -2.3770854821042007,
+   "p_value": 0.03020604120824165,
+   "n_clusters": 11,
+   "arms": [
+    "NB/ensemble",
+    "NB/dropout"
+   ],
+   "loss": "crps",
+   "favours": "NB/ensemble",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "crps",
+    "age_support": {
+     "NB/dropout": [
+      98,
+      99,
+      100
+     ],
+     "NB/ensemble": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  }
+ },
+ "dm_pboot_vs_native_crps": {
+  "LC": {
+   "mean_diff": 0.003962945674404238,
+   "se": 0.004071287133879259,
+   "t": 0.9733888925265289,
+   "p_value": 0.45549109821964395,
+   "n_clusters": 11,
+   "arms": [
+    "LC/pboot",
+    "LC/native"
+   ],
+   "loss": "crps",
+   "favours": "LC/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "crps",
+    "age_support": {
+     "LC/native": [
+      98,
+      99,
+      100
+     ],
+     "LC/pboot": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "PLC": {
+   "mean_diff": -0.000621534784929253,
+   "se": 0.001075261026245678,
+   "t": -0.5780315381646162,
+   "p_value": 0.7029405881176235,
+   "n_clusters": 11,
+   "arms": [
+    "PLC/pboot",
+    "PLC/native"
+   ],
+   "loss": "crps",
+   "favours": "PLC/pboot",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "crps",
+    "age_support": {
+     "PLC/native": [
+      98,
+      99,
+      100
+     ],
+     "PLC/pboot": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "CBD": {
+   "mean_diff": 0.023224110962584775,
+   "se": 0.013760237329858952,
+   "t": 1.6877696514862968,
+   "p_value": 0.04100820164032806,
+   "n_clusters": 11,
+   "arms": [
+    "CBD/pboot",
+    "CBD/native"
+   ],
+   "loss": "crps",
+   "favours": "CBD/native",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "crps",
+    "age_support": {
+     "CBD/native": [
+      43,
+      44,
+      45
+     ],
+     "CBD/pboot": [
+      43,
+      44,
+      45
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "RH": {
+   "mean_diff": -0.00046483801105719295,
+   "se": 0.00038768379284957543,
+   "t": -1.1990132670765372,
+   "p_value": 0.2576515303060612,
+   "n_clusters": 11,
+   "arms": [
+    "RH/pboot",
+    "RH/native"
+   ],
+   "loss": "crps",
+   "favours": "RH/pboot",
+   "sign_convention": "mean_diff = mean(loss[arms[0]] - loss[arms[1]]); losses negatively oriented, so negative favours arms[0]",
+   "intersection": {
+    "n_units": 198,
+    "n_arms": 2,
+    "n_cells_kept": 22,
+    "n_cells_dropped": 0,
+    "dropped_cells": [],
+    "arms_with_failures": [],
+    "horizons": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "loss": "crps",
+    "age_support": {
+     "RH/native": [
+      98,
+      99,
+      100
+     ],
+     "RH/pboot": [
+      98,
+      99,
+      100
+     ]
+    },
+    "ragged_age_support": false,
+    "ragged_age_support_across_cells": true
+   }
+  },
+  "SVAR": {
+   "skipped": "no cells have all 2 arms: nothing to compare (addendum 3 \u00a711 leaves an empty intersection)"
+  }
+ },
+ "calibration_table": [
+  {
+   "model": "CBD",
+   "mechanism": "copula_conf",
+   "n_cells": 22,
+   "coverage_95": 0.9871565668,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.9390026053,
+   "winkler_95": 1.7979251237,
+   "crps": 0.1715110302,
+   "pit_ks": 0.3036649527,
+   "joint_minus_marginal": -0.0481539615
+  },
+  {
+   "model": "CBD",
+   "mechanism": "enbpi",
+   "n_cells": 22,
+   "coverage_95": 0.9426965806,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.7544274671,
+   "winkler_95": 1.3425942377,
+   "crps": 0.1263828512,
+   "pit_ks": 0.2377533685,
+   "joint_minus_marginal": -0.1882691135
+  },
+  {
+   "model": "CBD",
+   "mechanism": "native",
+   "n_cells": 22,
+   "coverage_95": 0.986282012,
+   "coverage_80": 0.940365779,
+   "coverage_50": 0.7459819596,
+   "joint_95": 0.9179522498,
+   "winkler_95": 1.3382536541,
+   "crps": 0.1255029202,
+   "pit_ks": 0.2345635963,
+   "joint_minus_marginal": -0.0683297623
+  },
+  {
+   "model": "CBD",
+   "mechanism": "pboot",
+   "n_cells": 22,
+   "coverage_95": 0.9879425569,
+   "coverage_80": 0.9483802673,
+   "coverage_50": 0.7687442311,
+   "joint_95": 0.9279155188,
+   "winkler_95": 1.5636626668,
+   "crps": 0.1487270312,
+   "pit_ks": 0.248974945,
+   "joint_minus_marginal": -0.0600270381
+  },
+  {
+   "model": "CBD",
+   "mechanism": "split_conf",
+   "n_cells": 22,
+   "coverage_95": 0.9212729242,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.6623817456,
+   "winkler_95": 1.8142033328,
+   "crps": 0.1534488255,
+   "pit_ks": 0.2485340351,
+   "joint_minus_marginal": -0.2588911786
+  },
+  {
+   "model": "CNN",
+   "mechanism": "copula_conf",
+   "n_cells": 21,
+   "coverage_95": 0.9453288527,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.7119235111,
+   "winkler_95": 2.9679458104,
+   "crps": 0.2253522282,
+   "pit_ks": 0.2542932705,
+   "joint_minus_marginal": -0.2334053416
+  },
+  {
+   "model": "CNN",
+   "mechanism": "dropout",
+   "n_cells": 22,
+   "coverage_95": 0.8577279078,
+   "coverage_80": 0.7305651547,
+   "coverage_50": 0.48634145,
+   "joint_95": 0.4704940874,
+   "winkler_95": 2.7726036663,
+   "crps": 0.1717296668,
+   "pit_ks": 0.1531572932,
+   "joint_minus_marginal": -0.3872338204
+  },
+  {
+   "model": "CNN",
+   "mechanism": "enbpi",
+   "n_cells": 21,
+   "coverage_95": 0.8878282665,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.5382859695,
+   "winkler_95": 2.7463667809,
+   "crps": 0.1903916153,
+   "pit_ks": 0.2047753307,
+   "joint_minus_marginal": -0.349542297
+  },
+  {
+   "model": "CNN",
+   "mechanism": "ensemble",
+   "n_cells": 22,
+   "coverage_95": 0.7040421948,
+   "coverage_80": 0.5594634658,
+   "coverage_50": 0.3403710055,
+   "joint_95": 0.2409399187,
+   "winkler_95": 3.3037060792,
+   "crps": 0.1692603369,
+   "pit_ks": 0.2559882526,
+   "joint_minus_marginal": -0.4631022761
+  },
+  {
+   "model": "CNN",
+   "mechanism": "split_conf",
+   "n_cells": 22,
+   "coverage_95": 0.896172017,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.5255717659,
+   "winkler_95": 3.0103770249,
+   "crps": 0.2121453171,
+   "pit_ks": 0.2204299593,
+   "joint_minus_marginal": -0.3706002511
+  },
+  {
+   "model": "GP",
+   "mechanism": "copula_conf",
+   "n_cells": 13,
+   "coverage_95": 0.9441880342,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.7592307692,
+   "winkler_95": 2.3681581602,
+   "crps": 0.1955262572,
+   "pit_ks": 0.3044050568,
+   "joint_minus_marginal": -0.184957265
+  },
+  {
+   "model": "GP",
+   "mechanism": "enbpi",
+   "n_cells": 13,
+   "coverage_95": 0.8872649573,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.6023076923,
+   "winkler_95": 2.3652137774,
+   "crps": 0.176803358,
+   "pit_ks": 0.2789280626,
+   "joint_minus_marginal": -0.284957265
+  },
+  {
+   "model": "GP",
+   "mechanism": "native",
+   "n_cells": 16,
+   "coverage_95": 0.8197222222,
+   "coverage_80": 0.6906944444,
+   "coverage_50": 0.4329166667,
+   "joint_95": 0.48625,
+   "winkler_95": 2.6491044343,
+   "crps": 0.1805867106,
+   "pit_ks": 0.2867066403,
+   "joint_minus_marginal": -0.3334722222
+  },
+  {
+   "model": "GP",
+   "mechanism": "split_conf",
+   "n_cells": 13,
+   "coverage_95": 0.8651282051,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.5523076923,
+   "winkler_95": 2.709380414,
+   "crps": 0.1887656465,
+   "pit_ks": 0.2839967183,
+   "joint_minus_marginal": -0.3128205128
+  },
+  {
+   "model": "LC",
+   "mechanism": "copula_conf",
+   "n_cells": 22,
+   "coverage_95": 0.9066634288,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.5616470831,
+   "winkler_95": 3.0502039933,
+   "crps": 0.1923763234,
+   "pit_ks": 0.2689841153,
+   "joint_minus_marginal": -0.3450163457
+  },
+  {
+   "model": "LC",
+   "mechanism": "enbpi",
+   "n_cells": 22,
+   "coverage_95": 0.8387055986,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.4097525346,
+   "winkler_95": 3.0781206024,
+   "crps": 0.1708684724,
+   "pit_ks": 0.2392540713,
+   "joint_minus_marginal": -0.4289530639
+  },
+  {
+   "model": "LC",
+   "mechanism": "native",
+   "n_cells": 22,
+   "coverage_95": 0.7870293535,
+   "coverage_80": 0.6559716106,
+   "coverage_50": 0.4369614304,
+   "joint_95": 0.3351833736,
+   "winkler_95": 3.1661014948,
+   "crps": 0.1703245942,
+   "pit_ks": 0.2585641512,
+   "joint_minus_marginal": -0.4518459799
+  },
+  {
+   "model": "LC",
+   "mechanism": "pboot",
+   "n_cells": 22,
+   "coverage_95": 0.7994382914,
+   "coverage_80": 0.6731896995,
+   "coverage_50": 0.447365273,
+   "joint_95": 0.360711381,
+   "winkler_95": 3.1488375914,
+   "crps": 0.1742875398,
+   "pit_ks": 0.2529142977,
+   "joint_minus_marginal": -0.4387269104
+  },
+  {
+   "model": "LC",
+   "mechanism": "split_conf",
+   "n_cells": 22,
+   "coverage_95": 0.8185192057,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.3567112685,
+   "winkler_95": 3.2573571755,
+   "crps": 0.1818687739,
+   "pit_ks": 0.2377218745,
+   "joint_minus_marginal": -0.4618079371
+  },
+  {
+   "model": "LSTM",
+   "mechanism": "copula_conf",
+   "n_cells": 22,
+   "coverage_95": 0.9163911429,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.6000273608,
+   "winkler_95": 3.0932546177,
+   "crps": 0.1974946655,
+   "pit_ks": 0.2643405478,
+   "joint_minus_marginal": -0.3163637821
+  },
+  {
+   "model": "LSTM",
+   "mechanism": "dropout",
+   "n_cells": 22,
+   "coverage_95": 0.6372484066,
+   "coverage_80": 0.4902495268,
+   "coverage_50": 0.3078429315,
+   "joint_95": 0.172494987,
+   "winkler_95": 3.7598260066,
+   "crps": 0.1675710966,
+   "pit_ks": 0.2994306957,
+   "joint_minus_marginal": -0.4647534196
+  },
+  {
+   "model": "LSTM",
+   "mechanism": "enbpi",
+   "n_cells": 22,
+   "coverage_95": 0.8583326254,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.4743375312,
+   "winkler_95": 2.95972408,
+   "crps": 0.168703208,
+   "pit_ks": 0.2202484565,
+   "joint_minus_marginal": -0.3839950942
+  },
+  {
+   "model": "LSTM",
+   "mechanism": "ensemble",
+   "n_cells": 22,
+   "coverage_95": 0.6355552224,
+   "coverage_80": 0.4904377729,
+   "coverage_50": 0.305631943,
+   "joint_95": 0.1715906748,
+   "winkler_95": 3.8024513252,
+   "crps": 0.1658294241,
+   "pit_ks": 0.298837089,
+   "joint_minus_marginal": -0.4639645476
+  },
+  {
+   "model": "LSTM",
+   "mechanism": "split_conf",
+   "n_cells": 22,
+   "coverage_95": 0.840357502,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.4171032215,
+   "winkler_95": 3.1196736535,
+   "crps": 0.178060499,
+   "pit_ks": 0.2179124162,
+   "joint_minus_marginal": -0.4232542806
+  },
+  {
+   "model": "NB",
+   "mechanism": "copula_conf",
+   "n_cells": 22,
+   "coverage_95": 0.923323453,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.6107750042,
+   "winkler_95": 3.0714777707,
+   "crps": 0.2087767546,
+   "pit_ks": 0.2442433061,
+   "joint_minus_marginal": -0.3125484488
+  },
+  {
+   "model": "NB",
+   "mechanism": "dropout",
+   "n_cells": 22,
+   "coverage_95": 0.8965807737,
+   "coverage_80": 0.758970305,
+   "coverage_50": 0.4928286472,
+   "joint_95": 0.4673353198,
+   "winkler_95": 2.5700189405,
+   "crps": 0.1651106582,
+   "pit_ks": 0.1853814342,
+   "joint_minus_marginal": -0.4292454539
+  },
+  {
+   "model": "NB",
+   "mechanism": "enbpi",
+   "n_cells": 22,
+   "coverage_95": 0.8638236623,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.4490192275,
+   "winkler_95": 2.9909163062,
+   "crps": 0.1826905359,
+   "pit_ks": 0.2036453131,
+   "joint_minus_marginal": -0.4148044348
+  },
+  {
+   "model": "NB",
+   "mechanism": "ensemble",
+   "n_cells": 22,
+   "coverage_95": 0.8962624701,
+   "coverage_80": 0.741318035,
+   "coverage_50": 0.4743269325,
+   "joint_95": 0.4555357846,
+   "winkler_95": 2.5252880159,
+   "crps": 0.1616863259,
+   "pit_ks": 0.1996731218,
+   "joint_minus_marginal": -0.4407266855
+  },
+  {
+   "model": "NB",
+   "mechanism": "native",
+   "n_cells": 22,
+   "coverage_95": 0.8487953228,
+   "coverage_80": 0.6970296763,
+   "coverage_50": 0.4432264929,
+   "joint_95": 0.3613112573,
+   "winkler_95": 2.7393694036,
+   "crps": 0.1654447632,
+   "pit_ks": 0.2031309377,
+   "joint_minus_marginal": -0.4874840656
+  },
+  {
+   "model": "NB",
+   "mechanism": "split_conf",
+   "n_cells": 22,
+   "coverage_95": 0.8711763273,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.4747618111,
+   "winkler_95": 3.2007885898,
+   "crps": 0.2021811476,
+   "pit_ks": 0.2111136632,
+   "joint_minus_marginal": -0.3964145162
+  },
+  {
+   "model": "NLC",
+   "mechanism": "copula_conf",
+   "n_cells": 22,
+   "coverage_95": 0.9277388292,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.6326346021,
+   "winkler_95": 3.2752152292,
+   "crps": 0.2407119243,
+   "pit_ks": 0.2385213777,
+   "joint_minus_marginal": -0.2951042272
+  },
+  {
+   "model": "NLC",
+   "mechanism": "dropout",
+   "n_cells": 22,
+   "coverage_95": 0.7460649371,
+   "coverage_80": 0.5708679456,
+   "coverage_50": 0.344653232,
+   "joint_95": 0.2722158505,
+   "winkler_95": 3.4820449876,
+   "crps": 0.1946368903,
+   "pit_ks": 0.2570885241,
+   "joint_minus_marginal": -0.4738490866
+  },
+  {
+   "model": "NLC",
+   "mechanism": "enbpi",
+   "n_cells": 22,
+   "coverage_95": 0.8763636572,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.5104099436,
+   "winkler_95": 3.1787288441,
+   "crps": 0.2090777865,
+   "pit_ks": 0.206071118,
+   "joint_minus_marginal": -0.3659537136
+  },
+  {
+   "model": "NLC",
+   "mechanism": "ensemble",
+   "n_cells": 22,
+   "coverage_95": 0.6605507143,
+   "coverage_80": 0.4990446727,
+   "coverage_50": 0.2965226372,
+   "joint_95": 0.1461827927,
+   "winkler_95": 3.6551220001,
+   "crps": 0.185492604,
+   "pit_ks": 0.3031202826,
+   "joint_minus_marginal": -0.5143679216
+  },
+  {
+   "model": "NLC",
+   "mechanism": "split_conf",
+   "n_cells": 22,
+   "coverage_95": 0.8821647,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.5090240063,
+   "winkler_95": 3.4461521357,
+   "crps": 0.2359690952,
+   "pit_ks": 0.2151606297,
+   "joint_minus_marginal": -0.3731406937
+  },
+  {
+   "model": "PLC",
+   "mechanism": "copula_conf",
+   "n_cells": 22,
+   "coverage_95": 0.8927183919,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.5438690242,
+   "winkler_95": 3.2573810776,
+   "crps": 0.2017345319,
+   "pit_ks": 0.2829452482,
+   "joint_minus_marginal": -0.3488493677
+  },
+  {
+   "model": "PLC",
+   "mechanism": "enbpi",
+   "n_cells": 22,
+   "coverage_95": 0.8194938355,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.3910980866,
+   "winkler_95": 3.3171030368,
+   "crps": 0.1795752104,
+   "pit_ks": 0.2490718422,
+   "joint_minus_marginal": -0.4283957489
+  },
+  {
+   "model": "PLC",
+   "mechanism": "native",
+   "n_cells": 22,
+   "coverage_95": 0.78007544,
+   "coverage_80": 0.638808972,
+   "coverage_50": 0.4061707677,
+   "joint_95": 0.3091638088,
+   "winkler_95": 3.1770332638,
+   "crps": 0.1748032356,
+   "pit_ks": 0.2769220566,
+   "joint_minus_marginal": -0.4709116313
+  },
+  {
+   "model": "PLC",
+   "mechanism": "pboot",
+   "n_cells": 22,
+   "coverage_95": 0.7875195888,
+   "coverage_80": 0.6448935969,
+   "coverage_50": 0.4144563862,
+   "joint_95": 0.3269370889,
+   "winkler_95": 3.1685828313,
+   "crps": 0.1741817008,
+   "pit_ks": 0.2701862027,
+   "joint_minus_marginal": -0.4605824999
+  },
+  {
+   "model": "PLC",
+   "mechanism": "split_conf",
+   "n_cells": 22,
+   "coverage_95": 0.808644422,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.3641693372,
+   "winkler_95": 3.5449863154,
+   "crps": 0.1968432716,
+   "pit_ks": 0.2533426903,
+   "joint_minus_marginal": -0.4444750848
+  },
+  {
+   "model": "RH",
+   "mechanism": "copula_conf",
+   "n_cells": 22,
+   "coverage_95": 0.9201044562,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.6176576526,
+   "winkler_95": 3.013512207,
+   "crps": 0.200294324,
+   "pit_ks": 0.2624389857,
+   "joint_minus_marginal": -0.3024468036
+  },
+  {
+   "model": "RH",
+   "mechanism": "enbpi",
+   "n_cells": 22,
+   "coverage_95": 0.8499435397,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.441379753,
+   "winkler_95": 3.043956025,
+   "crps": 0.1779321338,
+   "pit_ks": 0.2225502422,
+   "joint_minus_marginal": -0.4085637867
+  },
+  {
+   "model": "RH",
+   "mechanism": "native",
+   "n_cells": 22,
+   "coverage_95": 0.7611733392,
+   "coverage_80": 0.6189559583,
+   "coverage_50": 0.4002213539,
+   "joint_95": 0.2928603287,
+   "winkler_95": 3.1405293446,
+   "crps": 0.1723143983,
+   "pit_ks": 0.2577950899,
+   "joint_minus_marginal": -0.4683130105
+  },
+  {
+   "model": "RH",
+   "mechanism": "pboot",
+   "n_cells": 22,
+   "coverage_95": 0.7728099069,
+   "coverage_80": 0.6330652536,
+   "coverage_50": 0.4118283744,
+   "joint_95": 0.3115517888,
+   "winkler_95": 3.1200064089,
+   "crps": 0.1718495603,
+   "pit_ks": 0.2521737756,
+   "joint_minus_marginal": -0.4612581182
+  },
+  {
+   "model": "RH",
+   "mechanism": "split_conf",
+   "n_cells": 22,
+   "coverage_95": 0.8447899839,
+   "coverage_80": null,
+   "coverage_50": null,
+   "joint_95": 0.4167055527,
+   "winkler_95": 3.2736920578,
+   "crps": 0.1959472606,
+   "pit_ks": 0.2318704586,
+   "joint_minus_marginal": -0.4280844312
+  },
+  {
+   "model": "SVAR",
+   "mechanism": "pboot",
+   "n_cells": 9,
+   "coverage_95": 0.969382716,
+   "coverage_80": 0.9396296296,
+   "coverage_50": 0.8012345679,
+   "joint_95": 0.7477777778,
+   "winkler_95": 1.6428220622,
+   "crps": 0.1247472898,
+   "pit_ks": 0.2320573278,
+   "joint_minus_marginal": -0.2216049383
+  }
+ ],
+ "coverage_by_age_band": [
+  {
+   "model": "CBD",
+   "mechanism": "copula_conf",
+   "coverage_95_band0_24": null,
+   "coverage_95_band25_64": 0.9590909091,
+   "coverage_95_band65_99": 0.9953306943
+  },
+  {
+   "model": "CBD",
+   "mechanism": "enbpi",
+   "coverage_95_band0_24": null,
+   "coverage_95_band25_64": 0.9060606061,
+   "coverage_95_band65_99": 0.9533345937
+  },
+  {
+   "model": "CBD",
+   "mechanism": "native",
+   "coverage_95_band0_24": null,
+   "coverage_95_band25_64": 0.9878787879,
+   "coverage_95_band65_99": 0.9858543417
+  },
+  {
+   "model": "CBD",
+   "mechanism": "pboot",
+   "coverage_95_band0_24": null,
+   "coverage_95_band25_64": 0.9904040404,
+   "coverage_95_band65_99": 0.9872761226
+  },
+  {
+   "model": "CBD",
+   "mechanism": "split_conf",
+   "coverage_95_band0_24": null,
+   "coverage_95_band25_64": 0.7873737374,
+   "coverage_95_band65_99": 0.9599381902
+  },
+  {
+   "model": "CNN",
+   "mechanism": "copula_conf",
+   "coverage_95_band0_24": 0.9265608466,
+   "coverage_95_band25_64": 0.9152116402,
+   "coverage_95_band65_99": 0.9933031799
+  },
+  {
+   "model": "CNN",
+   "mechanism": "dropout",
+   "coverage_95_band0_24": 0.7234343434,
+   "coverage_95_band25_64": 0.8342171717,
+   "coverage_95_band65_99": 0.9810144995
+  },
+  {
+   "model": "CNN",
+   "mechanism": "enbpi",
+   "coverage_95_band0_24": 0.8789417989,
+   "coverage_95_band25_64": 0.832010582,
+   "coverage_95_band65_99": 0.9582567034
+  },
+  {
+   "model": "CNN",
+   "mechanism": "ensemble",
+   "coverage_95_band0_24": 0.5624242424,
+   "coverage_95_band25_64": 0.6464646465,
+   "coverage_95_band65_99": 0.871559882
+  },
+  {
+   "model": "CNN",
+   "mechanism": "split_conf",
+   "coverage_95_band0_24": 0.8850505051,
+   "coverage_95_band25_64": 0.8388888889,
+   "coverage_95_band65_99": 0.9699126483
+  },
+  {
+   "model": "GP",
+   "mechanism": "copula_conf",
+   "coverage_95_band0_24": 0.9285470085,
+   "coverage_95_band25_64": 0.9111111111,
+   "coverage_95_band65_99": 0.9931623932
+  },
+  {
+   "model": "GP",
+   "mechanism": "enbpi",
+   "coverage_95_band0_24": 0.8666666667,
+   "coverage_95_band25_64": 0.8455128205,
+   "coverage_95_band65_99": 0.9496947497
+  },
+  {
+   "model": "GP",
+   "mechanism": "native",
+   "coverage_95_band0_24": 0.7288888889,
+   "coverage_95_band25_64": 0.8194444444,
+   "coverage_95_band65_99": 0.8849206349
+  },
+  {
+   "model": "GP",
+   "mechanism": "split_conf",
+   "coverage_95_band0_24": 0.7986324786,
+   "coverage_95_band25_64": 0.8239316239,
+   "coverage_95_band65_99": 0.9597069597
+  },
+  {
+   "model": "LC",
+   "mechanism": "copula_conf",
+   "coverage_95_band0_24": 0.8557575758,
+   "coverage_95_band25_64": 0.8622474747,
+   "coverage_95_band65_99": 0.9940187462
+  },
+  {
+   "model": "LC",
+   "mechanism": "enbpi",
+   "coverage_95_band0_24": 0.7866666667,
+   "coverage_95_band25_64": 0.7680555556,
+   "coverage_95_band65_99": 0.9569417115
+  },
+  {
+   "model": "LC",
+   "mechanism": "native",
+   "coverage_95_band0_24": 0.8113131313,
+   "coverage_95_band25_64": 0.7501262626,
+   "coverage_95_band65_99": 0.8121466769
+  },
+  {
+   "model": "LC",
+   "mechanism": "pboot",
+   "coverage_95_band0_24": 0.8197979798,
+   "coverage_95_band25_64": 0.7628787879,
+   "coverage_95_band65_99": 0.8269459299
+  },
+  {
+   "model": "LC",
+   "mechanism": "split_conf",
+   "coverage_95_band0_24": 0.7478787879,
+   "coverage_95_band25_64": 0.7351010101,
+   "coverage_95_band65_99": 0.9648016966
+  },
+  {
+   "model": "LSTM",
+   "mechanism": "copula_conf",
+   "coverage_95_band0_24": 0.8686868687,
+   "coverage_95_band25_64": 0.8786616162,
+   "coverage_95_band65_99": 0.9937304031
+  },
+  {
+   "model": "LSTM",
+   "mechanism": "dropout",
+   "coverage_95_band0_24": 0.5765656566,
+   "coverage_95_band25_64": 0.6128787879,
+   "coverage_95_band65_99": 0.7089018528
+  },
+  {
+   "model": "LSTM",
+   "mechanism": "enbpi",
+   "coverage_95_band0_24": 0.8119191919,
+   "coverage_95_band25_64": 0.8027777778,
+   "coverage_95_band65_99": 0.9552227135
+  },
+  {
+   "model": "LSTM",
+   "mechanism": "ensemble",
+   "coverage_95_band0_24": 0.5658585859,
+   "coverage_95_band25_64": 0.608459596,
+   "coverage_95_band65_99": 0.7167542499
+  },
+  {
+   "model": "LSTM",
+   "mechanism": "split_conf",
+   "coverage_95_band0_24": 0.7913131313,
+   "coverage_95_band25_64": 0.7599747475,
+   "coverage_95_band65_99": 0.9676181216
+  },
+  {
+   "model": "NB",
+   "mechanism": "copula_conf",
+   "coverage_95_band0_24": 0.9155555556,
+   "coverage_95_band25_64": 0.8708333333,
+   "coverage_95_band65_99": 0.9891215439
+  },
+  {
+   "model": "NB",
+   "mechanism": "dropout",
+   "coverage_95_band0_24": 0.8751515152,
+   "coverage_95_band25_64": 0.8681818182,
+   "coverage_95_band65_99": 0.9444603921
+  },
+  {
+   "model": "NB",
+   "mechanism": "enbpi",
+   "coverage_95_band0_24": 0.8604040404,
+   "coverage_95_band25_64": 0.8007575758,
+   "coverage_95_band65_99": 0.9387517909
+  },
+  {
+   "model": "NB",
+   "mechanism": "ensemble",
+   "coverage_95_band0_24": 0.8935353535,
+   "coverage_95_band25_64": 0.8693181818,
+   "coverage_95_band65_99": 0.9291011721
+  },
+  {
+   "model": "NB",
+   "mechanism": "native",
+   "coverage_95_band0_24": 0.8387878788,
+   "coverage_95_band25_64": 0.8175505051,
+   "coverage_95_band65_99": 0.8918247924
+  },
+  {
+   "model": "NB",
+   "mechanism": "split_conf",
+   "coverage_95_band0_24": 0.8694949495,
+   "coverage_95_band25_64": 0.785479798,
+   "coverage_95_band65_99": 0.970922492
+  },
+  {
+   "model": "NLC",
+   "mechanism": "copula_conf",
+   "coverage_95_band0_24": 0.9236363636,
+   "coverage_95_band25_64": 0.8795454545,
+   "coverage_95_band65_99": 0.985955429
+  },
+  {
+   "model": "NLC",
+   "mechanism": "dropout",
+   "coverage_95_band0_24": 0.6442424242,
+   "coverage_95_band25_64": 0.8071969697,
+   "coverage_95_band65_99": 0.7490992173
+  },
+  {
+   "model": "NLC",
+   "mechanism": "enbpi",
+   "coverage_95_band0_24": 0.8828282828,
+   "coverage_95_band25_64": 0.8054292929,
+   "coverage_95_band65_99": 0.9531945377
+  },
+  {
+   "model": "NLC",
+   "mechanism": "ensemble",
+   "coverage_95_band0_24": 0.5787878788,
+   "coverage_95_band25_64": 0.7297979798,
+   "coverage_95_band65_99": 0.6400852168
+  },
+  {
+   "model": "NLC",
+   "mechanism": "split_conf",
+   "coverage_95_band0_24": 0.8860606061,
+   "coverage_95_band25_64": 0.7994949495,
+   "coverage_95_band65_99": 0.9744201629
+  },
+  {
+   "model": "PLC",
+   "mechanism": "copula_conf",
+   "coverage_95_band0_24": 0.8101010101,
+   "coverage_95_band25_64": 0.8554292929,
+   "coverage_95_band65_99": 0.99462617
+  },
+  {
+   "model": "PLC",
+   "mechanism": "enbpi",
+   "coverage_95_band0_24": 0.7395959596,
+   "coverage_95_band25_64": 0.7505050505,
+   "coverage_95_band65_99": 0.9558850537
+  },
+  {
+   "model": "PLC",
+   "mechanism": "native",
+   "coverage_95_band0_24": 0.7896969697,
+   "coverage_95_band25_64": 0.7532828283,
+   "coverage_95_band65_99": 0.8040828453
+  },
+  {
+   "model": "PLC",
+   "mechanism": "pboot",
+   "coverage_95_band0_24": 0.7917171717,
+   "coverage_95_band25_64": 0.7612373737,
+   "coverage_95_band65_99": 0.8147822765
+  },
+  {
+   "model": "PLC",
+   "mechanism": "split_conf",
+   "coverage_95_band0_24": 0.7086868687,
+   "coverage_95_band25_64": 0.7306818182,
+   "coverage_95_band65_99": 0.9699121338
+  },
+  {
+   "model": "RH",
+   "mechanism": "copula_conf",
+   "coverage_95_band0_24": 0.88,
+   "coverage_95_band25_64": 0.8806818182,
+   "coverage_95_band65_99": 0.9940362371
+  },
+  {
+   "model": "RH",
+   "mechanism": "enbpi",
+   "coverage_95_band0_24": 0.784040404,
+   "coverage_95_band25_64": 0.7987373737,
+   "coverage_95_band65_99": 0.9559062744
+  },
+  {
+   "model": "RH",
+   "mechanism": "native",
+   "coverage_95_band0_24": 0.8052525253,
+   "coverage_95_band25_64": 0.7455808081,
+   "coverage_95_band65_99": 0.7476572447
+  },
+  {
+   "model": "RH",
+   "mechanism": "pboot",
+   "coverage_95_band0_24": 0.8141414141,
+   "coverage_95_band25_64": 0.7560606061,
+   "coverage_95_band65_99": 0.7625498684
+  },
+  {
+   "model": "RH",
+   "mechanism": "split_conf",
+   "coverage_95_band0_24": 0.7626262626,
+   "coverage_95_band25_64": 0.7887626263,
+   "coverage_95_band65_99": 0.968176288
+  },
+  {
+   "model": "SVAR",
+   "mechanism": "pboot",
+   "coverage_95_band0_24": 0.9387654321,
+   "coverage_95_band25_64": 0.962037037,
+   "coverage_95_band65_99": 0.9996472663
+  }
+ ]
+}

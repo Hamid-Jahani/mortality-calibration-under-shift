@@ -508,11 +508,15 @@ def _lookup(stats: pd.DataFrame, m: str, u: str) -> pd.Series | None:
 
 def block_table(df: pd.DataFrame, cols: list[str], col_heads: list[str],
                 fmt, regimes: list[str] | None = None, rows_filter=None,
-                per_block_stats=None):
+                per_block_stats=None, stacked: bool = False):
     """Return (colspec, header_rows, body_rows).
 
     `fmt(row_stats, model, mechanism, col)` -> cell string. Absent regimes
     get a one-column pending block. `rows_filter(df)` narrows the rows used.
+    `stacked=True` lays regimes out as ROWS within each family x mechanism
+    cell instead of column blocks, so the column count stays fixed as
+    regimes accumulate (three regimes x 8 columns overflowed the text width
+    by 163 pt as column blocks — tab-h5, 2026-08-31).
     """
     regimes = regimes or list(EXPECTED_REGIMES)
     frames = {r: regime_frame(df, r) for r in regimes}
@@ -530,6 +534,34 @@ def block_table(df: pd.DataFrame, cols: list[str], col_heads: list[str],
     gp_here = {r: gp_present(f) for r, f in frames.items()}
     if not any(m == GP_FAMILY for m, _ in cells):
         cells = sort_cells([*cells, (GP_FAMILY, "")])
+    if stacked:
+        colspec = "llc" + "r" * (len(cols) + 2)
+        header_rows = [" & ".join(["Family", "Mech.", "regime", *col_heads,
+                                   "$n$", "$n_{\\mathrm{err}}$"]) + " \\\\"]
+        body = []
+        last_fam = None
+        for m, u in cells:
+            if last_fam is not None and m != last_fam:
+                body.append("\\addlinespace[2pt]")
+            first = True
+            for r in regimes:
+                line = [fam(m) if m != last_fam else "",
+                        (mech(u) if u else "all arms") if first else "", r]
+                last_fam, first = m, False
+                s = stats[r]
+                if s is None:
+                    line.append(f"\\multicolumn{{{len(cols) + 2}}}{{c}}{{{PENDING}}}")
+                elif m == GP_FAMILY and not gp_here[r]:
+                    line.append(gp_pending_cell(len(cols) + 2))
+                else:
+                    row = _lookup(s, m, u) if u else None
+                    if row is None:
+                        line += ["--"] * len(cols) + ["0", "0"]
+                    else:
+                        line += [fmt(row, m, u, c) for c in cols]
+                        line += [fint(row["n"]), fint(row["n_err"])]
+                body.append(" & ".join(line) + " \\\\")
+        return colspec, header_rows, body
     colspec = "ll"
     head1 = ["Family", "Mech."]
     head2 = ["", ""]
@@ -793,9 +825,18 @@ def tab_h1(df: pd.DataFrame, w: TableWriter):
         "(addendum 2 \\S3). " + CBD_NOTE,
         gp_note(df),
     ]
-    w.write("tab-h1-rankings", "llrrrrrr",
-            ["Family & Mech. & RMSE & rk & CRPS & rk & log score & rk \\\\"],
-            body, notes)
+    w.write_longtable(
+        "tab-h1-rankings", "llrrrrrr",
+        ["Family & Mech. & RMSE & rk & CRPS & rk & log score & rk \\\\"],
+        body, notes,
+        caption=(r"Distributional arms only: rank of each family--mechanism arm by "
+                 r"mean RMSE on log rates, by mean CRPS on log rates and by mean "
+                 r"Poisson log score, with the rank correlation between the "
+                 r"orderings, by regime. CBD (fit on ages 55--99, 45 scored ages) "
+                 r"is ranked in its own block with its age support stated. The "
+                 r"three conformal mechanisms are absent: their proper scores are "
+                 r"placeholders (Section~\ref{sec:design-mechanisms})."),
+        label="tab:h1-rankings")
 
 
 def tab_h2(df: pd.DataFrame, w: TableWriter):
@@ -886,7 +927,8 @@ def _fmt_h5(row, m, u, c):
 def tab_h5(df: pd.DataFrame, w: TableWriter):
     cols = ["e0_cov", "e0_err", "e65_cov", "e65_err", "ann65_cov", "ann65_err"]
     heads = ["$e_0$ cov", "err", "$e_{65}$ cov", "err", "$\\annuity$ cov", "err"]
-    colspec, head, body = block_table(df, cols, heads, _fmt_h5, per_block_stats=_h5_stats)
+    colspec, head, body = block_table(df, cols, heads, _fmt_h5,
+                                      per_block_stats=_h5_stats, stacked=True)
     notes = [regime_note(df, r) for r in EXPECTED_REGIMES]
     notes += [DESCRIPTIVE_NOTE,
               "cov = share of rows whose realised $e_0$, $e_{65}$ or $\\annuity$ (2\\%) "
@@ -1125,7 +1167,7 @@ def tab_twin_crises(df: pd.DataFrame, sens: dict | None, w: TableWriter):
     last = None
     for m, u in cells:
         if last is not None and m != last:
-            body.append("\\addlinespace[2pt]")
+            body.append("\\addlinespace[1pt]")
         first_of_fam = (m != last)
         last = m
         line = [fam(m) if first_of_fam else "", mech(u) if u else "all arms"]
@@ -1262,9 +1304,18 @@ def tab_infeasible(df: pd.DataFrame, w: TableWriter):
             for r, cs in counts.items()) or PENDING) + ".",
         gp_note(df),
     ]
-    w.write("tab-infeasible", "llp{1.5cm}p{5.6cm}rr",
-            ["Family & Mech. & Class & Populations affected & \\#pop & $n$ \\\\"],
-            body, notes)
+    w.write_longtable(
+        "tab-infeasible", "llp{1.5cm}p{5.6cm}rr",
+        ["Family & Mech. & Class & Populations affected & \\#pop & $n$ \\\\"],
+        body, notes,
+        caption=(r"Primary-grid cells that produced no valid row, by population, "
+                 r"family and mechanism: the QA gate's class (\emph{structural} "
+                 r"design-floor cell, \emph{method} failure, or \emph{machine} "
+                 r"failure), an excerpt of the recorded reason, and the number of "
+                 r"rows affected. The machine class must be empty for any table in "
+                 r"this paper to be generated. Regime, population count and the "
+                 r"total number of error rows are stated in the table note."),
+        label="tab:infeasible")
     tab_infeasible_full(df, tab, w)
 
 
