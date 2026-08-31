@@ -531,13 +531,15 @@ already (correct CLI: `--regimes shift placebo --source regime=pass1,pass2`).
   .47 after stable frees it** fills the paragraph without changing any
   registered number. Verify a probe cell's crps_h1 against the parquet
   before trusting the rerun.
-- **SCHEDULING GAP: the stable GP pass is planned nowhere.** Both machines
-  run the 9 non-GP families only; the grid (and the stacked h5/h2 tables)
-  expect stable GP rows. Proposal: when `.49` finishes (first, ~Sep 1),
-  ship the current `runner.py` there by cat (brings q995 + obs fix for
-  free) and launch stable GP for all 18 admissible pops (jobs 2–3,
-  60-year cap, malloc_trim) — est. several days, overlapping .47's tail.
-  User decision pending on scheduling.
+- **SCHEDULING GAP CLOSED: stable GP pass approved for `.49`** (user,
+  2026-08-31 night). `scripts/server_launch_stable_gp.sh` written: ship
+  current `runner.py` by cat (q995 + obs fix travel with it, so stable GP
+  rows never need patch_obs), refuse-while-pass-1-alive guard, JOBS =
+  RAM/3 GB capped 8, thread pins, all 20 pops (HRV/KOR = instant
+  design-floor rows), resumable parts in `stable_gp.parts/`. A persistent
+  watcher polls `.49` every 30 min and wakes the session when run_regime
+  procs hit zero; procs=0 with parts<108 means pass 1 died — read the .49
+  launch log before launching GP.
 - ETAs measured 2026-08-31 ~19:00: `.49` 89/108 parts, ~1 part/55 min
   combined → done ~Sep 1 evening. `.47` 78/126, only 2 parts in 11 h (all
   ten workers deep in SVAR/NLC on full-length panels) → ~Sep 3–5.
