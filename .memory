@@ -100,3 +100,55 @@ placebo pass 1: placebo GP (jobs 1); stable on .47 for the other 14 pops
 Bastion sessions over the TLS proxy DROP on long commands: keep remote
 commands < ~60 s, never sleep inside them, always `(setsid nohup ... &)`.
 Pull stable from the bastion with a single-hop tar (server_pull.sh assumes .47).
+
+## 2026-08-31 — access differs by Windows profile (ASUS laptop)
+
+The section above was written on the **Gaming** machine. On the **ASUS**
+profile (`C:\Users\ASUS`, repo at `h:\Mortality - Explainable AI`) there is
+NO bastion and no `baazar` alias — both compute hosts answer directly:
+
+| host | alias to use here | what it is |
+|---|---|---|
+| 192.168.1.49 | `192.168.1.49` (config: `Host 192.168.1.49`, user hamid) | `ai-server`, 24 cores — the machine the Gaming notes call `baazar` |
+| 192.168.1.47 | **`claw-47`** (NOT the bare IP — that logs in as `asus` and is refused) | `tararis-ai3`, 12 cores |
+
+Key: `C:\Users\ASUS\.ssh\test`. Single hop, so no nested
+`ssh baazar 'ssh 192.168.1.47 "..."'` and no <60 s command limit here.
+Check progress with, e.g.:
+
+```bash
+ssh 192.168.1.49 'ls ~/mortality-calibration-under-shift/results/stable.parts | wc -l'
+ssh claw-47      'ls ~/mortality-calibration-under-shift/results/stable.parts | wc -l'
+```
+
+Also on this profile: the repo `.venv` is dead as warned, and
+`C:/Users/Gaming/venvs/mortcal-cpu` does not exist. A usable interpreter for
+throwaway parsing is
+`C:/Users/ASUS/AppData/Roaming/uv/python/cpython-3.12.13-windows-x86_64-none/python.exe`
+(bare, no project deps). Rebuild a real env before running anything from
+`src/` here.
+
+### Sweep state observed 2026-08-31 07:40 (read-only check, nothing changed)
+
+- **shift and placebo are COMPLETE on .47** (both passes: shift, shift_gp,
+  placebo, placebo_gp parquets present). Only STABLE is still running.
+- `.49`: stable for SWE,DNK,ISL,BEL,NOR,CHE, origins split in halves,
+  2 procs x jobs=6, 45.6 h in, **80/108 parts**. Done: LC PLC CBD RH SVAR
+  NLC. Left: CNN 8, LSTM 8, NB 12. Phase profile measured from part mtimes:
+  cheap four 0-0.8 h, SVAR 3.6-15.2 h, NLC 16.8-41.6 h, CNN/LSTM/NB from
+  38 h. Estimate **~1-2 days left**.
+- `.47`: stable for the other 14 pops, jobs=10, 23.7 h in, **76/126 parts**,
+  workers at 98.8% CPU. Only the cheap four models are done. Estimate
+  **~2-4 days left**.
+- **Parts-done badly overstates progress on .47**: HRV and KOR produced
+  `rows=1196 error_rows=1196 (5s)` — every cell errored instantly — and
+  CHL/HKG were 1002/1196 and 830/1196 errors. The ten remaining populations
+  have full-length panels and will mostly SUCCEED, so they carry far more
+  compute than the four "finished" ones.
+- **KOR and HRV are structurally absent from the STABLE regime.** KOR's data
+  starts 2003, HRV's 2001; stable origins are 1990-2014 and addendum 3 §4
+  needs >= 15 training years, so KOR's best origin (2014) gives 12 years and
+  HRV's 14 — below the floor at EVERY origin. The stable control therefore
+  has **18 populations, not 20**, while shift has all 20. Registered-design
+  consequence, not a bug — but it belongs in the paper's design section and
+  in the tab-infeasible accounting. NOT yet written into docs/STATUS.md.
