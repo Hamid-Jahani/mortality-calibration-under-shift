@@ -10,7 +10,7 @@ Registered documents override both: `PREREGISTRATION.md` + addenda 1–3
 
 | what | where |
 |---|---|
-| Repo of record | `g:\Mortality - Explainable AI` (this tree; remote github sheperd007/mortality-calibration-under-shift, branch main) |
+| Repo of record | `g:\Mortality - Explainable AI` (this tree; remote github Hamid-Jahani/mortality-calibration-under-shift, branch main) |
 | Python env for the laptop | `C:/Users/Gaming/venvs/mortcal-cpu/Scripts/python.exe` (CPU torch; use for everything here). The CUDA env `C:/Users/Gaming/venvs/mortcal` is for a future GPU hybrid only. The repo `.venv` is DEAD (zombie uv processes hold it) — delete after a reboot, never use. Never run plain `python`/`uv run`. |
 | Sweeps | compute node `tararis-ai3` = 192.168.1.47 (Ubuntu 24.04, 12 cores, 23 GB), reachable ONLY through the bastion `baazar` (= ai-server, 24 cores). Every command is nested: `/c/Windows/System32/OpenSSH/ssh.exe baazar 'ssh 192.168.1.47 "<cmd>"'`. Repo there: `~/mortality-calibration-under-shift` (arrived as a git bundle — no GitHub creds on the node; ship single files with `cat file \| ssh ... "cat > path"`). Env `.venv-server` (CPU torch 2.6.0, gpytorch 1.15.2). Data: `Dataset/` = the 7 sweep-relevant HMD files (281 MB, manifest-verified). |
 | SSH prerequisite | the Windows `ssh-agent` service must be running with `C:\Users\Gaming\.ssh\Tara\.ssh\Hamid` loaded (`ssh-add`, passphrase-protected; service set to Automatic on 2026-08-28). "Permission denied (publickey)" after a reboot = key not loaded. |
