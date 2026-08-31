@@ -34,7 +34,10 @@ the node alone; user decision pending (bastion 24 cores would halve it).
 
 ## Post-sweep order (laptop, mortcal-cpu env) — read results only at step 7
 
-1. `bash scripts/server_pull.sh shift placebo` (pulls parquet + parts + logs; purges local snapshots first)
+1. `bash scripts/server_pull.sh shift placebo` (pulls parquet + parts + logs; purges local snapshots first).
+   STABLE lives on TWO machines — use `bash scripts/server_pull_stable.sh`
+   instead (two-source pull + local assembly, duplicate-cell abort;
+   dry-run verified 2026-08-31).
 1b. `python scripts/patch_obs_lifetable.py results/<regime>.parquet results/<regime>_gp.parquet`
     — the server runners predate the observed-lifetable fix (2026-08-31):
     recomputes {e0,e65,ann65}_obs/_error via the fixed code path. REQUIRED
