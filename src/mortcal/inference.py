@@ -283,14 +283,28 @@ def losses_from_rows(df, loss: str = "crps", arms=None, cluster: str = "pop",
 
     support = None
     ragged = False
+    ragged_across_cells = False
     if "n_ages_scored" in keep.columns:
         support = {a: sorted({int(v) for v in g})
                    for a, g in keep.groupby("_arm")["n_ages_scored"]}
-        distinct = {n for v in support.values() for n in v}
-        ragged = len(distinct) > 1
+        # The confound the guard exists for (docstring): arms averaged over
+        # DIFFERENT ages of the same cell — CBD's mean over 55+ against a
+        # full-age mean. That is a WITHIN-cell disagreement between arms.
+        # Supports that vary ACROSS cells while every arm scores the same
+        # ages within each cell (placebo-era panels: top ages absent for
+        # some populations, so n_ages is 98/99/100 by population for every
+        # arm alike) leave the paired, per-cell loss differences comparable:
+        # each cell's difference is over that cell's own common ages. Allowed,
+        # but reported, so the mixed-support caveat travels with the numbers.
+        per_cell = keep.groupby(keys)["n_ages_scored"].nunique()
+        ragged = bool((per_cell > 1).any())
+        ragged_across_cells = (
+            len({n for v in support.values() for n in v}) > 1 and not ragged)
         if ragged and not allow_ragged_age_support:
+            bad = per_cell[per_cell > 1].index[:3].tolist()
             raise ValueError(
-                "arms do not share an age support: "
+                "arms do not share an age support within cell(s) "
+                f"{bad}{'...' if int((per_cell > 1).sum()) > 3 else ''}: "
                 + ", ".join(f"{a}={v}" for a, v in sorted(support.items()))
                 + ". The per-horizon loss columns are means over each family's "
                 "OWN scored ages, so these are not comparable. Restrict the "
@@ -309,5 +323,6 @@ def losses_from_rows(df, loss: str = "crps", arms=None, cluster: str = "pop",
         "loss": loss,
         "age_support": support,
         "ragged_age_support": ragged,
+        "ragged_age_support_across_cells": ragged_across_cells,
     }
     return losses, groups, names, report

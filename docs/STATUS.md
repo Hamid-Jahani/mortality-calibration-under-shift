@@ -422,3 +422,92 @@ sweep itself remains ground truth for the final count.
    cluster bootstrap's behaviour depends on it.
 
 No code change: the runner already refuses these cells and records them.
+
+## 2026-08-31 (later) — placebo promoted to a results regime; guard fix; twin-crises written
+
+**User-session edits independently verified.** The ASUS-session extension of
+`scripts/analyse.py` (`_dm_pair`/`_dm_family_block` producing
+`dm_ensemble_vs_dropout`, `dm_pboot_vs_native` and their `_crps` variants,
+with the sign convention recorded in each result) and the two paired-contrast
+todo resolutions in §6 were checked by an independent rerun: every DM value
+reproduced exactly. One rounding slip fixed (+1.894 → +1.895).
+
+**Placebo is now a legitimate results regime.** `server_pull.sh` brought
+`placebo.parquet` + `placebo_gp.parquet` from the node; `final_qa.py` passes
+(machine = 0; GP min-years rows are design-floor). `analyse.py` →
+`results/placebo_analysis.json` (1100 rows, 136 error rows);
+`sensitivities.py` adds the 19 placebo slices. Both parquets are now tracked
+like shift's.
+
+**Defect found and fixed: the age-support guard was over-strict.**
+`losses_from_rows` required a single `n_ages_scored` across ALL rows of a
+contrast. Placebo-era panels are ragged BY POPULATION (top ages absent →
+98/99/100 scored ages), identically for every arm of a family, so every
+within-family placebo DM and conformal MCS was skipped — contradicting the
+guard's stated purpose (the CBD-vs-full-age within-cell confound) and the
+comment in `analyse.py` asserting the guard never fires within family. Fixed
+to the correct rule: arms must agree on `n_ages_scored` **within each kept
+cell**; cross-cell raggedness with within-cell agreement is allowed and
+reported (`ragged_age_support_across_cells` travels in every intersection
+report). The CBD confound still raises; the two wiring tests still pass
+(43 passed). **Shift analysis re-run under the fixed guard is numerically
+identical** — the only diff is the wording of the one skip message.
+
+**Placebo inference (now computable).** Native-vs-split on winkler95: NOT
+significant for any full-age classical core (LC p=0.689, PLC p=0.127,
+RH p=0.563) — the COVID-regime conformal rescue does not transfer; NB native
+significantly beats its own wrapper (Δ=−0.461, p=0.008); CBD p=0.071.
+Ensemble-vs-dropout flips family-by-family across the two crises (CNN
+p=0.0002 favours dropout here vs p=0.739 under COVID; LSTM p=0.478 here vs
+p=0.0006 favouring dropout under COVID). pboot-vs-native: CBD native beats
+pboot (p=0.0012), the rest null. The registered classical MCS is NOT formable
+in placebo: SVAR native has zero valid rows (explosive-path rejection fired
+on every pre-1914 panel), so the addendum 3 §11 intersection is empty —
+reported as a finding, no fallback contrast invented post hoc.
+
+**Twin-crises subsection written** (§6, `tab-twin-crises` caption updated):
+family split reproduces 1914–22 (classical cores 0.76–0.79 marginal, neural
+point mechanisms 0.64–0.66, NB/GP near top); joint collapses in the same
+order over H=9; CBD near-nominal in placebo (0.986/0.918) vs broken under
+COVID (0.799/0.504) — the 1918 flu's excess fell below CBD's age-55 support,
+COVID's on it: coverage failure tracks where the shock lands in age (H4
+between regimes). Addendum-1 strata: neutral 0.86–0.89 vs belligerent
+0.55–0.59, civilian-only between. Mechanism verdicts do not transfer;
+family-level fragility does.
+
+**Layout.** Placebo columns overflowed three floats: `tab-infeasible` and
+`tab-h1-rankings` converted to page-spanning longtables (captions/labels now
+live in the fragments; §6 wrappers dropped); `tab-h5-actuarial` rebuilt with
+`block_table(stacked=True)` — regimes as rows, so the column count stays
+fixed when stable lands (was 19 columns, 163 pt overfull). Twin-crises float
+tightened (`addlinespace` 2→1 pt). Compile: 0 errors, 0 float-too-large,
+71 pages. Deferred to submission polish: five identical 17 pt overfulls (one
+per longtable, structural in `write_longtable`), 5×2.7 pt in a float tabular,
+and two ≤12 pt text spills (`docs/NEURAL-SPEC.md` in §8).
+
+**Second defect found and fixed: observed life-table open-group explosion.**
+The runner computed realised e0/e65/ä65 on the derived block (addendum 3 §3,
+ages 0..`derived_age_hi`) with the open group at the block's top age even
+when that age carried no registered deaths: m floored at 1e-10 → e_top =
+1/m ~ 1e10 → observed e0 of 8.5e6 YEARS (DNK female 1914: D99=0, E99=3.3)
+and 2.1e6 (FIN male, whose block ends at 98 because a test-year E99=0 masks
+age 99 — that is also why FIN male did not reproduce from the raw files at
+first). `mortcal.runner.observed_functionals` now closes the OBSERVED table
+at the last age with D ≥ 0.5 (the registered addendum 3 §10 zero-death
+threshold); model samples keep their full scored table (support mismatch
+documented — survivorship past the observed top age is O(1e-3) there).
+`scripts/patch_obs_lifetable.py` recomputes the obs/error columns of
+existing parquets through the same code path: placebo changed exactly 3
+units (DNK f e0 8.5e6→60.14, FIN m 2.1e6→48.16, ISL m hairline);
+**shift changed NOTHING** — §7's shift numbers stand untouched. Full test
+suite green (211 passed; 4 make-tables format tests updated for the
+longtable/stacked layouts). §7 twin-crises-economics written from the
+repaired placebo h5 rows.
+
+**Still open**: stable regime running on both machines; on completion —
+pull (bastion needs single-hop tar), **run `scripts/patch_obs_lifetable.py`
+on the stable parquets** (the node/bastion runners predate the
+observed-table fix), QA, analyse, regenerate with `--final`, H2/H5
+registered verdicts, per-origin effective cluster counts, 18-population
+intersection contrasts; figures regenerated with placebo already (correct
+CLI: `--regimes shift placebo --source regime=pass1,pass2`).

@@ -332,6 +332,42 @@ def _compose_deaths(samples_mx: np.ndarray, E_scored: np.ndarray,
     return rng.poisson(lam).astype(float)
 
 
+def observed_functionals(obs_D0: np.ndarray, obs_E0: np.ndarray) -> dict[str, float]:
+    """Realised e0 / e65 / ann65 on the first test year's observed table.
+
+    The observed table is CLOSED at the last age with a registered death
+    count (obs_D >= 0.5, the addendum 3 §10 zero-death threshold). An open
+    age group needs a positive death rate: a top age with ~zero fractional
+    deaths over positive exposure floors m at ``_RATE_FLOOR`` and the
+    open-group closure e_A = 1/m_A explodes (DNK female 1914: D_99 = 0,
+    E_99 = 3.3 -> observed e_0 = 8.5e6 years; found 2026-08-31). Ages above
+    the last registered death contribute no observable force of mortality
+    and cannot support an open-group rate, so they are excluded from the
+    OBSERVED table only. The model samples keep their full scored table:
+    survivorship past the observed top age is O(1e-3) in the affected
+    tables, and the support mismatch is documented, not imputed away.
+    A functional is NaN when its start age is not below the observed top
+    age or when any rate in its block is undefined (E = 0), as before.
+    """
+    with np.errstate(divide="ignore", invalid="ignore"):
+        m = np.clip(np.where(obs_E0 > 0,
+                             obs_D0 / np.where(obs_E0 > 0, obs_E0, 1.0), np.nan),
+                    _RATE_FLOOR, None)
+    nz = np.nonzero(np.asarray(obs_D0) >= 0.5)[0]
+    top = int(nz.max()) if nz.size else -1
+    x_old = min(65, len(m) - 1)
+    out: dict[str, float] = {}
+    for key, age, fn in (
+        ("e0", 0, lambda v, x: life_expectancy(v, x)),
+        ("e65", x_old, lambda v, x: life_expectancy(v, x)),
+        ("ann65", x_old, lambda v, x: annuity_factor(v, x0=x, i=0.02)),
+    ):
+        vec = m[:top + 1]
+        out[key] = (float(fn(vec, age))
+                    if top > age and np.isfinite(vec[age:]).all() else float("nan"))
+    return out
+
+
 def _derived_quantities(samples_mx: np.ndarray, obs_D: np.ndarray,
                         obs_E: np.ndarray, first_ok: int, contiguous: bool,
                         out: dict) -> None:
@@ -355,17 +391,14 @@ def _derived_quantities(samples_mx: np.ndarray, obs_D: np.ndarray,
     """
     n_ages = samples_mx.shape[2]
     x_old = min(65, n_ages - 1)          # clamp only fires on truncated synthetic panels
-    with np.errstate(divide="ignore", invalid="ignore"):
-        obs_full = np.clip(np.where(obs_E[0] > 0, obs_D[0] / np.where(obs_E[0] > 0, obs_E[0], 1.0), np.nan),
-                           _RATE_FLOOR, None)
+    obs_vals = observed_functionals(obs_D[0], obs_E[0])
     mx1 = samples_mx[:, 0, first_ok:]                                      # [n, n_scored]
     for key, age, fn in (
         ("e0", 0, lambda m, x: life_expectancy(m, x)),
         ("e65", x_old, lambda m, x: life_expectancy(m, x)),
         ("ann65", x_old, lambda m, x: annuity_factor(m, x0=x, i=0.02)),
     ):
-        obs_val = (float(fn(obs_full, age))
-                   if np.isfinite(obs_full[age:]).all() else float("nan"))
+        obs_val = obs_vals[key]
         idx = age - first_ok
         # idx >= 1 whenever the table is truncated: the truncated table's row 0
         # takes the infant a_0 rule, which must stay strictly below x.

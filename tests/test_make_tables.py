@@ -198,8 +198,11 @@ def test_all_tables_written_and_stamped(rows, analysis, tmp_path):
             assert "_gp.parquet" in text.splitlines()[0]
         # page-spanning fragments (they carry their own caption/label):
         # the full infeasibility listing, H5 and the DM/MCS table overflowed
-        # a float page and are emitted as longtables (measured 2026-08-28)
-        if p.stem in ("tab-infeasible-full", "tab-h5-actuarial", "tab-dm-mcs"):
+        # a float page and are emitted as longtables (measured 2026-08-28);
+        # tab-infeasible and tab-h1-rankings joined them when the placebo
+        # columns landed (measured 2026-08-31)
+        if p.stem in ("tab-infeasible-full", "tab-h5-actuarial", "tab-dm-mcs",
+                      "tab-infeasible", "tab-h1-rankings"):
             assert "\\begin{longtable}" in text and "\\end{longtable}" in text
             assert "\\begin{tabular}" not in text
         else:
@@ -212,7 +215,8 @@ def test_float_sizes(rows, analysis, tmp_path):
     mt.build_all(rows, analysis, None, tmp_path)
     for name in mt.TABLE_NAMES:
         text = _read(tmp_path, name)
-        if any(k in str(name) for k in ("tab-infeasible-full", "tab-h5-actuarial", "tab-dm-mcs")):
+        if any(k in str(name) for k in ("tab-infeasible-full", "tab-h5-actuarial",
+                                        "tab-dm-mcs", "tab-infeasible", "tab-h1-rankings")):
             # page-spanning longtable fragments size themselves (own caption/label)
             assert "\\begin{longtable}" in text, name
             continue
@@ -248,10 +252,13 @@ def test_h5_conformal_rows_are_na(rows, analysis, tmp_path):
     filler samples -- printed n/a, never tabulated, with the tablenote."""
     mt.build_all(rows, analysis, None, tmp_path)
     h5 = _read(tmp_path, "tab-h5-actuarial")
-    conf_line = [ln for ln in h5.splitlines() if "& split &" in ln][0]
+    lines = h5.splitlines()
+    i = next(j for j, ln in enumerate(lines) if "& split & stable &" in ln)
+    conf_line = lines[i + 1]   # stacked layout: shift row follows the arm's stable row
     cells = [c.strip() for c in conf_line.split("&")]
+    assert cells[2] == "shift"
     assert cells[3:9] == ["n/a"] * 6                      # six derived-quantity columns
-    assert cells[9] == "1" and cells[10] == "0"          # n / n_err still counted
+    assert cells[9] == "1" and cells[10].replace("\\\\", "").strip() == "0"  # n / n_err
     assert f"{CONF_E0:.2f}" not in h5 and f"{CONF_E0:.3f}" not in h5
     assert "1.000" not in conf_line                      # cov share never computed for it
     assert ("derived-quantity intervals require predictive samples; conformal mechanisms "
@@ -415,12 +422,17 @@ def test_twin_crises_has_no_family_restriction_note(rows, analysis, tmp_path):
 def test_h5_coverage_share_and_cbd_e0_undefined(rows, analysis, tmp_path):
     mt.build_all(rows, analysis, None, tmp_path)
     h5 = _read(tmp_path, "tab-h5-actuarial")
-    lc = [ln for ln in h5.splitlines() if ln.startswith("Lee--Carter (SVD) & native")][0]
-    cells = [c.strip() for c in lc.split("&")]
+    lines = h5.splitlines()
+    # stacked layout: the arm's first row is the (pending) stable regime;
+    # its shift row follows on the next line with blank family/mech cells
+    i = next(j for j, ln in enumerate(lines)
+             if ln.startswith("Lee--Carter (SVD) & native"))
+    cells = [c.strip() for c in lines[i + 1].split("&")]
+    assert cells[2] == "shift"
     # e0 obs 82.5 inside [81, 83] -> 1.000; e65 obs 22 outside [19, 21] -> 0.000
     assert cells[3] == "1.000" and cells[5] == "0.000"
-    cbd = [ln for ln in h5.splitlines() if ln.startswith("CBD (M5) & native")][0]
-    assert cbd.split("&")[3].strip() == "--"
+    i = next(j for j, ln in enumerate(lines) if ln.startswith("CBD (M5) & native"))
+    assert lines[i + 1].split("&")[3].strip() == "--"
 
 
 def test_populations_from_data_files(rows, analysis, hmd_files, tmp_path):
