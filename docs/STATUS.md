@@ -368,3 +368,57 @@ side; H1 rho CIs [0.771, 0.965] vs CRPS, [-0.162, 0.214] vs log score).
 Todo triage: sections 1–5 and the appendix are todo-free; the remaining
 markers in §6/§7 are pending-regime items only. Verifier's one defect
 (interval-score superlative unbounded) fixed. Compile: 0 errors, 64 pages.
+
+## 2026-08-31 — STABLE regime admissibility: the control has 18 populations, not 20
+
+Found while checking sweep progress (read-only; nothing on either node was
+changed). Not a defect — a registered-design consequence that has to be
+stated in the paper rather than discovered at analysis time.
+
+`splits.STABLE` is 13 expanding origins, 1990–2014 step 2, over `SHIFT_POPS`
+(20 populations). Addendum 3 §4 makes a triple admissible only at
+**n_train ≥ 15** contiguous training years. Two series begin too late to
+clear that floor at ANY stable origin:
+
+| pop | series starts | admissible origins | first admissible |
+|---|---|---|---|
+| **HRV** | 2001 | **0 / 13** | — |
+| **KOR** | 2003 | **0 / 13** | — |
+| CHL | 1992 | 5 / 13 | 2006 |
+| HKG | 1986 | 8 / 13 | 2000 |
+| other 16 | ≤ 1970 | 13 / 13 | 1990 |
+
+HRV's best origin (2014) yields 14 training years and KOR's 12 — both below
+the floor. They are therefore **structurally absent from the stable regime**
+while present throughout shift. Confirmed on the node: `.47`'s log records
+`HRV: rows=1196 error_rows=1196 (5s)` and the same for KOR — every cell
+inadmissible, in five seconds.
+
+Admissible (origin, pop) pairs: **221 of 260**; × 2 sexes = **442 of 520
+triples**. This supersedes the 401-buildable figure in the 2026-08-26 audit,
+which predates addendum 3 §1: 91 of that audit's 119 failures were
+"non-finite cells in D after pivot" on CHE/FIN/ISL/LUX/SWE, and those cells
+are now fitted under the `W = 1{E>0}` weighting rather than dropped. The
+sweep itself remains ground truth for the final count.
+
+**What has to change in the write-up.**
+
+1. §4 (design) must state that the stable control covers 18 populations
+   against shift's 20, name HRV and KOR, and give the reason (series start
+   vs the registered n_train floor) — not leave the reader to infer it from
+   a differing denominator between regimes.
+2. `tab-infeasible` needs the HRV/KOR rows as *design-floor* exclusions,
+   kept distinct from *method-failure* rows (SVAR explosive-draw rejection,
+   pboot overflow). Both are legitimate and they mean different things.
+3. Any stable-vs-shift contrast is computed on the **18-population
+   intersection**, per addendum 3 §11, with the intersection size reported.
+   Comparing a 20-population shift mean against an 18-population stable mean
+   would confound the regime effect with a change of panel — precisely the
+   selection confound §11 exists to prevent.
+4. CHL (5/13) and HKG (8/13) make the stable panel **unbalanced across
+   origins**: 18 populations at origin 2006+ but 16 at 1990–1998. The
+   per-origin effective cluster count is already required by addendum 3 §4
+   and must appear beside every stable-regime summary, because the wild
+   cluster bootstrap's behaviour depends on it.
+
+No code change: the runner already refuses these cells and records them.

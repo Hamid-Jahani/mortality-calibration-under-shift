@@ -145,10 +145,13 @@ throwaway parsing is
   CHL/HKG were 1002/1196 and 830/1196 errors. The ten remaining populations
   have full-length panels and will mostly SUCCEED, so they carry far more
   compute than the four "finished" ones.
-- **KOR and HRV are structurally absent from the STABLE regime.** KOR's data
-  starts 2003, HRV's 2001; stable origins are 1990-2014 and addendum 3 §4
-  needs >= 15 training years, so KOR's best origin (2014) gives 12 years and
-  HRV's 14 — below the floor at EVERY origin. The stable control therefore
-  has **18 populations, not 20**, while shift has all 20. Registered-design
-  consequence, not a bug — but it belongs in the paper's design section and
-  in the tab-infeasible accounting. NOT yet written into docs/STATUS.md.
+- **STABLE covers 18 populations, not 20** — HRV (series starts 2001) and
+  KOR (2003) clear addendum 3 §4's n_train >= 15 floor at NO stable origin
+  (best case 14 and 12 years). CHL is admissible at 5/13 origins, HKG at
+  8/13, the other 16 at 13/13 → 221 of 260 (origin, pop) pairs = 442 of 520
+  triples. This supersedes the 401-buildable figure from the 2026-08-26
+  audit, which predates addendum 3 §1. **Written up properly in
+  docs/STATUS.md (2026-08-31) with the four write-up consequences** — design
+  section, tab-infeasible design-floor vs method-failure split, the
+  18-population intersection for any stable-vs-shift contrast, and the
+  per-origin effective cluster count. No code change needed.
