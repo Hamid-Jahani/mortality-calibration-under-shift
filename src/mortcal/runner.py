@@ -407,11 +407,18 @@ def _derived_quantities(samples_mx: np.ndarray, obs_D: np.ndarray,
             vals = np.asarray(fn(mx1, idx), dtype=float)                   # [n]
             point = float(np.median(vals))
             q025, q975 = float(np.quantile(vals, 0.025)), float(np.quantile(vals, 0.975))
+            # one-year longevity tail (§7): nominally once-in-200-year upper
+            # quantile of the derived quantity. Added 2026-08-31 — parquets
+            # swept before then lack the column; per-cell seeds reproduce the
+            # samples bit-identically on the same device, so a re-score fills
+            # it without changing any registered number.
+            q995 = float(np.quantile(vals, 0.995))
         else:
-            point = q025 = q975 = float("nan")
+            point = q025 = q975 = q995 = float("nan")
         out[f"{key}_point"] = point
         out[f"{key}_q025"] = q025
         out[f"{key}_q975"] = q975
+        out[f"{key}_q995"] = q995
         out[f"{key}_obs"] = obs_val
         out[f"{key}_error"] = point - obs_val
 

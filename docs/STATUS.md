@@ -505,9 +505,39 @@ longtable/stacked layouts). §7 twin-crises-economics written from the
 repaired placebo h5 rows.
 
 **Still open**: stable regime running on both machines; on completion —
-pull (bastion needs single-hop tar), **run `scripts/patch_obs_lifetable.py`
-on the stable parquets** (the node/bastion runners predate the
-observed-table fix), QA, analyse, regenerate with `--final`, H2/H5
-registered verdicts, per-origin effective cluster counts, 18-population
-intersection contrasts; figures regenerated with placebo already (correct
-CLI: `--regimes shift placebo --source regime=pass1,pass2`).
+pull with **`scripts/server_pull_stable.sh`** (two-source: .47 two-hop +
+bastion single-hop; assembles `results/stable.parquet` locally with a
+duplicate-cell abort; dry-run verified 2026-08-31 evening — 167 partial
+parts assembled cleanly, 20 pops, no duplicates), **run
+`scripts/patch_obs_lifetable.py` on the stable parquets** (the node/bastion
+runners predate the observed-table fix), QA, analyse, regenerate with
+`--final`, H2/H5 registered verdicts, per-origin effective cluster counts,
+18-population intersection contrasts; figures regenerated with placebo
+already (correct CLI: `--regimes shift placebo --source regime=pass1,pass2`).
+
+## 2026-08-31 (evening) — pre-stable work: §4 written; two scheduling gaps flagged
+
+- **Write-up consequence #1 done**: §4 now states the stable control covers
+  18 of 20 registered populations (HRV 2001 / KOR 2003 starts vs the
+  n_train ≥ 15 floor; best origin 2014 gives 14 and 12 years), CHL 5/13 and
+  HKG 8/13 origins, 221/260 pairs = 442/520 triples, the per-origin count
+  rule (addendum 3 §4) and the 18-population intersection rule (§11) for
+  stable-vs-shift contrasts. Design-floor paragraph cross-references the
+  infeasibility ledger for the stable rows.
+- **§7 longevity-tail todo resolved into a plan**: runner now emits
+  `{e0,e65,ann65}_q995` (3-line change; suite green). Existing parquets
+  lack the column, but per-cell seeds reproduce predictive samples
+  bit-identically on the same device, so a **re-score of shift + placebo on
+  .47 after stable frees it** fills the paragraph without changing any
+  registered number. Verify a probe cell's crps_h1 against the parquet
+  before trusting the rerun.
+- **SCHEDULING GAP: the stable GP pass is planned nowhere.** Both machines
+  run the 9 non-GP families only; the grid (and the stacked h5/h2 tables)
+  expect stable GP rows. Proposal: when `.49` finishes (first, ~Sep 1),
+  ship the current `runner.py` there by cat (brings q995 + obs fix for
+  free) and launch stable GP for all 18 admissible pops (jobs 2–3,
+  60-year cap, malloc_trim) — est. several days, overlapping .47's tail.
+  User decision pending on scheduling.
+- ETAs measured 2026-08-31 ~19:00: `.49` 89/108 parts, ~1 part/55 min
+  combined → done ~Sep 1 evening. `.47` 78/126, only 2 parts in 11 h (all
+  ten workers deep in SVAR/NLC on full-length panels) → ~Sep 3–5.

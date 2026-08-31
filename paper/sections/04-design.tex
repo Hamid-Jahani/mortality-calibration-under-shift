@@ -66,7 +66,22 @@ Every window is expanding-origin; training always uses the maximal
 contiguous block of complete years ending at the origin, from the
 population's own first year, and a triple (origin, population, sex) is
 admissible only with at least fifteen such years (Addendum~3~\S2, \S4).
-Inadmissible triples are recorded as such and not scored. A random split
+Inadmissible triples are recorded as such and not scored. In the stable
+regime that floor is not a marginal trim: HRV's series begins in 2001 and
+KOR's in 2003, so even their best origin ($T=2014$) yields fourteen and
+twelve training years---below the floor at every origin. The stable
+control therefore covers eighteen of the twenty registered populations,
+while both populations remain present throughout the shift regime. CHL
+(first year 1992) is admissible at five of the thirteen origins and HKG
+(1986) at eight; 221 of the 260 (origin, population) pairs---442 of the
+520 triples---clear the floor, and the stable panel is unbalanced across
+origins: sixteen populations at origins 1990--1998, eighteen from 2006.
+Every stable-regime summary is therefore read beside its per-origin
+population count (Addendum~3~\S4), because the wild cluster bootstrap's
+behaviour depends on the number of clusters actually present, and any
+stable-versus-shift contrast is computed on the eighteen-population
+intersection (Addendum~3~\S11), never a twenty-population mean against an
+eighteen-population one. A random split
 is never used anywhere, because mortality panels leak trivially under
 random splitting: adjacent ages and years are near-duplicates.
 
@@ -318,7 +333,10 @@ and the LSTM; and in HKG (thirty-four) EnbPI and the copula band for the
 LSTM. These are properties of the design---the registered population list
 crossed with the registered mechanisms and the families' reference
 architectures---not failures of a fit; they are tabulated as such, and
-every other shift panel clears every floor.
+every other shift panel clears every floor. Applied to the thirteen stable
+origins the same rule produces the longer list summarised above, up to the
+wholesale exclusion of HRV and KOR; the stable rows enter the same ledger
+(Section~\ref{sec:results-infeasible}) when that sweep lands.
 
 \paragraph{Contrasts on common cells; three classes of missing row.}
 Because the grid is ragged, no claim in this paper is a full-factorial main

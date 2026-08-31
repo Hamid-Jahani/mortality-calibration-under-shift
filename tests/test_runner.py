@@ -57,7 +57,7 @@ CONFORMAL_NA_KEYS = ({f"coverage_{lvl}" for lvl in (50, 80)}
                      | {f"winkler_{lvl}" for lvl in (50, 80)}
                      | {f"coverage_{lvl}_{b}" for lvl in (50, 80) for b in BAND_TAGS})
 DERIVED_KEYS = {f"{q}_{s}" for q in ("e0", "e65", "ann65")
-                for s in ("point", "q025", "q975", "obs", "error")}
+                for s in ("point", "q025", "q975", "q995", "obs", "error")}
 JSON_KEYS = {"cov95_by_age", "pit_hist"}
 
 
@@ -210,7 +210,7 @@ def test_run_cell_cbd_native_masks_ages_below_55():
     out = run_cell(D, E, "CBD", "native", h, 400, np.random.default_rng(3),
                    obs_D=obs_D[:h], obs_E=obs_E[:h])
     assert set(out) == expected_keys(h)
-    nan_by_design = {"e0_point", "e0_q025", "e0_q975", "e0_error",
+    nan_by_design = {"e0_point", "e0_q025", "e0_q975", "e0_q995", "e0_error",
                      "coverage_50_band0_24", "coverage_80_band0_24",
                      "coverage_95_band0_24", "pit_ks_band0_24"}
     _assert_types(out, "native", nan_ok=nan_by_design)
