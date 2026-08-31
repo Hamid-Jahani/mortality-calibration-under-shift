@@ -174,3 +174,31 @@ shift analysis verified numerically identical under it. `tab-infeasible` +
   section, tab-infeasible design-floor vs method-failure split, the
   18-population intersection for any stable-vs-shift contrast, and the
   per-origin effective cluster count. No code change needed.
+
+## 2026-08-31 (night) — stable GP pass APPROVED for .49; watcher armed
+
+User approved: when `.49` finishes pass 1 (108/108 parts, run_regime procs
+gone; ETA ~Sep 1 evening), launch the stable GP pass THERE. Procedure is
+fully scripted — from the laptop (Gaming profile):
+
+1. Ship current `src/mortcal/runner.py` to the bastion by cat (brings q995
+   columns + observed-lifetable fix, so stable GP rows never need
+   patch_obs_lifetable.py).
+2. Ship + run `scripts/server_launch_stable_gp.sh` (exact commands in that
+   script's header). It refuses while pass 1 is alive (FORCE=1 overrides),
+   sizes JOBS = RAM/3GB capped at 8, pins threads, runs all 20 pops
+   (HRV/KOR = instant design-floor rows), logs to
+   `results/logs/stable_gp_49.out`, parts in `results/stable_gp.parts/`.
+3. Health-check after launch; expect several days of runtime, overlapping
+   .47's neural tail.
+
+A persistent Monitor in the 2026-08-31 session polls .49 every 30 min and
+fires when procs hit 0 (done OR died — check parts count: 108 = done).
+If that session is gone, just check manually and run steps 1–2. Note:
+procs=0 with parts<108 means pass 1 DIED — investigate stable_node/launch
+logs on .49 before launching GP. Do NOT pkill anything on .49 while pass 1
+runs; the GP launcher needs no relaunch-style cleanup.
+
+Also flagged in STATUS: after stable lands, re-score shift+placebo on .47
+with the q995 runner (seeds reproduce samples bit-identically on the same
+device; verify a probe cell's crps_h1 against the parquet first).
