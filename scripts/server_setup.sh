@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One-shot setup + launch of the pre-registered sweeps on a Linux CPU server.
 #
-#   git clone git@github.com:sheperd007/mortality-calibration-under-shift.git
+#   git clone git@github.com:Hamid-Jahani/mortality-calibration-under-shift.git
 #   cd mortality-calibration-under-shift
 #   # copy the HMD bulk files into ./Dataset/ (see docs/SERVER.md — the data
 #   # are registration-restricted, so they travel with you, not with the repo)

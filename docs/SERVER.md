@@ -17,7 +17,7 @@ GP/native 45 s, conformal cells a few minutes each): `GP_JOBS ≈ RAM_GB / 3`.
 
 ## Steps
 
-1. `git clone git@github.com:sheperd007/mortality-calibration-under-shift.git && cd mortality-calibration-under-shift`
+1. `git clone git@github.com:Hamid-Jahani/mortality-calibration-under-shift.git && cd mortality-calibration-under-shift`
 2. Copy the HMD bulk files to `Dataset/` on the server. They are
    registration-restricted (not in the repo). From the laptop:
    `rsync -av --progress "/g/Mortality - Explainable AI/Dataset/" user@server:~/mortality-calibration-under-shift/Dataset/`
