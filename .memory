@@ -202,3 +202,32 @@ runs; the GP launcher needs no relaunch-style cleanup.
 Also flagged in STATUS: after stable lands, re-score shift+placebo on .47
 with the q995 runner (seeds reproduce samples bit-identically on the same
 device; verify a probe cell's crps_h1 against the parquet first).
+
+## 2026-09-02 — .49 IS PRODUCTION, .47 IS STAGING (user, authoritative)
+
+**Never add load to `.49` (192.168.1.49, ai-server, 24 cores).** It runs a
+real production service stack — measured 2026-09-02: 1,402 processes,
+`mongod` 3.75 GB resident, `java`, four `ruby`, `devpi-server`, `uvicorn`,
+taking 23–30% user CPU continuously on their own. Our stable-half sweep was
+taking a further **~8.8 of 24 cores** (14 workers at 50–99%).
+
+**`.47` (claw-47, tararis-ai3, 12 cores) is staging — heavy load is fine.**
+Prefer it for everything, and give it the memory-hungry passes too: it had
+17 GB available against `.49`'s 7 GB, and a GP cell needs ~1.6 GB.
+
+Corollary: the reallocation instinct "move work to the idle machine" is
+WRONG here whenever the idle machine is `.49`. Idle capacity on `.49`
+belongs to production, not to us.
+
+### Swap on .49 is a non-issue (settled 2026-09-02)
+Swap showed 8127/8191 MB full, but `vmstat` si/so = **0/0** — full but
+static, i.e. idle daemon pages the kernel parked, not thrashing. Our share
+was 2,096 MB of 8,582 MB (24%); the rest is the service stack (devpi 1 GB,
+java 876 MB, four ruby ~1.5 GB, mongod 409 MB). Do not diagnose "swap full"
+as a sweep problem again — measure si/so, not usage.
+
+### Reading sweep liveness correctly
+`ps ... | grep run_regime` matches only the PARENT processes, which sit at
+0.0% CPU in `futex_do_wait` while their pool works — that is HEALTHY, not a
+stall. The workers are the children: `pgrep -P <parent>`. Misreading this
+once produced a false "the sweep is stalled" conclusion.
