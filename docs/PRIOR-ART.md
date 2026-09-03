@@ -342,3 +342,46 @@ outcomes (no backtest, no break). H3's safe wording is unchanged in substance
 structural break" — but Li & Chan must be cited wherever joint bands are
 discussed, and the Addendum-3 comparator (model-implied joint coverage) should
 acknowledge that its construction is essentially theirs.
+
+---
+
+## Quotation audit (2026-09-03)
+
+Prompted by the Dowd misquotation above: every direct quote in the paper was
+checked mechanically against the 53 extracted literature texts
+(`scripts/verify_quotes.py`), and every unmatched one read by eye. Thirty
+quotes of three or more words; **seventeen located in the corpus, thirteen
+unmatched**. The unmatched ones resolved as:
+
+- **One false negative** — the Miyata–Matsuyama quote on exogenous
+  randomness spans an `\ldots`, so the joined string could not match. Both
+  fragments verified in the source; attribution correct.
+- **Eleven of our own words** — scare quotes and self-quotation of the
+  registered documents, not attributions to the literature.
+- **Four genuine precision defects, all fixed**, all quotations of *our own*
+  hash-stamped documents, where a referee can diff the published
+  registration against the paper:
+  1. `04-design` and `02-related-work` both compressed H2 to "under-cover
+     for every family". The registration says "under-cover **in the shift
+     regime** for every **model** family". Now quoted verbatim.
+  2. `04-design` quoted the seeding rule as "global seed plus member index";
+     the registration says "global + member index".
+  3. `04-design` described gate G-N1's recalibrated form as "finite and
+     below one **nat**". A nat is a unit of information; the gate in
+     `docs/NEURAL-SPEC.md` is finite RMSE(log m) < 1 over h = 1…5. The
+     quotation marks are dropped and the criterion stated correctly.
+  4. `01-introduction` claimed the term "MSE" appears "twenty-eight times"
+     in Richman–Wüthrich (2021). We hold only the 2018 preprint, where the
+     count is 25, and the citation resolves to the published *Annals of
+     Actuarial Science* article we do not hold. The claim now states the
+     substantive fact — no interval, no coverage assessment, no proper
+     score — which does not depend on a count.
+
+**Standing caution.** Ten cited works are held only as preprints or working
+papers (`grep -n 'preprint\|working paper\|on file' paper/references.bib`).
+Only two of them are quoted directly, and both disclose it: `marino2023neural`
+names the arXiv version as "the source of the quotations in the text", and
+`dowd2010backtesting` is now the published NAAJ text. **Any new quotation or
+exact count taken from a preprint must either be verified in the published
+version or say which version it comes from.** Characterisations are safe;
+verbatim quotes and counts are not.
