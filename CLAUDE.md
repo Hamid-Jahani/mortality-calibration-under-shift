@@ -110,9 +110,11 @@ absorbed as an analysis section.
   males 1950-2000 — identical loglik, beta rel diff 2.4e-14 when Newton runs to cap
   (`scripts/check_parity.py`; StMoMo fit dump tracked in `results/parity/`).
   R 4.6.1 via winget; packages in R_LIBS_USER personal library.
-- OPEN before real-data results: Dowd et al. 2010b + Schnürch-Korn 2022 must be read
-  before related-work text (SSRN, browser only — literature/GET-THESE.md); runner metric
-  defects from the adversarial verifier (docs/STATUS.md) must be fixed first.
+- CLOSED 2026-08-26: the Dowd et al. 2010 pair and Schnürch–Korn 2022 are fetched AND
+  read — `literature/GET-THESE.md` (provenance, DOIs, preprint-vs-published caveats) and
+  `docs/PRIOR-ART.md` (what they do and do not establish, quoted by line range). Both are
+  cited in the related-work text. Runner metric defects from the adversarial verifier
+  (docs/STATUS.md) were fixed before the real-data sweeps.
 - Inference plan: wild cluster bootstrap over populations (20 correlated clusters), MCS at 90%.
 
 ## Session state
