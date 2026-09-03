@@ -320,7 +320,14 @@ because a wrapper's inner fits inherit the base family's own minimum.
 Every family needs at least ten training years; the banded VAR needs more
 than ten, the CNN more than fifteen (its ten-year window plus the five
 inner-validation years) and the LSTM more than seventeen (window, inner
-validation and two more), under every mechanism. Split conformal fits the
+validation and two more), under every mechanism. The multi-output GP's
+floor is much the highest at forty years: its separable
+age$\times$time kernel is fitted by exact marginal likelihood, and a
+shorter panel leaves the time-kernel length-scale unidentified against the
+nugget. That floor---not the fifteen-year admissibility rule---is what
+removes CHL, HKG, HRV and KOR from every GP cell, in the shift and stable
+regimes alike, so the GP family is read on sixteen populations where the
+other nine are read on twenty. Split conformal fits the
 base family on the $T-9$ years beneath its nine calibration years; EnbPI
 and the copula band fit their earliest staggered member on $T-18$ years.
 Applied to the registered shift panels, whose lengths at the 2019 origin
