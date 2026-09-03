@@ -548,3 +548,44 @@ already (correct CLI: `--regimes shift placebo --source regime=pass1,pass2`).
 - ETAs measured 2026-08-31 ~19:00: `.49` 89/108 parts, ~1 part/55 min
   combined → done ~Sep 1 evening. `.47` 78/126, only 2 parts in 11 h (all
   ten workers deep in SVAR/NLC on full-length panels) → ~Sep 3–5.
+
+## 2026-09-03 (evening) — stable GP moved to `.47`; GP's 40-year floor documented
+
+**Where it runs now.** Stable GP was moved off the bastion `.49` onto the
+dedicated node `.47` at the user's direction. `.49` is a *production* box:
+24 cores but only ~9 GB free (15 GB belongs to its other services), which
+capped it at 2 GP workers and ~5.8 days. `.47` is staging — 12 cores,
+~21 GB free — and GP is **memory-bound, not core-bound**, so the smaller
+box is the faster one. `.49`'s GP run was stopped; it had written no parts.
+
+**JOBS=11 OOM-killed the run after ~25 minutes.** Measured on `.49`, GP
+workers sat at ~1 GB RSS, so 11 looked safe on a 23 GB box. It was not: at
+11 workers `.47` reached 22/23 GB used, 1 GB available and load 43 on 12
+cores, and the pass died leaving leaked-semaphore warnings from abruptly
+killed workers. The ~1 GB figure was measured early in a population; GP
+memory grows with the origin (longer panel, bigger kernel), so many workers
+peak together at ~2 GB. **Relaunched at `JOBS=6`** (~12 GB of 21). The four
+already-written parts were kept by resume, so the restart cost ~25 min.
+A memory-guard watcher now warns below 4 GB available. Estimated ~1.8 days.
+
+**Finding: the multi-output GP covers SIXTEEN populations, not eighteen.**
+`MultiOutputGP` carries `min_years=40` — the strictest family floor in the
+study, far above the registered n_train >= 15 admissibility rule. CHL
+(series from 1992), HKG (1986), HRV (2001) and KOR (2003) never reach 40
+training years at any origin, so **every GP cell fails for them in the
+stable regime, and the shift regime is already the same**: `shift_gp.parquet`
+has 8/8 error rows for each of those four, and its sixteen good populations
+are exactly BEL CHE DNK EST FIN ISL JPN LTU LUX LVA NOR PRT SVK SWE TWN USA.
+Verified per mechanism: at CHL's best origin (2014, 23 training years)
+`native` and `split_conf` fail with "MultiOutputGP needs >= 40" and
+`enbpi`/`copula_conf` with the K=10 staggered-member floor. These are
+**structural/design-floor** rows, not method failures.
+
+*Write-up consequence.* §4's design-floor paragraph enumerated the VAR, CNN
+and LSTM minima but omitted the GP's, which is both the largest and the one
+that removes whole populations. It now states the 40-year floor, its cause
+(the separable age x time kernel is fitted by exact marginal likelihood;
+a shorter panel leaves the time length-scale unidentified against the
+nugget), and that the GP family is read on sixteen populations where the
+other nine are read on twenty. Any GP-inclusive contrast is on that
+sixteen-population intersection.

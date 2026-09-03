@@ -36,10 +36,17 @@ PY="$PWD/.venv-server/bin/python"
 # post-release_memory() peak with the 60-year cap.
 AVAIL_GB=$(awk '/MemAvailable/ {printf "%d", $2/1024/1024}' /proc/meminfo)
 CORES=$(nproc)
-JOBS="${JOBS:-$(( AVAIL_GB / 3 ))}"
-[ "$JOBS" -gt $(( CORES - 2 )) ] && JOBS=$(( CORES - 2 ))
-[ "$JOBS" -gt 8 ] && JOBS=8
-[ "$JOBS" -lt 1 ] && JOBS=1
+if [ -n "${JOBS:-}" ]; then
+  # An explicit operator override WINS: the caps below are a safe default for
+  # a shared box, not a safety limit. On a dedicated node the operator knows
+  # the machine is free and should be able to use all of it.
+  echo "JOBS=$JOBS set explicitly; auto-sizing caps not applied"
+else
+  JOBS=$(( AVAIL_GB / 3 ))
+  [ "$JOBS" -gt $(( CORES - 2 )) ] && JOBS=$(( CORES - 2 ))
+  [ "$JOBS" -gt 8 ] && JOBS=8
+  [ "$JOBS" -lt 1 ] && JOBS=1
+fi
 LOG="results/logs/stable_gp_$(hostname -s).out"
 export MORTCAL_DEVICE=cpu
 # thread pinning belongs in the launch environment (measured: load 52 -> 11)
