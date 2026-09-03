@@ -540,6 +540,11 @@ already (correct CLI: `--regimes shift placebo --source regime=pass1,pass2`).
   watcher polls `.49` every 30 min and wakes the session when run_regime
   procs hit zero; procs=0 with parts<108 means pass 1 died — read the .49
   launch log before launching GP.
+  **Launched 2026-09-03**: .49 pass 1 complete (108/108, ~26 h late vs the
+  Sep 1 estimate — a laptop-side DNS outage also blinded the watcher for a
+  day); GP pass running at `JOBS=2` (deliberate: box showed ~7 GB
+  available, its other services own 15 GB — the RAM formula's 7 workers
+  would have OOM'd it). `.47` at 124/126 (two NB parts), watcher armed.
 - ETAs measured 2026-08-31 ~19:00: `.49` 89/108 parts, ~1 part/55 min
   combined → done ~Sep 1 evening. `.47` 78/126, only 2 parts in 11 h (all
   ten workers deep in SVAR/NLC on full-length panels) → ~Sep 3–5.

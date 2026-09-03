@@ -192,12 +192,19 @@ fully scripted — from the laptop (Gaming profile):
 3. Health-check after launch; expect several days of runtime, overlapping
    .47's neural tail.
 
-A persistent Monitor in the 2026-08-31 session polls .49 every 30 min and
-fires when procs hit 0 (done OR died — check parts count: 108 = done).
-If that session is gone, just check manually and run steps 1–2. Note:
-procs=0 with parts<108 means pass 1 DIED — investigate stable_node/launch
-logs on .49 before launching GP. Do NOT pkill anything on .49 while pass 1
-runs; the GP launcher needs no relaunch-style cleanup.
+**EXECUTED 2026-09-03**: .49 pass 1 finished 108/108; runner.py + launcher
+shipped by cat; GP pass LAUNCHED with explicit `JOBS=2` — the RAM formula
+said 7 but the box showed only ~7 GB available (15 GB used by the user's
+other services; it is a production machine — never oversubscribe it).
+Log: `results/logs/stable_gp_49.out`; parts land in `stable_gp.parts/`
+(expect 20). Watchers armed in the 2026-09-03 session: .47 completion
+(was 124/126) and .49 GP health (procs=0 with parts<20 = died, likely
+OOM; resume skips done parts — relaunch same way).
+
+DNS note: if `ssh baazar` fails with "Temporary failure in name
+resolution", pin the IP in the ProxyCommand — replace
+`-connect app.baazartehran.com:443` with `-connect 87.107.136.42:443`
+(SNI stays `-servername ssh.baazartehran.com`); worked 2026-09-02.
 
 Also flagged in STATUS: after stable lands, re-score shift+placebo on .47
 with the q995 runner (seeds reproduce samples bit-identically on the same
