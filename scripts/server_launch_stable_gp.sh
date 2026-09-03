@@ -53,10 +53,17 @@ export MORTCAL_DEVICE=cpu
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
 mkdir -p results/logs
 
+# POPS: comma list restricting this machine to a subset, so the pass can be
+# split across machines. The subsets MUST be disjoint -- parts are named
+# <POP>__GP.parquet with no machine tag, so two machines running the same
+# population produce colliding filenames at pull time.
+POPS_ARG=""
+[ -n "${POPS:-}" ] && POPS_ARG="--pops $POPS"
+
 setsid nohup "$PY" scripts/run_regime.py stable --out results/stable_gp.parquet \
-  --models GP --jobs "$JOBS" > $LOG 2>&1 < /dev/null &
+  --models GP --jobs "$JOBS" $POPS_ARG > $LOG 2>&1 < /dev/null &
 disown
-echo "launched stable GP: JOBS=$JOBS MEM_AVAIL=${AVAIL_GB}G CORES=${CORES} log=$LOG"
+echo "launched stable GP: JOBS=$JOBS POPS=${POPS:-all} MEM_AVAIL=${AVAIL_GB}G CORES=${CORES} log=$LOG"
 sleep "${HEALTH_WAIT:-30}"
 echo "--- load: $(cut -d' ' -f1-3 /proc/loadavg) | run_regime procs: $(pgrep -fc '[r]un_regime.py' || true) ---"
 tail -3 $LOG

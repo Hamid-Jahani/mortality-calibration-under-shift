@@ -599,3 +599,31 @@ a shorter panel leaves the time length-scale unidentified against the
 nugget), and that the GP family is read on sixteen populations where the
 other nine are read on twenty. Any GP-inclusive contrast is on that
 sixteen-population intersection.
+
+### Split across both machines (2026-09-03, user's call: "I want 1.8 days")
+
+Stable GP now runs as **disjoint population halves**, sized to each box's
+memory rather than its core count:
+
+| machine | role | workers | populations |
+|---|---|---|---|
+| `.47` tararis-ai3 | staging, 21 GB free | 4 | BEL CHE DNK FIN ISL JPN LUX NOR PRT SWE USA (11) |
+| `.49` ai-server | **production**, 11 GB free | 2 | TWN EST LTU LVA SVK (5) |
+
+The five on `.49` are deliberately the **shortest panels** (post-Soviet
+series and TWN): smaller kernels mean both less wall time and a lower peak
+RSS, which is what a production box with 11 GB free can absorb. The eleven
+long-panel populations, which sit at the 60-year cap at every origin and
+carry the highest peak memory, are on the machine with headroom.
+
+`scripts/server_launch_stable_gp.sh` gained a `POPS` variable for this.
+**The subsets must stay disjoint**: parts are named `<POP>__GP.parquet`
+with no machine tag, so the same population run on both machines produces
+colliding filenames at pull time. `server_pull_stable.sh` already pulls
+`stable_gp.parts` from both hosts and aborts on a duplicate cell.
+
+Caught while setting this up: `.49`'s original GP run **was never killed**
+when the pass moved to `.47`, so for several hours both machines were
+computing all twenty populations. It had written no parts, so the only loss
+was the duplicated compute. Expected wall time now ~1.9 days
+(`.47` 11/4 ~45 h; `.49` 5/2 on cheap panels ~30 h).
