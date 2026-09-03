@@ -30,18 +30,26 @@ fi
 
 PY="$PWD/.venv-server/bin/python"
 [ -x "$PY" ] || { echo "no interpreter at $PY"; exit 1; }
-MEM_GB=$(awk '/MemTotal/ {printf "%d", $2/1024/1024}' /proc/meminfo)
-JOBS="${JOBS:-$(( MEM_GB / 3 < 8 ? MEM_GB / 3 : 8 ))}"
+# Size by AVAILABLE memory, not total: on the bastion 15 GB belongs to other
+# services, which is why that box takes 2 workers while the dedicated node
+# takes 6+. GP is memory-bound, not core-bound -- 3 GB per worker is the
+# post-release_memory() peak with the 60-year cap.
+AVAIL_GB=$(awk '/MemAvailable/ {printf "%d", $2/1024/1024}' /proc/meminfo)
+CORES=$(nproc)
+JOBS="${JOBS:-$(( AVAIL_GB / 3 ))}"
+[ "$JOBS" -gt $(( CORES - 2 )) ] && JOBS=$(( CORES - 2 ))
+[ "$JOBS" -gt 8 ] && JOBS=8
 [ "$JOBS" -lt 1 ] && JOBS=1
+LOG="results/logs/stable_gp_$(hostname -s).out"
 export MORTCAL_DEVICE=cpu
 # thread pinning belongs in the launch environment (measured: load 52 -> 11)
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
 mkdir -p results/logs
 
 setsid nohup "$PY" scripts/run_regime.py stable --out results/stable_gp.parquet \
-  --models GP --jobs "$JOBS" > results/logs/stable_gp_49.out 2>&1 < /dev/null &
+  --models GP --jobs "$JOBS" > $LOG 2>&1 < /dev/null &
 disown
-echo "launched stable GP: JOBS=$JOBS MEM=${MEM_GB}G log=results/logs/stable_gp_49.out"
+echo "launched stable GP: JOBS=$JOBS MEM_AVAIL=${AVAIL_GB}G CORES=${CORES} log=$LOG"
 sleep "${HEALTH_WAIT:-30}"
 echo "--- load: $(cut -d' ' -f1-3 /proc/loadavg) | run_regime procs: $(pgrep -fc '[r]un_regime.py' || true) ---"
-tail -3 results/logs/stable_gp_49.out
+tail -3 $LOG
