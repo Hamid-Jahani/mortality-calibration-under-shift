@@ -100,9 +100,9 @@ cannot be the population-size artefact \citet{schnurch2022point} describe.
 \Htwo\ is restated \emph{two-sided}: the quantity tested is
 $|\text{empirical coverage}-\text{nominal}|$, which is hypothesised to grow
 from the stable to the shift regime, with the direction free to differ by
-family and mechanism; the registered one-sided ``under-cover for every
-family'' is already false in the stable regime for bootstrap-ensemble
-neural intervals. \Hthree's comparator is re-specified: realised joint path
+family and mechanism; the registered one-sided form---intervals
+``under-cover in the shift regime for every model family''---is already
+contradicted in the stable regime by bootstrap-ensemble neural intervals. \Hthree's comparator is re-specified: realised joint path
 coverage is compared with each cell's \emph{own simulated-path-implied}
 joint coverage, computable from the same predictive sample paths, rather
 than with the marginal rate at the same nominal level, because joint
@@ -396,7 +396,7 @@ Gaussian paths that would drag a sample mean; no column uses the mean.
 The global seed is 20260825. Each cell derives its own generator from a seed
 sequence over (global seed, origin, population, sex, family, mechanism);
 ensemble member $j$ is seeded from the $j$th spawn of the cell's sequence
-(the registration's ``global seed plus member index'' in substance:
+(the registration's ``global + member index'' in substance:
 distinct, deterministic and recorded per member). Every seed, the device the cell ran on, the number of
 ages and cells scored, the training window and the exception string of any
 failed cell are written to the results file alongside the metrics.
@@ -468,8 +468,9 @@ defined in Section~\ref{sec:metrics-inference}.
   changed---but recorded here so the ledger is complete.
 \item CNN learning-rate grid lowered before the first real-data run
   (divergence on synthetic data); neural gate~G-N1 recalibrated from
-  ``within twice the Poisson Lee--Carter error'' to ``finite and below one
-  nat'', because the cell-feature networks' extrapolation plateau is the
+  a within-twice-the-Poisson-Lee--Carter-error form to finite
+  $\mathrm{RMSE}(\log m) < 1$ over $h = 1\ldots5$, because the
+  cell-feature networks' extrapolation plateau is the
   audited fragility rather than an implementation defect. Both dated in
   \texttt{docs/NEURAL-SPEC.md}.
 \item Seed derivation for ensemble members. Registered: member seed $=$
