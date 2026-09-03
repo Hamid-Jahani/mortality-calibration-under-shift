@@ -21,7 +21,7 @@ disk is a working paper, the citation names the published version.
 | H1 (RMSE vs proper-score ranking) | **PRIOR-ART-EXISTS** | Barigou et al. (2021) and Goes et al. (2024) already publish the conclusion; Schnürch–Korn's own Table 2 shows the inversion |
 | H2 (universal under-coverage, worse for neural) | **PARTIAL — universality clause already falsified** in the stable regime | Schnürch–Korn: FFNN 97.0 / CNN 98.0 PICP vs 95 nominal; Levantesi et al.: LC-LSTM PICP = 1.0 |
 | H3 (joint ≪ marginal coverage) | **NOVEL in mortality**; method not novel; registered comparator near-tautological | Dowd et al. name the dependence in a footnote and measure marginals anyway; 0 corpus hits for joint/path coverage in mortality |
-| H4 (coverage failure concentrates at old ages) | **PARTIAL — registered direction contradicted** by prior art | Dowd et al.: "Forecast performance tends to improve with higher ages" |
+| H4 (coverage failure concentrates at old ages) | **PARTIAL — registered direction contradicted** by prior art | Dowd et al. (published NAAJ): age 84 covers better than age 65. The sweeping "improve with higher ages" is **working-paper only** — see the provenance note below |
 | H5 (miscalibration propagates to annuities/e_x) | **PARTIAL** — construction is prior art; ex-post coverage audit is NOT FOUND | Dowd et al. list it as their own un-executed extension |
 
 ---
@@ -103,9 +103,12 @@ framework names the dependence and then measures marginals anyway:
 > "Note though that the positions of the individual observations within the
 > prediction intervals are not independent. If, for example, the 1990
 > observation is 'low', then the 1995 observation is also likely to be 'low'."
-— Dowd et al. (2010), footnote 9,
-`DowdCairnsBlakeEtAl2010_Backtesting-…NAAJ-PI0803.txt:699–701`; repeated at
-footnote 17 (`:1681–1684`). Corpus-wide grep for *joint coverage | simultaneous
+— Dowd et al. (2010), **footnote 10 of the published NAAJ article**
+(`DowdCairnsBlakeEtAl2010_Backtesting-…NAAJ.txt:477`); the same sentence is
+footnote 9 of working paper PI-0803
+(`…NAAJ-PI0803.txt:699–701`, repeated at footnote 17, `:1681–1684`).
+Verified in the published text 2026-09-03 — cite the footnote by its
+published number. Corpus-wide grep for *joint coverage | simultaneous
 coverage | path coverage | joint prediction region/interval | Bonferroni*
 returns **zero hits in any mortality text**.
 
@@ -130,7 +133,25 @@ sample paths, falsifiable, and the actuarially meaningful quantity.
 already published for multiple families, and the prior finding is the
 opposite of the registered direction:
 > "Forecast performance tends to improve with higher ages."
-— Dowd et al. (2010), `DowdCairnsBlakeEtAl2010_Backtesting-…NAAJ-PI0803.txt:728`
+— Dowd et al., **working paper PI-0803 only**,
+`DowdCairnsBlakeEtAl2010_Backtesting-…NAAJ-PI0803.txt:728`.
+
+**PROVENANCE CORRECTION (2026-09-03, on obtaining the published NAAJ text.)**
+That sentence is a bullet in the working paper's summary and **does not
+appear in the published article**, which plots two ages only and states the
+narrower finding:
+
+> "the age 65 forecasts have a notable upward bias with the realized values
+> often close to or below the lower bounds, whereas the age 84 forecast show
+> only a very slight upward bias."
+
+— Dowd et al. (2010), NAAJ,
+`DowdCairnsBlakeEtAl2010_Backtesting-…NAAJ.txt:487`. The direction of the
+prior finding is unchanged (the higher age behaves better, so the registered
+H4 direction is still contradicted), but the evidence is two ages and a bias
+statement, not a monotone trend across the age range. `02-related-work.tex`
+quoted the working-paper sentence against the published citation until this
+was caught; it now quotes the published wording.
 > "The ACF and LC models are very unreliable at the boundaries of the
 > considered age range, while the NN approaches are more stable across ages."
 — Schnürch & Korn (2022), Figure 7 discussion, `SchnurchKorn2022_…ASTIN.txt:873–876`

@@ -10,7 +10,7 @@ Kept as a record of provenance and version caveats, which matter for citation.
 
 | # | Paper | File stem | Version held |
 |---|---|---|---|
-| 1 | Dowd, Cairns, Blake et al. (2010), *Backtesting Stochastic Mortality Models*, NAAJ 14(3):281–298 | `DowdCairnsBlakeEtAl2010_Backtesting-…_NAAJ-PI0803` | ⚠️ Pensions Institute DP **PI-0803, Sept 2008** — preprint, 43 pp |
+| 1 | Dowd, Cairns, Blake et al. (2010), *Backtesting Stochastic Mortality Models*, NAAJ 14(3):281–298 | `DowdCairnsBlakeEtAl2010_Backtesting-…_NAAJ` (published) and `…_NAAJ-PI0803` (working paper) | ✅ **published, 18 pp, obtained 2026-09-03**; the PI-0803 preprint (43 pp) is kept for provenance only |
 | 2 | Perla, Richman, Scognamiglio & Wüthrich (2021), *Time-Series Forecasting … Deep Learning*, SAJ 2021(7):572–598 | `PerlaRichmanScognamiglioWuthrich2021_…_SAJ` | ⚠️ preprint "Version of May 6, 2020", 26 pp |
 | 3 | Schnürch & Korn (2022), *Point and Interval Forecasts of Death Rates Using Neural Networks*, ASTIN 52(1) | `SchnurchKorn2022_…_ASTIN` | ✅ published, 28 pp |
 | 4 | Renshaw & Haberman (2006), *A cohort-based extension to the Lee–Carter model*, IME 38(3):556–570 | `RenshawHaberman2006_…_IME` | ✅ published, 15 pp |
@@ -20,9 +20,18 @@ Kept as a record of provenance and version caveats, which matter for citation.
 | 8 | Cairns, Blake, Kessler & Kessler (2020), *The Impact of COVID-19 on Future Higher-Age Mortality* | `CairnsBlakeKesslerKessler2020_…_PI-2007` | ⚠️ Pensions Institute DP **PI-2007**, 34 pp |
 | 9 | Tuljapurkar, Li & Boe (2000), *A Universal Pattern of Mortality Decline in the G7*, Nature 405:789–792 | `TuljapurkarLiBoe2000_…_Nature` | ✅ published, 4 pp |
 
-**Cite the published version for #1, #2 and #8; the file on disk is a working
+**Cite the published version for #2 and #8; the file on disk is a working
 paper.** Verify any quoted number or section reference against the published
 text — preprints and final articles diverge.
+
+**This caveat has already bitten once.** #1's published text was obtained
+2026-09-03 and the working paper diverges materially: its summary bullet
+"Forecast performance tends to improve with higher ages" is absent from the
+published article, which plots two ages and reports a bias comparison
+instead, and the dependence footnote is numbered 9 in the working paper but
+10 in the published article. `02-related-work.tex` had quoted the
+working-paper sentence against the published citation. Both are corrected;
+see `docs/PRIOR-ART.md`.
 
 ## Verified DOIs
 
