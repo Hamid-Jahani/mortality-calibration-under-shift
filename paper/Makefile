@@ -7,11 +7,15 @@
 #   make clean      -> remove build products (keeps the PDF)
 #   make distclean  -> remove build products and the PDF
 #
-# ON THIS MACHINE (2026-08-26): PATH points at E:\texlive\2026\bin\windows,
-# but the E: drive that holds TeX Live is not mounted, so latexmk/pdflatex are
-# absent. The working build route is tectonic 0.17.0 (self-contained XeTeX
-# engine; https://tectonic-typesetting.github.io), which resolves natbib and
-# BibTeX itself. Two things it needs here:
+# ON THIS MACHINE (2026-09-03): TeX Live 2026 on E: is mounted again, so the
+# PRIMARY route works -- latexmk + pdfTeX at E:\texlive\2026\bin\windows,
+# verified clean (0 errors, 0 overfull, 71 pp). Prefer it: microtype is
+# pdfTeX-only, so the XeTeX route reports margin overhangs that the real
+# route does not.
+#
+# FALLBACK, for when E: is unmounted (it was, 2026-08-26 to 09-02): tectonic
+# 0.17.0 (self-contained XeTeX engine; https://tectonic-typesetting.github.io),
+# which resolves natbib and BibTeX itself. Two things it needs here:
 #   * the socks ALL_PROXY variable unset (its bundle download fails through
 #     the socks proxy; the http(s) proxy variables are fine) -- done below;
 #   * a tectonic binary: either on PATH, or pass TECTONIC=<path>, e.g.

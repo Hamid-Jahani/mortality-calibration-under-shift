@@ -47,7 +47,7 @@ the node alone; user decision pending (bastion 24 cores would halve it).
 4. `python scripts/sensitivities.py ...` → `results/sensitivities.json`
 5. `python scripts/make_tables.py --parquet ... (all four) --analysis ... --sensitivities results/sensitivities.json --out paper/tables --final`
 6. `python scripts/make_figures.py ...` → `paper/figures`
-7. compile: copy `paper/` to the scratchpad, `env -u ALL_PROXY <scratchpad>/tectonic/tectonic.exe -X compile --keep-logs main.tex`; check `grep -c '^!' main.log` = 0 and no "Float too large".
+7. compile: copy `paper/` to the scratchpad, then **`latexmk -pdf -interaction=nonstopmode main.tex`** (TeX Live 2026 on E: — remounted 2026-09-03; this is the route the paper targets, and the only one with microtype). `make` is NOT installed; call latexmk directly. Never pass `-halt-on-error=false` — not a latexmk option; it aborts with "Bad options specified" and leaves a stale first-pass `main.log` that reports phantom float/overfull counts. Fallback when E: is unmounted: `env -u ALL_PROXY <scratchpad>/tectonic/tectonic.exe -X compile --keep-logs main.tex`. Check `grep -c '^!' main.log` = 0, no "Float too large", no "Overfull".
 Then commit the generated tables/figures deliberately (they are gitignored until final).
 
 ## Rules that are easy to break
