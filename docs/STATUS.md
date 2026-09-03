@@ -566,7 +566,17 @@ killed workers. The ~1 GB figure was measured early in a population; GP
 memory grows with the origin (longer panel, bigger kernel), so many workers
 peak together at ~2 GB. **Relaunched at `JOBS=6`** (~12 GB of 21). The four
 already-written parts were kept by resume, so the restart cost ~25 min.
-A memory-guard watcher now warns below 4 GB available. Estimated ~1.8 days.
+A memory-guard watcher now warns below 4 GB available.
+
+**JOBS=6 then OOM-died too**, about an hour in, the box again going
+unresponsive to SSH before it fell over. Settled at **JOBS=4**, measured
+5.1 GB across the pool with 16 GB available. The lesson that cost two
+restarts: **GP worker RSS is not stationary** -- it grows across a
+population's thirteen origins and its EnbPI/copula members (eleven retained
+model fits each), so an early reading badly understates the peak. The 1 GB
+seen on `.49` and the 0.8-1.8 GB seen here minutes after launch both became
+~3.3 GB at peak. Size GP passes off the *peak*, not the first measurement;
+budget ~3.5 GB per worker. Estimated ~2.7 days at JOBS=4.
 
 **Finding: the multi-output GP covers SIXTEEN populations, not eighteen.**
 `MultiOutputGP` carries `min_years=40` — the strictest family floor in the
