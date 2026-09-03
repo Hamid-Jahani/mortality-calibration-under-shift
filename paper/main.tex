@@ -25,6 +25,12 @@
   \usepackage{microtype}
 \fi
 
+% A file path in \texttt{} is one unbreakable box; a justified line carrying
+% one overhangs the margin (3-20 pt, measured on the XeTeX route, where the
+% pdfTeX-only microtype above is unavailable). Let TeX stretch the line
+% instead in its final pass -- engine-independent, unlike microtype.
+\setlength{\emergencystretch}{3em}
+
 \usepackage[a4paper,margin=2.5cm,marginparwidth=2.0cm,marginparsep=0.35cm]{geometry}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs}

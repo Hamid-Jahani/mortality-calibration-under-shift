@@ -391,7 +391,11 @@ class TableWriter:
                  "\\bottomrule", "\\endlastfoot",
                  *(body_rows or [f"\\multicolumn{{{ncols}}}{{l}}{{{PENDING}: no rows}} \\\\"]),
                  "\\end{longtable}",
-                 "\\begin{minipage}{\\linewidth}\\scriptsize"]
+                 # \noindent: the minipage is \linewidth wide, so an indented
+                 # paragraph puts it exactly \parindent (17 pt at 11pt) past
+                 # the text block. \raggedright keeps a long \texttt path in
+                 # a note from overhanging.
+                 "\\noindent\\begin{minipage}{\\linewidth}\\scriptsize\\raggedright"]
         parts += [f"\\noindent {n}\\par" for n in notes]
         parts += ["\\end{minipage}}", ""]
         path = self.out_dir / f"{name}.tex"
@@ -978,7 +982,8 @@ def tab_murphy(df: pd.DataFrame, w: TableWriter):
               "the decomposition becomes informative only across levels. PIT-REL "
               "is the reliability term of the PIT-histogram decomposition "
               "(distributional rows only; n/a for conformal rows).", CBD_NOTE, gp_note(df)]
-    w.write("tab-murphy", colspec, head, body, notes)
+    # 14 columns at 2.5 pt spacing ran 7.4 pt past the text block
+    w.write("tab-murphy", colspec, head, body, notes, tabcolsep="2pt")
 
 
 def _pit_stats(ok: pd.DataFrame, err: pd.DataFrame, cols_: list[str]) -> pd.DataFrame:
@@ -1087,7 +1092,7 @@ def tab_dm_mcs(analyses: dict[str, dict], w: TableWriter):
                  r"use CRPS on log rates; every contrast that includes a conformal arm "
                  r"uses the per-horizon 95\% interval score. A contrast that cannot be "
                  r"formed is listed with its recorded reason."),
-        label="tab:dm-mcs")
+        label="tab:dm-mcs", tabcolsep="2pt")  # 2.5 pt ran the body 2.7 pt wide
 
 
 #: scripts/sensitivities.py slice names -> the addendum-1 stratum labels used here
