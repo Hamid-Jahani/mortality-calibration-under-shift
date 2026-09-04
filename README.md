@@ -11,15 +11,33 @@ attributed to the architecture or to the uncertainty machinery bolted onto it.
 Title and design selected by an adversarial multi-agent tournament —
 see `docs/IDEA.md` for the full record.
 
-**Status:** pre-registered, pre-results. `PREREGISTRATION.md` committed
-2026-08-25, sha256 `bbbe3860a5446d063e186e56555afa893b07c36cf15a990d07567471affe50be`.
-Implemented and green (50 tests): HMD parser (validated against HMD's own Mx),
-LC-SVD, Poisson-LC, CBD-M5, Renshaw–Haberman M2-A, sparse VAR, Poisson
-bootstrap, conformal wrappers, life-table/annuity chain, scoring suite
-(CRPS / Poisson log score / Winkler / randomized PIT / joint path coverage).
-Validation gate 1 (synthetic truth) passes. Open gates before real-data
-results: R/StMoMo oracle parity; Dowd et al. 2010b and Schnürch–Korn 2022
-must be read before related-work text (`literature/GET-THESE.md`).
+**Status:** complete. All three pre-registered regimes are swept, QA-gated
+(zero machine-failure rows) and analysed; the paper draft is written from
+them. `PREREGISTRATION.md` was committed 2026-08-25 — sha256
+`bbbe3860a5446d063e186e56555afa893b07c36cf15a990d07567471affe50be` — before
+the first model was fitted to real data, and every deviation since is
+recorded in the four addenda and `docs/STATUS.md`.
+
+Headline findings, all from the pre-registered grid:
+
+- **Most miscalibration predates the pandemic.** In the quiet stable control
+  (13 expanding origins, 1990–2014), classical native intervals already cover
+  0.702 (Lee–Carter), 0.682 (Poisson-LC) and 0.731 (APC/RH) against a nominal
+  0.95.
+- **The registered one-sided H2 is refuted.** The two-sided
+  |coverage − nominal| grows from stable to shift in only 27 of 50 cells.
+  Coverage falls in 34 of 50, but that is degradation only for arms that began
+  below nominal: over-covering arms move *toward* nominal. The break sorts
+  families by which side of nominal they started on.
+- **H3 holds universally** — joint path coverage is below marginal in 100 of
+  100 (regime, cell) pairs.
+- **H5 is the practical warning.** Annuity-factor intervals are far worse than
+  rate-level ones and are already broken in quiet periods: Lee–Carter's
+  nominal 95% interval for ä₆₅ covers 0.253 of realisations in the stable
+  control.
+
+Validation gates all pass: synthetic truth, R/StMoMo oracle parity
+(β relative difference 2.4e-14), and life-table parity.
 
 ## Research question
 

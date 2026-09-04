@@ -9,6 +9,7 @@ regimes printed as an explicit placeholder, the second-pass GP family
 printed as an explicit pending block until its parquet arrives, and
 tab-populations generated from HMD bulk files rather than a parquet.
 """
+import re
 import json
 import sys
 from pathlib import Path
@@ -211,7 +212,15 @@ def test_all_tables_written_and_stamped(rows, analysis, tmp_path):
 
 
 def test_float_sizes(rows, analysis, tmp_path):
-    """Every threeparttable fragment: \\footnotesize, \\tabcolsep 2.5pt, notes in \\scriptsize."""
+    """Every threeparttable fragment: \\scriptsize body, tight column spacing,
+    notes in \\scriptsize.
+
+    The guard is against a fragment drifting BACK to loose settings (\\small,
+    3-4 pt columns), which is what overflowed the text block. A table is
+    allowed to go TIGHTER than the 2.5 pt default -- tab-murphy carries
+    fourteen-plus columns and is emitted at 2 pt for exactly that reason --
+    so the spacing is checked as a bound, not as a literal.
+    """
     mt.build_all(rows, analysis, None, tmp_path)
     for name in mt.TABLE_NAMES:
         text = _read(tmp_path, name)
@@ -220,7 +229,9 @@ def test_float_sizes(rows, analysis, tmp_path):
             # page-spanning longtable fragments size themselves (own caption/label)
             assert "\\begin{longtable}" in text, name
             continue
-        assert "\\scriptsize\\renewcommand{\\arraystretch}{0.90}\\setlength{\\tabcolsep}{2.5pt}" in text, name
+        assert "\\scriptsize\\renewcommand{\\arraystretch}{0.90}\\setlength{\\tabcolsep}{" in text, name
+        sep = re.search(r"\\setlength\{\\tabcolsep\}\{([0-9.]+)pt\}", text)
+        assert sep and float(sep.group(1)) <= 2.5, f"{name}: tabcolsep {sep and sep.group(1)}"
         if name == "tab-infeasible-full":
             assert "\\begin{minipage}{\\linewidth}\\scriptsize" in text
         else:
