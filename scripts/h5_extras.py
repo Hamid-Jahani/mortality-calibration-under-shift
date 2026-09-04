@@ -177,22 +177,32 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--parquet", action="append", default=None,
                     help="runner parquet(s); default results/shift.parquet + results/shift_gp.parquet")
-    ap.add_argument("--out", default=str(ROOT / "results" / "h5_extras.json"))
+    ap.add_argument("--out", default=None,
+                    help="default results/h5_extras.json, or "
+                         "results/h5_extras_<regime>.json for a non-shift regime")
+    # The regime was hardcoded to "shift" until 2026-09-04, so the stable-control
+    # figures quoted in the actuarial section could not be regenerated from the
+    # command line at all -- they had to be produced by importing the function.
+    ap.add_argument("--regime", default="shift",
+                    help="regime to summarise; also picks the default parquets")
     ap.add_argument("--B", type=int, default=H1_BOOT_B)
     ap.add_argument("--seed", type=int, default=H1_BOOT_SEED)
     args = ap.parse_args(argv)
 
-    paths = args.parquet or [str(ROOT / "results" / "shift.parquet"),
-                             str(ROOT / "results" / "shift_gp.parquet")]
+    paths = args.parquet or [str(ROOT / "results" / f"{args.regime}.parquet"),
+                             str(ROOT / "results" / f"{args.regime}_gp.parquet")]
+    out_path = args.out or str(
+        ROOT / "results" / ("h5_extras.json" if args.regime == "shift"
+                            else f"h5_extras_{args.regime}.json"))
     df = mt.load_rows(paths)
 
-    shortfall = annuity_shortfall(df)
-    boot = h1_bootstrap(df, B=args.B, seed=args.seed)
+    shortfall = annuity_shortfall(df, regime=args.regime)
+    boot = h1_bootstrap(df, regime=args.regime, B=args.B, seed=args.seed)
 
     payload = {
         "script": "scripts/h5_extras.py",
         "inputs": [Path(p).name for p in paths],
-        "regime": "shift",
+        "regime": args.regime,
         "annuity_shortfall": {
             "definition": {
                 "upper_exceed_share": "share of admissible cells with ann65_obs > ann65_q975",
@@ -205,7 +215,7 @@ def main(argv=None) -> int:
         },
         "h1_rank_correlation": boot,
     }
-    out = Path(args.out)
+    out = Path(out_path)
     out.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
     hdr = (f"{'family':6s} {'mech':9s} {'n_adm':>5s} {'n_err':>5s} "

@@ -1,0 +1,321 @@
+{
+  "script": "scripts/h5_extras.py",
+  "inputs": [
+    "stable.parquet",
+    "stable_gp.parquet"
+  ],
+  "regime": "stable",
+  "annuity_shortfall": {
+    "definition": {
+      "upper_exceed_share": "share of admissible cells with ann65_obs > ann65_q975",
+      "upper_mean_rel_shortfall": "mean of (ann65_obs - ann65_q975)/ann65_point over those cells",
+      "lower_exceed_share": "share of admissible cells with ann65_obs < ann65_q025",
+      "lower_mean_rel_shortfall": "mean of (ann65_q025 - ann65_obs)/ann65_point over those cells",
+      "admissible": "no error, scores_secondary False, grid_secondary False, finite obs/point/q025/q975"
+    },
+    "arms": [
+      {
+        "model": "LC",
+        "mechanism": "native",
+        "n": 442,
+        "n_admissible": 442,
+        "n_err": 78,
+        "upper_exceed_n": 310,
+        "upper_exceed_share": 0.7013574660633484,
+        "upper_mean_rel_shortfall": 0.04175216007847033,
+        "lower_exceed_n": 20,
+        "lower_exceed_share": 0.04524886877828054,
+        "lower_mean_rel_shortfall": 0.008947698586317021
+      },
+      {
+        "model": "LC",
+        "mechanism": "pboot",
+        "n": 442,
+        "n_admissible": 442,
+        "n_err": 78,
+        "upper_exceed_n": 293,
+        "upper_exceed_share": 0.6628959276018099,
+        "upper_mean_rel_shortfall": 0.04021532624444562,
+        "lower_exceed_n": 14,
+        "lower_exceed_share": 0.03167420814479638,
+        "lower_mean_rel_shortfall": 0.009807413676942042
+      },
+      {
+        "model": "PLC",
+        "mechanism": "native",
+        "n": 442,
+        "n_admissible": 442,
+        "n_err": 78,
+        "upper_exceed_n": 234,
+        "upper_exceed_share": 0.5294117647058824,
+        "upper_mean_rel_shortfall": 0.020305480084907675,
+        "lower_exceed_n": 18,
+        "lower_exceed_share": 0.04072398190045249,
+        "lower_mean_rel_shortfall": 0.009113004094375021
+      },
+      {
+        "model": "PLC",
+        "mechanism": "pboot",
+        "n": 442,
+        "n_admissible": 442,
+        "n_err": 78,
+        "upper_exceed_n": 221,
+        "upper_exceed_share": 0.5,
+        "upper_mean_rel_shortfall": 0.02068384350034193,
+        "lower_exceed_n": 14,
+        "lower_exceed_share": 0.03167420814479638,
+        "lower_mean_rel_shortfall": 0.00860683705211458
+      },
+      {
+        "model": "CBD",
+        "mechanism": "native",
+        "n": 442,
+        "n_admissible": 442,
+        "n_err": 78,
+        "upper_exceed_n": 48,
+        "upper_exceed_share": 0.1085972850678733,
+        "upper_mean_rel_shortfall": 0.008786470580592466,
+        "lower_exceed_n": 1,
+        "lower_exceed_share": 0.0022624434389140274,
+        "lower_mean_rel_shortfall": 1.807064927755086e-05
+      },
+      {
+        "model": "CBD",
+        "mechanism": "pboot",
+        "n": 442,
+        "n_admissible": 442,
+        "n_err": 78,
+        "upper_exceed_n": 29,
+        "upper_exceed_share": 0.06561085972850679,
+        "upper_mean_rel_shortfall": 0.009868652903764367,
+        "lower_exceed_n": 0,
+        "lower_exceed_share": 0.0,
+        "lower_mean_rel_shortfall": null
+      },
+      {
+        "model": "RH",
+        "mechanism": "native",
+        "n": 442,
+        "n_admissible": 442,
+        "n_err": 78,
+        "upper_exceed_n": 123,
+        "upper_exceed_share": 0.27828054298642535,
+        "upper_mean_rel_shortfall": 0.017780653617507105,
+        "lower_exceed_n": 35,
+        "lower_exceed_share": 0.07918552036199095,
+        "lower_mean_rel_shortfall": 0.007374236121264648
+      },
+      {
+        "model": "RH",
+        "mechanism": "pboot",
+        "n": 442,
+        "n_admissible": 442,
+        "n_err": 78,
+        "upper_exceed_n": 113,
+        "upper_exceed_share": 0.25565610859728505,
+        "upper_mean_rel_shortfall": 0.018081718823214826,
+        "lower_exceed_n": 28,
+        "lower_exceed_share": 0.06334841628959276,
+        "lower_mean_rel_shortfall": 0.00804325395116516
+      },
+      {
+        "model": "SVAR",
+        "mechanism": "native",
+        "n": 297,
+        "n_admissible": 297,
+        "n_err": 223,
+        "upper_exceed_n": 5,
+        "upper_exceed_share": 0.016835016835016835,
+        "upper_mean_rel_shortfall": 0.004410854590918942,
+        "lower_exceed_n": 1,
+        "lower_exceed_share": 0.003367003367003367,
+        "lower_mean_rel_shortfall": 0.0008584535221908392
+      },
+      {
+        "model": "SVAR",
+        "mechanism": "pboot",
+        "n": 238,
+        "n_admissible": 238,
+        "n_err": 282,
+        "upper_exceed_n": 33,
+        "upper_exceed_share": 0.13865546218487396,
+        "upper_mean_rel_shortfall": 0.00602548902615441,
+        "lower_exceed_n": 2,
+        "lower_exceed_share": 0.008403361344537815,
+        "lower_mean_rel_shortfall": 0.003014930570537556
+      },
+      {
+        "model": "GP",
+        "mechanism": "native",
+        "n": 357,
+        "n_admissible": 357,
+        "n_err": 163,
+        "upper_exceed_n": 29,
+        "upper_exceed_share": 0.08123249299719888,
+        "upper_mean_rel_shortfall": 0.007826655758563065,
+        "lower_exceed_n": 20,
+        "lower_exceed_share": 0.056022408963585436,
+        "lower_mean_rel_shortfall": 0.005347145174155384
+      },
+      {
+        "model": "NLC",
+        "mechanism": "ensemble",
+        "n": 442,
+        "n_admissible": 442,
+        "n_err": 78,
+        "upper_exceed_n": 129,
+        "upper_exceed_share": 0.2918552036199095,
+        "upper_mean_rel_shortfall": 0.016239940969797834,
+        "lower_exceed_n": 110,
+        "lower_exceed_share": 0.248868778280543,
+        "lower_mean_rel_shortfall": 0.01218856158622443
+      },
+      {
+        "model": "NLC",
+        "mechanism": "dropout",
+        "n": 442,
+        "n_admissible": 442,
+        "n_err": 78,
+        "upper_exceed_n": 91,
+        "upper_exceed_share": 0.20588235294117646,
+        "upper_mean_rel_shortfall": 0.017051999405966595,
+        "lower_exceed_n": 59,
+        "lower_exceed_share": 0.1334841628959276,
+        "lower_mean_rel_shortfall": 0.009560739246945206
+      },
+      {
+        "model": "CNN",
+        "mechanism": "ensemble",
+        "n": 437,
+        "n_admissible": 437,
+        "n_err": 83,
+        "upper_exceed_n": 176,
+        "upper_exceed_share": 0.40274599542334094,
+        "upper_mean_rel_shortfall": 0.017678140702502777,
+        "lower_exceed_n": 17,
+        "lower_exceed_share": 0.038901601830663615,
+        "lower_mean_rel_shortfall": 0.017086263244388583
+      },
+      {
+        "model": "CNN",
+        "mechanism": "dropout",
+        "n": 438,
+        "n_admissible": 438,
+        "n_err": 82,
+        "upper_exceed_n": 193,
+        "upper_exceed_share": 0.4406392694063927,
+        "upper_mean_rel_shortfall": 0.023895019652374987,
+        "lower_exceed_n": 5,
+        "lower_exceed_share": 0.01141552511415525,
+        "lower_mean_rel_shortfall": 0.020197037514464215
+      },
+      {
+        "model": "LSTM",
+        "mechanism": "ensemble",
+        "n": 434,
+        "n_admissible": 434,
+        "n_err": 86,
+        "upper_exceed_n": 349,
+        "upper_exceed_share": 0.804147465437788,
+        "upper_mean_rel_shortfall": 0.04203386681305607,
+        "lower_exceed_n": 17,
+        "lower_exceed_share": 0.03917050691244239,
+        "lower_mean_rel_shortfall": 0.014580499005241426
+      },
+      {
+        "model": "LSTM",
+        "mechanism": "dropout",
+        "n": 434,
+        "n_admissible": 434,
+        "n_err": 86,
+        "upper_exceed_n": 338,
+        "upper_exceed_share": 0.7788018433179723,
+        "upper_mean_rel_shortfall": 0.04005896731592408,
+        "lower_exceed_n": 13,
+        "lower_exceed_share": 0.029953917050691243,
+        "lower_mean_rel_shortfall": 0.018458707663573444
+      },
+      {
+        "model": "NB",
+        "mechanism": "native",
+        "n": 442,
+        "n_admissible": 442,
+        "n_err": 78,
+        "upper_exceed_n": 85,
+        "upper_exceed_share": 0.19230769230769232,
+        "upper_mean_rel_shortfall": 0.013075333331623206,
+        "lower_exceed_n": 63,
+        "lower_exceed_share": 0.1425339366515837,
+        "lower_mean_rel_shortfall": 0.011317769046531414
+      },
+      {
+        "model": "NB",
+        "mechanism": "ensemble",
+        "n": 442,
+        "n_admissible": 442,
+        "n_err": 78,
+        "upper_exceed_n": 36,
+        "upper_exceed_share": 0.08144796380090498,
+        "upper_mean_rel_shortfall": 0.008636387434306964,
+        "lower_exceed_n": 46,
+        "lower_exceed_share": 0.10407239819004525,
+        "lower_mean_rel_shortfall": 0.007274535072962602
+      },
+      {
+        "model": "NB",
+        "mechanism": "dropout",
+        "n": 442,
+        "n_admissible": 442,
+        "n_err": 78,
+        "upper_exceed_n": 47,
+        "upper_exceed_share": 0.10633484162895927,
+        "upper_mean_rel_shortfall": 0.013459654946979564,
+        "lower_exceed_n": 40,
+        "lower_exceed_share": 0.09049773755656108,
+        "lower_mean_rel_shortfall": 0.010934597813210893
+      }
+    ]
+  },
+  "h1_rank_correlation": {
+    "B": 2000,
+    "seed": 20260830,
+    "cluster": "population",
+    "n_pops": 13,
+    "pops": [
+      "BEL",
+      "DNK",
+      "EST",
+      "FIN",
+      "LTU",
+      "LUX",
+      "LVA",
+      "NOR",
+      "PRT",
+      "SVK",
+      "SWE",
+      "TWN",
+      "USA"
+    ],
+    "n_arms": 18,
+    "n_units_kept": 217,
+    "n_units_total": 520,
+    "rho_rmse_crps": {
+      "point": 0.805986,
+      "ci95": [
+        0.6202270381836945,
+        0.9051083591331267
+      ]
+    },
+    "rho_rmse_logscore": {
+      "point": -0.176471,
+      "ci95": [
+        -0.28586171310629516,
+        0.05882352941176471
+      ]
+    },
+    "n_nan_replicates": {
+      "crps_logmx": 0,
+      "poisson_log_score": 0
+    }
+  }
+}
