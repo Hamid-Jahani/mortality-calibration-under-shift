@@ -1,0 +1,98 @@
+{
+ "shift": {
+  "sources": [
+   {
+    "path": "results\\shift.parquet",
+    "sha256": "1ca21bcec68ba39653d94a6412c47ca79504a40b2862289011387390da3ffd15"
+   },
+   {
+    "path": "results\\shift_gp.parquet",
+    "sha256": "189350e207adb613ecb4d7c3eface39a7be5aabbab005fc111a9a1c60f114a99"
+   }
+  ],
+  "snapshot": false,
+  "cells": "common",
+  "generated": "2026-09-04",
+  "status": "generated",
+  "files": {
+   "fig-coverage-by-age-shift.pdf": 47383,
+   "fig-pit-hist-shift.pdf": 30835,
+   "fig-reliability-shift.pdf": 34552,
+   "fig-joint-vs-marginal-shift.pdf": 34886
+  },
+  "n_rows": 2000,
+  "n_valid": 1790,
+  "n_error_rows": 210,
+  "regime_labels": [
+   "shift"
+  ]
+ },
+ "placebo": {
+  "sources": [
+   {
+    "path": "results\\placebo.parquet",
+    "sha256": "8c54e3490f46ce7bc2f68217b5b67aacc93a3cc447bb4d34bc15f114729be01c"
+   },
+   {
+    "path": "results\\placebo_gp.parquet",
+    "sha256": "2906a51e1216bdd490ab310f664a3cf951e4584c3850bbbda8bb5389ad9ef786"
+   }
+  ],
+  "snapshot": false,
+  "cells": "common",
+  "generated": "2026-09-04",
+  "status": "generated",
+  "files": {
+   "fig-coverage-by-age-placebo.pdf": 45921,
+   "fig-pit-hist-placebo.pdf": 30742,
+   "fig-reliability-placebo.pdf": 34202,
+   "fig-joint-vs-marginal-placebo.pdf": 35012
+  },
+  "n_rows": 1100,
+  "n_valid": 964,
+  "n_error_rows": 136,
+  "regime_labels": [
+   "placebo"
+  ]
+ },
+ "stable": {
+  "sources": [
+   {
+    "path": "results\\stable.parquet",
+    "sha256": "1af36a35b0f4ac48b5f5d2d04005008f8425b9a9110de3b52e669d2ad4a8d908"
+   },
+   {
+    "path": "results\\stable_gp.parquet",
+    "sha256": "cbaac11103ebbd055182119f09cc04e91f545811d07d386a0e714bd3d3ff9c0e"
+   }
+  ],
+  "snapshot": false,
+  "cells": "common",
+  "generated": "2026-09-04",
+  "status": "generated",
+  "files": {
+   "fig-coverage-by-age-stable.pdf": 55354,
+   "fig-pit-hist-stable.pdf": 30899,
+   "fig-reliability-stable.pdf": 34471,
+   "fig-joint-vs-marginal-stable.pdf": 34921
+  },
+  "n_rows": 26000,
+  "n_valid": 19520,
+  "n_error_rows": 6480,
+  "regime_labels": [
+   "stable_1990",
+   "stable_1992",
+   "stable_1994",
+   "stable_1996",
+   "stable_1998",
+   "stable_2000",
+   "stable_2002",
+   "stable_2004",
+   "stable_2006",
+   "stable_2008",
+   "stable_2010",
+   "stable_2012",
+   "stable_2014"
+  ]
+ }
+}

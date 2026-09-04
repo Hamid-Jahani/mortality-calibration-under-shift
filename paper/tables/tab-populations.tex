@@ -1,0 +1,43 @@
+% GENERATED FROM THE DATA FILES (not snapshot-derived) by scripts/make_tables.py on 2026-09-04 from Deaths_1x1.txt, Exposures_1x1.txt; do not hand-edit.
+\begin{threeparttable}\scriptsize\renewcommand{\arraystretch}{0.90}\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{@{}lrrrrrrrll@{}}
+\toprule
+Pop. & First & Last & Train yrs & \multicolumn{2}{c}{Zero-$E$ train} & \multicolumn{2}{c}{Zero-$D$ test} & Placebo & Stratum \\
+ & year & year & $\le$2019 & F & M & F & M & & \\
+\midrule
+BEL & 1841 & 2024 & 101 & 0 & 0 & 0 & 0 & no & none \\
+CHE & 1876 & 2024 & 144 & 1 & 10 & 3 & 2 & yes & neutral \\
+CHL & 1992 & 2024 & 28 & 0 & 0 & 0 & 0 & no & none \\
+DNK & 1835 & 2025 & 185 & 0 & 0 & 10 & 5 & yes & neutral \\
+EST & 1959 & 2024 & 61 & 0 & 0 & 40 & 24 & no & none \\
+FIN & 1878 & 2024 & 142 & 0 & 27 & 7 & 8 & yes & neutral \\
+HKG & 1986 & 2024 & 34 & 0 & 0 & 5 & 6 & no & none \\
+HRV & 2001 & 2024 & 19 & 0 & 0 & 10 & 6 & no & none \\
+ISL & 1838 & 2024 & 182 & 13 & 30 & 117 & 68 & yes & neutral \\
+JPN & 1947 & 2024 & 73 & 0 & 0 & 0 & 0 & no & none \\
+KOR & 2003 & 2024 & 17 & 0 & 0 & 0 & 0 & no & none \\
+LTU & 1959 & 2024 & 61 & 0 & 0 & 19 & 8 & no & none \\
+LUX & 1960 & 2024 & 60 & 0 & 6 & 110 & 72 & no & none \\
+LVA & 1959 & 2024 & 61 & 0 & 0 & 29 & 18 & no & none \\
+NOR & 1846 & 2024 & 174 & 0 & 0 & 14 & 5 & yes & neutral \\
+PRT & 1940 & 2024 & 80 & 0 & 0 & 3 & 0 & no & none \\
+SVK & 1950 & 2024 & 70 & 0 & 0 & 3 & 2 & no & none \\
+SWE & 1751 & 2024 & 269 & 0 & 12 & 1 & 1 & yes & neutral \\
+TWN & 1970 & 2024 & 50 & 0 & 0 & 0 & 0 & no & none \\
+USA & 1933 & 2024 & 87 & 0 & 0 & 0 & 0 & no & none \\
+\midrule
+\multicolumn{10}{l}{Placebo-only populations (train $\le$1913, test 1914--1922)} \\
+FRATNP & -- & -- & -- & -- & -- & -- & -- & yes & belligerent \\
+GBRTENW & -- & -- & -- & -- & -- & -- & -- & yes & belligerent \\
+GBR\_SCO & -- & -- & -- & -- & -- & -- & -- & yes & civilian-only \\
+ITA & -- & -- & -- & -- & -- & -- & -- & yes & belligerent \\
+NLD & -- & -- & -- & -- & -- & -- & -- & yes & neutral \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}\scriptsize
+\item Generated from the data files -- the HMD bulk \texttt{Deaths\_1x1} and \texttt{Exposures\_1x1} files pinned in \texttt{data/MANIFEST.sha256} -- not from any model output; shift populations per PREREGISTRATION.md (20).
+\item First / last year: first and last year of single-age data for the population. Train yrs: maximal contiguous block of years with data ending at the 2019 origin, minimum over sexes (addendum 3 \S2; BEL trains 1919--2019).
+\item Zero-$E$: training-panel cells at ages 0--99 with $E=0$ or missing, by sex (addendum 3 \S1). Zero-$D$: cells with $D<0.5$ at ages 0--99 in the 2020--2024 test window before any model age mask, by sex (addendum 3 \S10).
+\item Placebo eligibility and stratum per PREREGISTRATION-ADDENDUM-1 \S A: neutral / register-based (CHE, DNK, FIN, ISL, NLD, NOR, SWE), belligerent total series (FRATNP, GBRTENW, ITA), civilian-only (GBR\_SCO); BEL excluded (missing 1914--1918).
+\end{tablenotes}
+\end{threeparttable}

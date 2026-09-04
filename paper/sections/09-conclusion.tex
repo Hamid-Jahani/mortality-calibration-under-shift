@@ -2,54 +2,132 @@
 \label{sec:conclusion}
 
 Mortality prediction intervals are priced, reserved against and hedged,
-and until now none had been scored against a realised structural break.
-This paper pre-registered a calibration audit---ten forecasting families
-crossed with seven uncertainty mechanisms, fifty admissible cells, one
-sampling interface, one scoring path---and has now run its primary regime:
-every interval built strictly from data through 2019, held against
-realised 2020--2024 mortality in twenty populations of the first HMD
-vintage with final data through 2024.
+and until now none had been scored against a realised structural break
+alongside a matched control. This paper pre-registered a calibration
+audit---ten forecasting families crossed with seven uncertainty
+mechanisms, fifty admissible cells, one sampling interface, one scoring
+path---and has now run all three registered regimes: a stable control of
+thirteen expanding origins from 1990 to 2014 at a two-year step, with no
+break anywhere in its test windows; the primary shift regime, every
+interval built strictly from data through 2019 and held against realised
+2020--2024 mortality in twenty populations of the first HMD vintage with
+final data through 2024 (sixteen for the multi-output GP, whose forty-year
+floor excludes four short panels); and the 1914--1922 placebo, eleven
+populations over nine horizons. The post-sweep gate records no machine-failure row in
+any of the three, so no number below rests on a broken run.
 
-On the shift regime the registered hypotheses read as follows. \Hone,
-demoted in advance to a harness-validity check, is supported: the RMSE and
-CRPS orderings disagree with the registered top-three inversion, and
-against the Poisson log score the point-accuracy ordering nearly dissolves
-($\rho=0.12$). The universal clause of \Htwo\ is refuted in strong form:
-the classical cores under their own predictive law covered 62--80\% at a
-nominal 95\% (Poisson Lee--Carter 0.624, Renshaw--Haberman 0.654, SVD
-Lee--Carter 0.692, CBD 0.799), but the NB distributional head
-(0.933--0.972), the dropout CNN (0.962) and the sixty-year-window GP
-(0.905) held near-nominal coverage through the break while the LSTM
-(0.647--0.685) and the ensembled neural-LC (0.694) broke alongside the
-classical cores; the failure is a property of the family--mechanism pair,
-not of an architecture class. The registered direction of \Hthree\ holds
-in every one of the fifty admissible arms: joint path coverage collapses
-relative to marginal (0.298 against 0.624 for Poisson Lee--Carter), and
-only the copula band, the one mechanism calibrated for the path, holds
-0.805--0.927 joint. \Hfour\ is refuted as a universal: the old-age
-concentration it registered is real but belongs to the index-extrapolating
-families, while other arms are age-flat or reverse it. The shift half of
-\Hfive\ is established---coverage of the registered $e_{65}$ and
-$\annuity$ intervals departs from nominal by at least 0.200 for every
-full-age distributional arm, and integration concentrates the rate-surface
-failure rather than averaging it away. The comparative clauses of \Htwo\
-and \Hfive\ await the stable control, and the 1914--1922 placebo supplies
-the second event; both run under the same registered design and no claim
-here rests on them.
+The control changes the question the title asks. Most of the
+miscalibration this audit measures predates the pandemic. With nothing
+breaking in the test window, the classical cores under their own
+predictive law already cover 0.682 (Poisson Lee--Carter), 0.702 (SVD
+Lee--Carter) and 0.731 (APC/RH) against a nominal 95\%, and the
+LSTM-$\kappa_t$ deep ensemble covers 0.638. The break does not create
+those failures; it deepens some and repairs others.
 
-The crossed design delivered the attribution it was built for: split
-conformal wrapping significantly improves the interval score of exactly
-the four classical cores whose native law broke and significantly worsens
-exactly the three families whose native law had held. That sign pattern,
-not any single coverage number, is the study's central result, and it is
-the kind of result only a design that separates architecture from
-uncertainty mechanism can produce.
+On the registered hypotheses the audit reads as follows. \Hone, demoted in
+advance to a harness-validity check, is supported: the RMSE and CRPS
+orderings disagree at the registered top-three inversion, and against the
+Poisson log score the point-accuracy ordering nearly dissolves
+($\rho=0.12$). \Htwo\ fails in the form it was registered, and the failure
+is the more interesting result. The registered one-sided clause---nominal
+95\% intervals under-cover in the shift regime for every model
+family---is not supported. Marginal coverage does fall from control to
+break in 34 of the 50 admissible cells, but a fall is degradation only
+for an arm that began below nominal, and the two-sided quantity actually
+tested, $|\text{coverage}-\text{nominal}|$ (Addendum~3, \S8), grows in
+only 27 of 50. The arms that were over-dispersed in the control move
+\emph{towards} the nominal level as the surface breaks---the sparse VAR
+under its native law from 0.988 to 0.937, the NB head under a deep
+ensemble from 0.988 to 0.956---while the under-covering arms move further
+away, Poisson Lee--Carter from 0.682 to 0.624 and APC/RH from 0.731 to
+0.654. What the pandemic does to this grid, on the rate scale, is sort it
+by the side of nominal each cell started on; on the liability scale of
+\Hfive\ the mechanism differs, because arms that already cover almost
+nothing have no room left to fall. A study that had scored the break alone
+would have read the same 34 cells as uniform degradation; the control is
+what makes the sorting visible, and the registration is what obliges us
+to report the registered direction as unsupported.
+
+\Hthree\ requires the most careful statement. Joint path coverage over
+$h=1,\dots,H$ lies below marginal coverage in all 100 of the (regime,
+cell) pairs the two five-horizon regimes provide, with a mean gap of
+0.127 in the control and 0.168 at the break, and the placebo repeats it
+over nine horizons---but that ordering is close to arithmetic, since
+independence alone would open a gap of $0.95-0.95^5=0.176$, wider than
+either mean. The informative comparison is against each arm's own
+implied independence, $\text{marginal}^H$, and there the finding is
+sharp in the opposite direction: joint coverage \emph{exceeds} that
+benchmark in 50 of 50 control cells, 50 of 50 shift cells and 45 of 46
+placebo cells, by as much as 0.34. Horizons are strongly positively
+dependent, which is the dependence \citet{dowd2010backtesting} name in a
+footnote and do not measure; measuring it is what this hypothesis
+contributes. The registered comparator of Addendum~3---each cell's own
+model-implied joint coverage---is not computable from the columns the
+sweeps emitted, and we report no verdict against it. The collapse is not a symptom of
+bad marginal calibration that good calibration removes: Poisson
+Lee--Carter falls from 0.624 marginal to 0.298 joint at the break, and
+the best-covered marginal arms lose the path as well. Only the copula
+band, the one mechanism constructed over the path, holds joint coverage
+of 0.805--0.927. The quantity a liability depends on is therefore
+mis-stated by the quantity the literature reports, in quiet periods as
+much as at a break.
+
+\Hfour\ is refuted as a universal and supported precisely where the
+family-level split of Section~\ref{sec:discussion-split} places it: the
+old-age concentration belongs to the families that forecast through an
+extrapolated period index and to the LSTM, the calibrated arms are
+near-flat in age, and three arms reverse the direction outright. It too
+is already present in the control, where SVD Lee--Carter under its native
+law covers 0.888, 0.760 and 0.501 across ages 0--24, 25--64 and 65--99
+with no break in the test window---a gradient of nearly four tenths that
+owes nothing to the pandemic. This resolves an open point against the
+published prior: \citet{dowd2010backtesting} report their age-84
+forecasts backtesting better than their age-65 ones, and Addendum~3
+pre-committed to treating a reversal as informative rather than as
+grounds for re-testing. The resolution is that the age profile of
+miscalibration is a property of the family--mechanism pair and not of
+mortality forecasting as such, and for the index extrapolators the
+old-age deterioration is real, large and present without any break at
+all.
+
+\Hfive\ is the result an actuarial reader should carry away, and it is
+the most severe in the paper. Calibration does not survive integration
+across ages. In the stable control, SVD Lee--Carter under its native law
+covers 0.253 of its nominal 95\% intervals for $\annuity$ and 0.256 for
+$e_{65}$, and the LSTM deep ensemble covers 0.157 for $\annuity$: an arm
+whose rate-level marginal coverage is 0.702 delivers an annuity interval
+that misses roughly three times in four in a quiet period. Integration
+concentrates the rate-surface failure rather than averaging it away,
+which is the opposite of the attenuation \citet{cairns2011mortality}
+describe for point applications. Annuity factors and life-expectancy
+intervals from these families carry essentially no reliable interval
+whether or not a pandemic intervenes, and any reserving or
+longevity-hedging use of them needs that figure stated in front of it.
+
+The crossed design delivered the attribution it was built for, and the
+control shows that this attribution is not a pandemic effect either.
+Split conformal wrapping significantly improves the 95\% interval score
+of exactly the families whose native law was broken and significantly
+worsens exactly those whose native law was sound, with the same sign in
+both regimes: a mean $\IS_{0.05}$ difference of $+0.694$ in the control
+and $+0.700$ at the break for SVD Lee--Carter, both favouring the split
+band, against $-0.873$ and $-1.024$ for the NB head, both favouring its
+native law. Wrap what is broken and do not wrap what is calibrated is a
+standing rule of interval construction, not crisis advice. That sign
+pattern, not any single coverage number, is the study's central
+methodological result, and it is the kind of result only a design that
+separates architecture from uncertainty mechanism can produce.
 
 The remaining contribution is the protocol itself: a pre-registration
 hash-stamped before the first fit, a harness that recovered nominal
 coverage on synthetic truth and matched the reference implementation to
-machine precision, one predictive-sample interface for every family, and
+machine precision, one predictive-sample interface for every family,
 cluster-bootstrap forecast-comparison inference that treats a pandemic as
-one event rather than thousands of cells. The next break will not announce
-itself either; the protocol is built to score it. The repair belongs to
-the models that come after.
+one event rather than thousands of cells, and---the component this study
+found it could not do without---a matched control regime that says how
+much of a break's apparent damage was there beforehand. The title's
+question has a more interesting answer than yes or no: most of these
+intervals were never calibrated to begin with, and the break mainly
+re-orders them. The next break will not announce itself either; the
+protocol is built to score it, and to apportion the score. The repair
+belongs to the models that come after.

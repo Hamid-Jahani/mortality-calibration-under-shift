@@ -1,70 +1,359 @@
 \section{Discussion}
 \label{sec:discussion}
 
+\subsection{The break sorts the families; it does not create the miscalibration}
+\label{sec:discussion-standing}
+
+The audit was built to ask whether mortality prediction intervals survive
+a pandemic. With all three regimes scored the answer is not the yes or no
+the question invites, and the more interesting answer is the one the
+stable control supplies: most of the interval failure measured in this
+paper is already present in a quiet period, before any break, and what
+the break chiefly does is re-order the families according to how far
+their intervals stood from nominal beforehand and on which side.
+
+The stable control is the evidence. Over thirteen expanding origins from
+1990 to 2014, horizons $h=1,\dots,5$, with no structural event in any
+test year, the classical cores under their own predictive law cover
+0.702 (SVD Lee--Carter), 0.682 (Poisson Lee--Carter), 0.731 (APC/RH) and
+0.901 (CBD) against a nominal 0.95, and LSTM-$\kappa_t$ covers 0.638
+under deep ensembling and 0.667 under MC dropout
+(Table~\ref{tab:h2-coverage}). The shortfall is not an artefact of the
+tail of the predictive law: the three full-age cores among them cover
+0.365, 0.324 and 0.353 at a nominal 0.50, and 0.562, 0.522 and 0.566 at
+a nominal 0.80. These are the standard implementations of
+the standard families on the standard data source, scored against the
+years they were fitted to forecast, with nothing breaking. A reader who
+saw only the shift regime would attribute SVD Lee--Carter's 0.692 in
+2020--2024 to the pandemic; 0.702 of it was there in 1990--2014.
+
+\Htwo\ as registered---``nominal 95\% intervals under-cover in the shift
+regime for every model family''---is therefore not supported, and the
+two-sided restatement of Addendum~3~\S8, under which the quantity tested
+is $|\text{coverage}-\text{nominal}|$ and the direction is free to differ
+by arm, is supported in only about half the grid. The departure grows
+from the stable control to the shift regime in 27 of the 50 admissible
+cells. It is important not to report that number alone. Raw coverage
+\emph{falls} from stable to shift in 34 of the 50, so the modal movement
+at the break is downward, as the registered one-sided form anticipated;
+what the one-sided form did not anticipate is that a fall is degradation
+only for an arm that began below nominal.
+
+The two counts are the same movement read through an absolute value. A
+structural break widens realised forecast errors relative to the
+dispersion the intervals were built from, and realised coverage duly
+falls in roughly two thirds of the grid---34 of the 50 cells, against 16
+in which it rose. Whether that fall is a departure from nominal or a
+return to it depends entirely on the starting side. An arm at 0.702 that
+moves to 0.692 has moved away from 0.95; an arm at 0.988 that moves to
+0.937 has moved towards it. Because the registered quantity is folded
+about the nominal point, a predominantly downward movement produces
+increases in the registered departure on one side of nominal and
+decreases on the other, and the grid divides accordingly. Four
+behaviours are visible, and only the second and third are the failure the
+hypothesis was written to catch.
+
+Some arms are standing failures that the break barely moves: SVD
+Lee--Carter native goes 0.702 to 0.692, its Poisson-bootstrap companion
+0.726 to 0.727, LSTM-$\kappa_t$ 0.638 to 0.647 under the ensemble and
+0.667 to 0.685 under dropout---four arms whose intervals were wrong
+before 2020 and are wrong by about the same amount afterwards. Some are
+standing failures that deepen: Poisson Lee--Carter 0.682 to 0.624 and
+APC/RH 0.731 to 0.654. Some began the quiet control close to nominal and
+were genuinely damaged: the multi-output GP's native law goes 0.945 to
+0.905, and the sparse VAR's split-conformal band---0.948 in the control,
+a registered departure of 0.002 and among the smallest in the stable
+grid---goes to 0.910. CBD belongs beside them only with a qualification,
+because it was 0.049 from nominal before anything broke: its departure
+grows 0.049 to 0.151 as coverage falls 0.901 to 0.799, the largest growth
+anywhere in the grid, but from a starting point that was not sound. And
+some were over-wide and were pulled towards nominal by the shock: the
+sparse VAR's native law goes 0.988 to 0.937 and the NB head's deep
+ensemble 0.988 to 0.956, each posting a smaller registered departure at
+the break than in the quiet period.
+
+\Hthree\ needs more care than its headline count invites, and the care
+is what turns it into a result. Joint path coverage over $h=1,\dots,5$
+does lie below marginal coverage in all 100 of the 100 (regime, cell)
+pairs formed by the fifty admissible arms in the stable and shift
+regimes, with a mean gap of 0.127 in the quiet control and 0.168 at the
+break (Table~\ref{tab:h3-joint}). That count is descriptive and close to
+arithmetic: five independent nominal-95\% statements already give
+$0.95^5=0.774$, a gap of 0.176 that is larger than either observed mean,
+so a negative gap is what a well-calibrated arm should produce and is on
+its own evidence of nothing. Section~\ref{sec:design-status} recorded
+that before any result existed, which is why the comparator was
+re-specified to each cell's own simulated-path-implied joint coverage;
+that quantity is not among the columns the runner emitted
+(Section~\ref{sec:results-joint}), so \Hthree\ returns no registered
+verdict here and the marginal-versus-joint gap is reported as a
+measurement rather than as a test.
+
+The measurement that carries information compares each arm's joint rate
+with independence \emph{at that arm's own realised marginal rate},
+$\text{marginal}^H$, and on that benchmark the sign reverses. Realised
+joint coverage \emph{exceeds} what independence at the same marginal
+level would deliver in 50 of the 50 stable cells, 50 of the 50 shift
+cells and 45 of the 46 placebo cells, by as much as $+0.34$. Whether a
+path is missed at successive horizons is therefore strongly positively
+dependent: a miss at $h=1$ tends to persist, so trajectories fail in
+clumps rather than independently. That is the dependence
+\citet{dowd2010backtesting} name in a footnote and then set aside,
+measuring marginal positions instead, and quantifying it across ten
+families, seven mechanisms and three regimes is what this paper
+contributes on \Hthree.
+
+The practical reading follows, and it is less comfortable than the
+dependence result sounds. Positive dependence helps, but not enough:
+joint coverage still falls below the nominal independence value of 0.774
+in 21 of the 50 stable cells and in 30 of the 50 at the break. Four arms
+hold a joint rate at or above 0.95 in the quiet control---the NB head
+under dropout and under ensembling (0.956 and 0.953) and the sparse VAR
+under its native and bootstrap laws (0.951 and 0.985)---and every one of
+them does so from a marginal rate of 0.988 or higher, that is, by being
+over-wide at the single level; at the break no arm in the grid reaches
+0.95 jointly. The copula band, the one mechanism constructed for the
+trajectory rather than the level, carries the highest joint rate in eight
+of the ten family blocks in the quiet control and in nine of ten at the
+break (0.894--0.942 and 0.805--0.927), but it is not alone at the top of
+the column---the NB head's dropout arm outscores its own family's copula
+band in both regimes, 0.956 against 0.922 and 0.897 against 0.868---and
+its weakest cell of the two, CBD under the break at 0.805, sits far from
+its nominal 0.95. The literature reports marginal coverage; the quantity
+a multi-year reserve depends on is the path, and outside a handful of
+over-wide arms the path is not covered at the advertised rate in either
+regime.
+
+The practical consequence is the strongest recommendation this paper is
+willing to make, and it is a recommendation about audit design rather
+than about models. \emph{A calibration audit must include a quiet control
+period.} A shift-only audit cannot distinguish a model that broke from
+one that was never calibrated, because both present as under-coverage at
+the break, and it cannot distinguish either from a model that was
+over-wide and got lucky. The sparse VAR is the cautionary case: read on
+the shift regime alone, its native law is the best-calibrated native arm
+in the grid---on the 29 of 40 population--sex units its own rejection
+rule admits---at 0.937 against nominal 0.95, a registered departure of
+0.013. Read against its own quiet control it earns that rank by having
+been over-wide at 0.988 by roughly the amount the shock happened to
+consume, and there is nothing in the shift regime that says the next
+shock will be sized to consume it again. Reporting the departure at a
+break without the departure in quiet years is not a conservative
+simplification; it is a measurement that can rank a broken model above a
+sound one.
+
 \subsection{What the family-level split is evidence of}
 \label{sec:discussion-split}
 
 The registration deliberately declined a directional claim on
-neural-versus-classical ordering (Section~\ref{sec:design-status}), and the
-working conjecture that motivated the audit---that coverage degradation
-across the break would be larger for the neural families---is refuted in
-its strong form by Table~\ref{tab:h2-coverage}. The split the shift regime
-actually produced runs through the middle of the neural group. The arms
-that held near-nominal marginal coverage through the break are the NB head
-under all three of its mechanisms (0.933--0.972), CNN-LC under dropout
-(0.962), the multi-output GP (0.905) and---on the cells its own rejection
-rule admits, a selection caveat carried from
-Table~\ref{tab:infeasible}---the sparse VAR (0.937--0.938). The arms that
-broke are the four classical cores (0.624--0.799), LSTM-$\kappa_t$ under
-both its mechanisms (0.647--0.685) and the neural-LC ensemble (0.694).
+neural-versus-classical ordering (Section~\ref{sec:intro}), and
+the working conjecture that motivated the audit---that coverage
+degradation across the break would be larger for the neural
+families---is refuted in its strong form by Table~\ref{tab:h2-coverage}.
+The split the grid actually produced runs through the middle of the
+neural group, and it is visible in the stable control as well as at the
+break. In the quiet regime the arms holding near-nominal marginal
+coverage are the NB head under all three of its distributional
+mechanisms (0.975--0.988), the multi-output GP (0.945), CNN-LC under dropout
+(0.954) and---on the cells its own rejection rule admits, a selection
+caveat carried from Table~\ref{tab:infeasible}---the sparse VAR (0.988).
+The arms far from nominal are the three full-age classical cores
+(0.682--0.731), LSTM-$\kappa_t$ under both its mechanisms (0.638--0.667)
+and the neural-LC ensemble (0.758). At the break the membership of the
+two groups is unchanged---0.905--0.972 for the first, 0.624--0.694 for
+the second---with CBD, at 0.901 in the quiet control and 0.799 at the
+break, the one family that sits between the two groups and moves towards
+the second.
 
 The two groups differ along a line the design did not manipulate. Every
-broken arm forecasts through an extrapolated low-dimensional period
-index---$\kappa_t$ and its cohort or CBD companions, the LSTM's learned
-continuation of $\kappa_t$, the year feature that neural-LC evaluates at
-future dates---and equips the extrapolation with intervals that propagate
-the \emph{process risk} of that index: an innovation variance estimated
-from pre-2020 residuals, drift-estimation uncertainty, and, for the
-ensembles, variance across training seeds. Every arm that held carries its
-uncertainty somewhere else: a count likelihood with a fitted dispersion
-(the NB head), a posterior over functions of calendar time (the GP),
-stochastic perturbation of the fitted map itself (dropout), a cross-age
-innovation covariance with coefficient draws (the sparse VAR). When the
-surface broke, the intervals that survived were the ones whose width came
-from a distributional head or from integrating over the model's own
-parameters, not from the historical smoothness of an index.
+arm in the second group forecasts through an extrapolated
+low-dimensional period index---$\kappa_t$ and its cohort or CBD
+companions, the LSTM's learned continuation of $\kappa_t$, the year
+feature that neural-LC evaluates at future dates---and equips the
+extrapolation with intervals that propagate the \emph{process risk} of
+that index: an innovation variance estimated from in-sample residuals,
+drift-estimation uncertainty, and, for the ensembles, variance across
+training seeds. Every arm in the first group carries its uncertainty
+somewhere else: a count likelihood with a fitted dispersion (the NB
+head), a posterior over functions of calendar time (the GP), stochastic
+perturbation of the fitted map itself (dropout), a cross-age innovation
+covariance with coefficient draws (the sparse VAR). The intervals that
+are calibrated, in quiet years and across the break alike, are the ones
+whose width comes from a distributional head or from integrating over
+the model's own parameters rather than from the historical smoothness of
+an index.
 
 This is an observed association, not an established mechanism. The grid
 crossed family with mechanism; it did not cross ``index extrapolation''
 with ``distributional head'' as manipulated factors, and the families on
 the two sides of the line differ in architecture, likelihood, feature set
 and width at once. Four readings within the grid nevertheless discipline
-the association. First, the mechanism moves coverage with the architecture
-held fixed: on the same CNN-LC architecture, dropout covers 0.962 against
-the ensemble's 0.882, and on neural-LC, 0.811 against 0.694
-(Section~\ref{sec:results-contrasts}). Second, the family moves coverage
-with the mechanism held fixed: under the same deep-ensemble mechanism the
-NB head covers 0.956 where neural-LC covers 0.694 and the LSTM 0.647.
-Third, the held arms are not simply vaguer: NB native and CNN-LC dropout
-carry the two smallest 95\% interval scores among the distributional arms
-(1.684 and 1.677; only the interval-constructing EnbPI wrappers of SVD-LC
-and the LSTM, scored from their bounds, sit lower at 1.615 and 1.631),
-while the one arm that visibly buys coverage with width---neural-LC
-dropout, 0.811 at an interval score of 5.559---is identified by the width
-penalty exactly as it should be. Fourth, adding parameter uncertainty to
-the classical cores barely moves them (SVD-LC 0.692 to 0.727 and CBD
-0.799 to 0.830 under the Poisson bootstrap): what the broken intervals
-lacked at this break was not parameter risk, which is consistent with the
-missing risk being a break in the process the index extrapolates. The age
-resolution agrees: the families whose miss concentrates at ages
-65--99---where the pandemic's excess mortality was---are the index
-extrapolators (Table~\ref{tab:h4-age}), the pattern a level-and-drift miss
-of one common factor loaded onto all ages would produce, while the
-calibrated arms are near-flat in age. Agreement is not proof. Establishing
-the mechanism would need designs this grid does not contain---a
-distributional head grafted onto a classical core, or the NB head's
-likelihood replaced while its features are kept---and that is a follow-on
-study, not a reading of this one.
+the association, and each now has a stable-regime value beside its
+shift-regime one. First, the mechanism moves coverage with the
+architecture held fixed: on the same CNN-LC architecture dropout covers
+0.954 against the ensemble's 0.863 in the quiet control and 0.962
+against 0.882 at the break, and on neural-LC 0.816 against 0.758 and
+0.811 against 0.694 (Section~\ref{sec:results-contrasts}). Second, the
+family moves coverage with the mechanism held fixed: under the same
+deep-ensemble mechanism the NB head covers 0.988 where neural-LC covers
+0.758 and the LSTM 0.638 in the stable regime, and 0.956, 0.694 and
+0.647 at the break. Third, the calibrated arms are not simply vaguer.
+Among the full-age distributional arms of the quiet control the two
+smallest 95\% interval scores belong to the NB head's native law and the
+sparse VAR's native law ($\IS_{95}$ of 1.455 and 1.474, at coverages of
+0.975 and 0.988), against 2.330 for SVD Lee--Carter at 0.702 coverage and
+3.056 for Poisson Lee--Carter at 0.682; the same holds at the break, where
+NB native and CNN-LC dropout carry the two smallest scores among the
+distributional arms (1.684 and 1.677; only the interval-constructing
+EnbPI wrappers of SVD-LC and the LSTM, scored from their bounds, sit
+lower at 1.615 and 1.631). The one arm that visibly buys coverage with
+width---neural-LC dropout, 0.811 at the break for an interval score of
+5.559---is identified by the width penalty exactly as it should be. CBD's
+scores are excluded from these comparisons because its 55--99 age support
+is not the full-age families'. Fourth, adding parameter uncertainty to
+the classical cores barely moves them, in either regime: the Poisson
+bootstrap takes SVD-LC from 0.702 to 0.726 in the quiet control and from
+0.692 to 0.727 at the break, and CBD from 0.901 to 0.921 and 0.799 to
+0.830. What these intervals lack is not parameter risk, and they lack it
+whether or not anything is breaking---which is consistent with the
+missing risk being in the process the index extrapolates rather than in
+the estimation of the model that extrapolates it. Agreement is not proof.
+Establishing the mechanism would need designs this grid does not
+contain---a distributional head grafted onto a classical core, or the NB
+head's likelihood replaced while its features are kept---and that is a
+follow-on study, not a reading of this one.
+
+\subsection{The age profile is standing, and it settles a disagreement with the prior literature}
+\label{sec:discussion-age}
+
+\Hfour\ registered a concentration of coverage failure at the old ages.
+The result is family-specific rather than universal
+(Section~\ref{sec:results}), and for the families in which it holds it is
+again a property of the quiet control rather than of the break. SVD
+Lee--Carter's native intervals cover 0.888, 0.760 and 0.501 across ages
+0--24, 25--64 and 65--99 in the stable regime, and 0.882, 0.725 and
+0.518 at the break (Table~\ref{tab:h4-age}); LSTM-$\kappa_t$ under deep
+ensembling covers 0.858, 0.700 and 0.409 in the quiet control against
+0.893, 0.687 and 0.426 at the break. For these arms the age gradient is
+essentially unmoved by the pandemic: it is a standing feature of an
+interval built by extrapolating one index whose loadings are largest
+where the death counts are. APC/RH is the counter-case in which the
+gradient is genuinely break-induced---0.751, 0.729, 0.720, flat in age in
+the quiet control, against 0.732, 0.661, 0.589 at the break---and
+Poisson Lee--Carter is uniformly poor in both regimes with only a shallow
+age profile that runs the other way, 0.676 at 65--99 against 0.664 at
+25--64 in the control and 0.639 against 0.602 at the break. The neural-LC
+dropout arm's collapse at the young ages is standing too, at 0.529 in the
+quiet control and 0.538 at the break.
+
+This resolves a disagreement in the published record, and we state the
+resolution as a contribution rather than as an incidental finding. The
+prior-art map recorded before any result existed that \Hfour's registered
+direction was contradicted by \citet{dowd2010backtesting}, whose
+published backtest reports that ``the age 65 forecasts have a notable
+upward bias with the realized values often close to or below the lower
+bounds, whereas the age 84 forecast show only a very slight upward
+bias''---the higher age behaving better, on two ages of one family group.
+On thirteen origins, eighteen populations and the full 0--99 range, with
+no break in the test years, the ordering for the index-extrapolating
+families runs the other way and runs steeply: 0.888 at 0--24 against
+0.501 at 65--99 for SVD Lee--Carter. The disagreement is not about the
+pandemic, since our stable window contains no pandemic; it is about age
+coverage of an extrapolated index measured over a wider age range, more
+origins and more populations than the two-age comparison the earlier
+finding rested on. What survives from that literature is the narrower
+point that the ordering is not universal, and our own table makes that
+point far more strongly than the earlier one did: in the shift regime the
+registered direction is reversed in 34 of the 50 cells---in 26 of the 30
+conformal arms, and in every arm of CBD, CNN-LC, Poisson Lee--Carter and
+the multi-output GP. It survives chiefly where the interval comes from
+extrapolating an index under its own law: SVD Lee--Carter and APC/RH
+natively and under the Poisson bootstrap, LSTM-$\kappa_t$ under both its
+mechanisms, and the neural-LC ensemble. The NB head and the sparse VAR
+preserve it in four of their five arms each, but by margins of 0.044 and
+below, mostly inside bands that sit at or above nominal---0.932 at 25--64
+against 0.901 at 65--99 for the NB head's native law, 0.935 against 0.927
+for the sparse VAR's, the widest being the NB head's EnbPI arm at 0.898
+against 0.854---which is a different phenomenon from the steep gradient
+\Hfour\ was written about. The old-age concentration is thus a property
+of index extrapolation rather than of mortality forecasting at large, and
+a conformal wrapper does not merely flatten it: on 26 of 30 wrapped arms
+it tips the gradient the other way, so that the old ages end up the
+better covered.
+
+\subsection{Derived quantities carry the least reliable intervals in the study, and already do so in quiet years}
+\label{sec:discussion-derived}
+
+The result an actuarial reader should take from this study is not on the
+rate surface at all. Intervals on the derived quantities---period life
+expectancy and the annuity-due factor---are worse calibrated than the
+rate-level intervals of the same arms in every full-age family, and for
+the index-extrapolating families the deterioration is already present in
+the quiet control at close to its full size. In the stable regime SVD
+Lee--Carter's native law covers 0.256 for $e_{65}$ and 0.253 for
+$\annuity$ at a nominal 0.95, against 0.702 for the same arm's marginal
+coverage on log rates; the LSTM ensemble covers 0.182 and 0.157
+(Table~\ref{tab:h5-actuarial}). An annuity factor produced by these
+models carries, one year ahead of thirteen quiet origins spanning three
+decades, an interval that covers its own realised value about a quarter
+of the time when it advertises nineteen times in twenty. That is a
+statement about ordinary valuation practice, not about crisis
+resilience.
+
+Two qualifications keep the claim honest. CBD is the exception: on its
+truncated 55--99 table the integration does not hurt it, and its native
+law covers 0.930 on $e_{65}$ and 0.889 on $\annuity$ against 0.901 on
+rates, with its Poisson-bootstrap companion at 0.950 and 0.934 against
+0.921---derived-quantity coverage at or above the rate-level figure in
+three of those four comparisons. And for the arms that were well
+calibrated on rates the derived-quantity failure is largely a break
+effect rather than a standing one: the sparse VAR's native law loses
+0.008 between rates and $\annuity$ in the quiet control (0.988 against
+0.980) and 0.351 at the break (0.937 against 0.586), the GP 0.082 against
+0.311, the NB head's ensemble 0.174 against 0.506. It is the
+index-extrapolating arms---SVD and Poisson Lee--Carter, APC/RH,
+LSTM-$\kappa_t$, neural-LC---whose derived quantities were already
+uncovered before anything broke.
+
+The ordering across arms is the same one the rate surface shows, which is
+what makes the finding coherent rather than anecdotal: in the quiet
+control the sparse VAR's native law covers 0.980 on $\annuity$, CBD's
+0.889 on its truncated 55--99 table, the GP's 0.863 and the NB head's
+deep ensemble 0.814, while SVD Lee--Carter, Poisson Lee--Carter and
+LSTM-$\kappa_t$ sit between 0.157 and 0.468 under either of their two
+mechanisms. The mechanism is the one Section~\ref{sec:actuarial} sets out:
+a period functional integrates a whole age range of one test year, so it
+behaves as a joint coverage statement across ages rather than a marginal
+one, and the marginal-to-joint gap \Hthree\ measures along the horizon
+axis has an age-axis analogue that the life-table integration cannot
+average away. The attenuation
+alternative of \citet{cairns2011mortality} is answered in the quiet
+control as well as at the break: integration concentrates the failure.
+
+The sorting logic of Section~\ref{sec:discussion-standing} recurs here in
+a form worth stating because it is easy to misread. Several
+badly-under-covering arms cover \emph{better} on the derived quantities
+at the break than in the quiet control---SVD Lee--Carter's native
+$\annuity$ coverage goes 0.253 to 0.450---while several of the arms that
+covered well in quiet years collapse: the sparse VAR from 0.980 to 0.586,
+the GP from 0.863 to 0.594, the NB head's ensemble from 0.814 to 0.450.
+CBD is the exception among the well-covering arms and is worth naming as
+such: its stable $e_{65}$ and $\annuity$ coverages fall only to 0.875 and
+0.850 natively, and to 0.925 and 0.850 under the bootstrap---a
+deterioration, not a collapse. The first movement is not a repair. SVD
+Lee--Carter under-states $e_{65}$ systematically: its median path sits a
+mean of 0.84 years below the
+realised value in the quiet control and 0.57 years below it at the break
+(the error column of Table~\ref{tab:h5-actuarial}, $-0.84$ and $-0.57$),
+and coverage rose because a standing under-projection of longevity was
+partly cancelled by a mortality shock, not because the intervals became
+trustworthy. The two error means are descriptive and rest on different
+support---thirteen origins over eighteen populations against one origin
+over twenty, two of which the stable regime cannot score
+(Section~\ref{sec:discussion-limitations})---so the narrowing is a
+statement about the two columns as they stand and not an estimate of a
+period effect. A reserving basis that appears to improve under a pandemic
+for that reason has not been validated by the pandemic.
 
 \subsection{Reading the conformal attribution}
 \label{sec:discussion-conformal}
@@ -74,32 +363,65 @@ design's attribution finding, and its sign pattern admits a one-sentence
 practitioner reading: \emph{wrap what is broken; do not wrap what is
 calibrated}. A conformal band is not a free safety layer laid over a
 model's own uncertainty; it replaces that uncertainty with a
-residual-quantile geometry, and the replacement is signed. It is
-significantly better on the 95\% interval score for exactly the four
-classical cores whose native law broke, and significantly worse for
-exactly the three families whose native law had held---a premium paid in
-width by a model whose own dispersion was already right. Conformalisation
-here behaves as insurance: it pays out precisely when the model's own
-uncertainty was wrong and costs a premium precisely when it was right,
-and which side of the line a family falls on is a property of the
-family--mechanism pair, not of the wrapper.
+residual-quantile geometry, and the replacement is signed. It is better
+on the 95\% interval score for exactly the four classical cores whose
+native law is wrong and worse for exactly the three families whose native
+law is sound---a premium paid in width by a model whose own dispersion
+was already right---and at the break every one of those seven contrasts
+is significant.
 
-Three cautions temper the reading. First, the repair is empirical, not
-guaranteed. Exchangeability between calibration and test years is violated
-by design in the shift regime, so the finite-sample conformal guarantee
-does not apply across the break; the wrappers held 95\% coverage of
-0.848--0.981 anyway, which the coverage-gap bounds of
-\citet{barber2023conformal} permit but do not promise. A practitioner who
-adopts the wrapper for the next break inherits the same asterisk. Second,
-the wrapper equalises the marginal level, not everything an actuary needs:
-split and EnbPI bands that cover marginally still lose the path (joint
-coverage 0.692--0.862 for the split arm), and the copula band that holds
-the path (0.805--0.927) pays for it at the single level, where the
-interval-score confidence sets of Table~\ref{tab:dm-mcs} eliminate it in
-five families. The choice among wrappers is a choice of which quantity is
-to be calibrated---the level or the trajectory---and
+The contrast is not a pandemic effect either, which is a further place
+where the quiet control changes the reading. Every one of
+the seven families that admits the native-versus-split contrast carries
+the \emph{same sign} in the stable regime as at the break, with mean loss
+differentials of comparable size: SVD Lee--Carter $+0.694$ in the quiet
+control against $+0.700$ at the break, Poisson Lee--Carter $+1.038$
+against $+1.895$, APC/RH $+0.451$ against $+1.039$ and CBD $+0.108$
+against $+0.318$, all favouring the wrapper; the NB head $-0.873$ against
+$-1.024$, the GP $-0.772$ against $-0.413$ and the sparse VAR $-0.236$
+against $-0.318$, all favouring the native law. The pattern is already
+significant at the 5\% level in five of the seven families in the quiet
+control (SVD-LC $p=0.006$, Poisson-LC $p=0.032$, the NB head and the GP
+$p<0.0002$, the sparse VAR $p=0.0002$), with APC/RH marginal ($p=0.086$)
+and CBD not distinguishable from zero ($p=0.198$); at the break all seven
+reach $p\le0.019$. The bootstrap resolution is 4999 replicates, so
+$p<0.0002$ is the smallest statement any of these tests can support.
+Conformalisation therefore behaves as insurance in ordinary
+years and not only across breaks: it pays out precisely when the model's
+own uncertainty is wrong and costs a premium precisely when it is right,
+and which side of the line a family falls on is a property of the
+family--mechanism pair rather than of the wrapper or of the regime.
+
+Four cautions temper the reading. First, the pattern does not reproduce
+at the second break. In the placebo regime every one of the six families
+that admits the contrast there returns a point estimate favouring the
+native law, and only the NB head's reaches significance ($-0.461$,
+$p=0.008$, keeping the native-favouring sign it carries in the other two
+regimes) with CBD's reversal marginal ($-0.476$, $p=0.071$); the remaining
+contrasts are indistinguishable from zero ($p\ge0.127$). Over a nine-year
+horizon, on the placebo regime's eleven populations---seven of them for
+the GP, whose own admissibility rule binds hardest there---with
+calibration residuals drawn from pre-1914 data, the wrapper's advantage
+for the classical cores simply is not there. Second, the repair is
+empirical, not guaranteed:
+exchangeability between calibration and test years is violated by design
+in the shift regime, so the finite-sample conformal guarantee does not
+apply across the break; the wrappers held 95\% coverage of 0.848--0.981
+anyway, which the coverage-gap bounds of \citet{barber2023conformal}
+permit but do not promise, and a practitioner who adopts the wrapper for
+the next break inherits the same asterisk. Third, the wrapper equalises
+the marginal level, not everything an actuary needs: split and EnbPI
+bands that cover marginally still lose the path (joint coverage
+0.760--0.842 in the quiet control and 0.692--0.862 at the break for the
+split arm, against the 0.774 that independence at the nominal level
+would already give), and the copula band that holds the path pays for it at the
+single level, where the interval-score confidence sets of
+Table~\ref{tab:dm-mcs} eliminate it in five families at the break and in
+two---CBD and the sparse VAR---in the quiet control. The choice among
+wrappers is a choice of which quantity is to be
+calibrated---the level or the trajectory---and
 Section~\ref{sec:results-contrasts} prices that choice without
-adjudicating it. Third, a conformal cell has no distributional paths, so
+adjudicating it. Fourth, a conformal cell has no distributional paths, so
 it contributes nothing to the derived-quantity audit of
 Section~\ref{sec:actuarial}: a practitioner who needs an interval on
 $e_{65}$ or $\annuity$ from a wrapped model must first decide what a band
@@ -108,36 +430,45 @@ study did not register.
 
 \subsection{Limitations}
 \label{sec:discussion-limitations}
+\label{sec:discussion-limits}
 
 The limitations in this subsection, through the itemised list below, were
-written and committed before any shift-regime result was read, so that
-none could be selected after the fact to excuse a finding or to inflate
-one. They are retained in substance; where a pre-committed limitation now
+written and committed before any regime result was read, so that none
+could be selected after the fact to excuse a finding or to inflate one.
+They are retained in substance; where a pre-committed limitation now
 bears on a specific result, the cross-reference is added and nothing is
-removed. Two further limitations arose during the production sweeps and
+removed. Three further limitations arose during the production sweeps and
 the analysis and are stated, dated, at the end.
 
 \subsubsection{The effective sample size is one}
 
 Every shift-regime number in this paper is a statement about one pandemic
-observed in twenty places. Clustering by population and imposing the null
-in the bootstrap make the standard errors honest \emph{given the event}; they
-do not make the event a sample of events. The audit therefore answers
-``did these intervals survive this break?'' and, through the placebo,
-``does the pattern resemble the previous break?''---not ``will these
-intervals survive the next break?''. A reader who wants the last question
-answered wants a different study, one that we cannot run until there is a
-next break.
+observed in twenty places, sixteen of them for the multi-output GP.
+Clustering by population and imposing the null
+in the bootstrap make the standard errors honest \emph{given the event};
+they do not make the event a sample of events. The stable control changes
+what the shift numbers mean---it separates a break from a standing
+failure, which is the substance of
+Section~\ref{sec:discussion-standing}---but it does not change this. The
+audit answers ``did these intervals survive this break, and were they
+calibrated before it?'' and, through the placebo, ``does the pattern
+resemble the previous break?''---not ``will these intervals survive the
+next break?''. A reader who wants the last question answered wants a
+different study, one that we cannot run until there is a next break.
 
 \subsubsection{The grid is ragged, so claims are contrasts}
 
 Ten families by seven mechanisms is seventy cells on paper and fifty in
-fact. Main effects over a ragged grid confound the factor with the pattern
-of admissibility, so no main effect is reported; every claim is a contrast
-within a sub-grid whose composition is stated. This costs generality: a
-finding that conformal wrapping changes coverage for classical families
-says nothing about neural families unless the neural sub-grid shows it
-too, and we will not average across the two.
+fact. Main effects over a ragged grid confound the factor with the
+pattern of admissibility, so no main effect is reported; every claim is a
+contrast within a sub-grid whose composition is stated. This costs
+generality: a finding that conformal wrapping changes coverage for
+classical families says nothing about neural families unless the neural
+sub-grid shows it too, and we will not average across the two. The counts
+of Section~\ref{sec:discussion-standing}---27 of 50 and 34 of 50---are
+descriptive tallies over the admissible cells and carry no inference;
+they are not a test of \Htwo\ over a balanced design, because the design
+is not balanced.
 
 \subsubsection{Conformal cells carry secondary proper scores}
 
@@ -154,40 +485,41 @@ would remove this limitation and are noted as future work.
 
 HMD does not flag provisional years; it re-issues whole series at each
 release, so the 2024 values are final only in the sense that this release
-contains them. The shift regime's $h=5$ results rest on 2024, and two of the
-twenty populations (USA, CHL) carry census-based exposures that HMD
-documents as pending revision. The pre-registered robustness run drops 2024;
-Addendum~1 adds runs that drop USA and CHL and that contrast register-based
-with census-based populations. If the $h=5$ and $h\le4$ results disagree,
-the $h\le4$ result is the one to trust and the $h=5$ result is reported as
-provisional; if a later vintage appears before submission, the shift regime
-is re-run on it and any change in the headline coverage is reported as a
-vintage-revision effect.
+contains them. The shift regime's $h=5$ results rest on 2024, and two of
+that regime's twenty populations (USA, CHL) carry census-based exposures
+that HMD documents as subject to later revision. The pre-registered robustness run
+drops 2024; Addendum~1 adds runs that drop USA and CHL and that contrast
+register-based with census-based populations. If the $h=5$ and $h\le4$
+results disagree, the $h\le4$ result is the one to trust and the $h=5$
+result is reported as provisional; if a later vintage appears before
+submission, the shift regime is re-run on it and any change in the
+headline coverage is reported as a vintage-revision effect.
 
 \subsubsection{SVD Lee--Carter is over-dispersed by construction}
 
 Validation gate~1 found that the classical two-stage SVD Lee--Carter
 produces intervals slightly wider than nominal on data simulated from a
-Poisson Lee--Carter process, because the SVD estimate of $\kappa_t$ absorbs
-observation noise that then inflates the random-walk innovation variance.
-This is a property of the method that \citet{girosi2007understanding}
-would predict, not a harness artefact, and it has a direct consequence for
-reading the results: an SVD-LC row that appears better calibrated than
-Poisson-LC in the stable regime may be so partly because it is vaguer, and
-the interval score and Murphy resolution term---not coverage---are the
-columns that tell the two apart. In the shift tables this is visible as
-SVD-LC's 0.692 native coverage against Poisson Lee--Carter's 0.624 on the
-same panels: part of that gap is width, and the interval-score column is
-the one that prices it.
+Poisson Lee--Carter process, because the SVD estimate of $\kappa_t$
+absorbs observation noise that then inflates the random-walk innovation
+variance. This is a property of the method that
+\citet{girosi2007understanding} would predict, not a harness artefact,
+and it has a direct consequence for reading the results: an SVD-LC row
+that appears better calibrated than Poisson-LC may be so partly because
+it is vaguer, and the interval score and Murphy resolution term---not
+coverage---are the columns that tell the two apart. This is visible in
+both regimes, as 0.702 native coverage against Poisson Lee--Carter's
+0.682 in the quiet control and 0.692 against 0.624 at the break; part of
+each gap is width, and the interval-score column is the one that prices
+it.
 
 \subsubsection{Other pre-committed limitations}
 
 \begin{itemize}
 \item \emph{Exchangeability is violated by design.} Conformal calibration
   residuals come from pre-cutoff years, and the test years are precisely
-  the years chosen to differ from them. \citet{barber2023conformal} bound the
-  resulting coverage gap; we measure it rather than assume it away. The
-  conformal arms are audited, not endorsed
+  the years chosen to differ from them. \citet{barber2023conformal} bound
+  the resulting coverage gap; we measure it rather than assume it away.
+  The conformal arms are audited, not endorsed
   (Section~\ref{sec:discussion-conformal}).
 \item \emph{Neural families are budget-limited.} Ensembles of ten over
   the origins, populations and sexes of three regimes fix the
@@ -198,10 +530,10 @@ the one that prices it.
   (Section~\ref{sec:design-families}) is a property of the specification,
   not a tuning accident.
 \item \emph{Data quality in the placebo window.} Military deaths are
-  reconstructed in the belligerent series and excluded in the civilian-only
-  one. Placebo results are descriptive, are reported pooled and by the
-  pre-specified strata, and the neutral register-based stratum carries the
-  1918-versus-2020 comparison.
+  reconstructed in the belligerent series and excluded in the
+  civilian-only one. Placebo results are descriptive, are reported pooled
+  and by the pre-specified strata, and the neutral register-based stratum
+  carries the 1918-versus-2020 comparison.
 \item \emph{Single-age granularity.} Modelling ages $0$--$99$ singly keeps
   the old-age cells noisy in small populations; the age-cap-90 robustness
   run tests whether \Hfour\ is an artefact of that noise.
@@ -209,83 +541,132 @@ the one that prices it.
   deaths; the CRPS-on-counts sensitivity exists to show that nothing turns
   on it.
 \item \emph{One code path, one author.} A single evaluation module is a
-  strength for consistency and a weakness for independent verification; the
-  synthetic-truth gate and the \pkg{StMoMo} oracle are the checks, and the
-  code is public.
+  strength for consistency and a weakness for independent verification;
+  the synthetic-truth gate and the \pkg{StMoMo} oracle are the checks, and
+  the code is public.
 \end{itemize}
 
 \subsubsection{Limitations recorded during the sweeps and analysis}
 
 \begin{itemize}
-\item \emph{The GP rows audit a sixty-year-window variant} (Addendum~4,
-  registered 2026-08-29, during the production sweeps and before any GP
-  cell on a panel longer than sixty years had produced a result). The
-  exact multitask GP was infeasible on the long panels at the available
-  memory, so the family trains on the trailing sixty complete years under
-  every mechanism; the cause, the memory figures and the disclosure of an
-  earlier forty-year diagnostic are in
+\item \emph{The GP rows audit a sixty-year-window variant on a reduced
+  population set} (Addendum~4, registered 2026-08-29, during the production
+  sweeps and before any GP cell on a panel longer than sixty years had
+  produced a result). The exact multitask GP was infeasible on the long
+  panels at the available memory, so the family trains on the trailing
+  sixty complete years under every mechanism; the cause, the memory
+  figures and the disclosure of an earlier forty-year diagnostic are in
   Section~\ref{sec:design-deviations}. Every GP number in this paper is
   therefore a statement about the sixty-year-window GP, not about the
-  registered full-panel specification; the four populations whose panels
-  were already within the cap are unchanged, and the GP's contrasts stay
+  registered full-panel specification. The family's own minimum
+  training-block rule additionally removes populations from every regime,
+  and by a different amount in each: the GP rows rest on sixteen
+  populations in the stable control and sixteen in the shift regime,
+  against eighteen and twenty respectively for the other nine families,
+  and on eight of the placebo regime's eleven, where its native rows come
+  from sixteen of the twenty-two population--sex units
+  (Table~\ref{tab:h5-actuarial}). Every GP comparison therefore stays
   inside its own sub-grid.
-\item \emph{The 99.5\% longevity tail is not computable from the persisted
-  results} (recorded 2026-08-30, at analysis). The runner persists the
-  2.5\% and 97.5\% sample quantiles of the derived quantities, not the
-  99.5\% quantile, so the empirical frequency of a nominally
-  once-in-200-year $\annuity$ exceedance described in
-  Section~\ref{sec:actuarial} cannot be evaluated from the results files
-  as they stand. It was descriptive, not registered; filling it requires
-  re-scoring the cells with a persisted 99.5\% column, and until that run
-  exists the paper makes no tail-frequency claim.
+\item \emph{The stable control is scored on eighteen populations, not
+  twenty} (recorded 2026-09-02, at the stable QA gate). HRV and KOR enter
+  HMD too late to supply the registered admissibility floor of fifteen
+  contiguous training years at any of the thirteen stable origins---at the
+  earliest origins their panels have no training years at all---so no
+  family produces a valid stable row for either, and the stable columns of
+  every regime-indexed table are means over eighteen populations for the
+  nine non-GP families and sixteen for the multi-output GP. The sparse
+  VAR is thinned further, but by its own explosive-draw rejection rule
+  rather than by an admissibility floor, so its stable support is a set of
+  cells rather than a population count: 297 of the 520 (population, sex,
+  origin) units for its native law (Table~\ref{tab:infeasible}). The
+  stable-versus-shift comparisons of
+  Section~\ref{sec:discussion-standing} are therefore not
+  taken on an identical population set: the two regimes' descriptive means
+  differ in support as well as in period, and the shift regime's twenty
+  populations include two that the stable regime cannot score. Every
+  contrast reported with a test statistic is computed on the intersection
+  of cells in which both compared arms produced a valid row
+  (Addendum~3~\S11), and the cluster counts in Table~\ref{tab:dm-mcs}
+  state that intersection for each.
+\item \emph{The 99.5\% longevity tail was not emitted by the swept passes}
+  (recorded 2026-08-30 at analysis; closed as future work 2026-09-04). The
+  runner persists the 2.5\% and 97.5\% sample quantiles of the derived
+  quantities, not the 99.5\% quantile, and the three production sweeps
+  completed without it. The empirical frequency with which a nominally
+  once-in-200-year $\annuity$ exceedance is realised---the quantity an
+  internal model would carry as its one-year longevity tail---therefore
+  cannot be evaluated from the results files, and no tail-frequency claim
+  is made anywhere in this paper. It was descriptive and not registered.
+  Per-cell seeds are recorded, so a re-score with a persisted 99.5\%
+  column would reproduce the original predictive samples exactly; that
+  re-score is left to future work, and the 97.5\% breach frequencies of
+  Section~\ref{sec:actuarial} are what this study reports at the top of
+  the distribution.
 \end{itemize}
 
-\subsection{What the stable and placebo regimes will and will not settle}
-\label{sec:discussion-pending}
+\subsection{What the stable and placebo regimes settle, and what they cannot}
+\label{sec:discussion-regimes}
 
-Two of the three registered regimes are still running, and this draft
-asserts nothing derived from them. What their arrival can and cannot
-change is fixed by the registration, and is stated here as design, not as
-prediction.
+The three regimes were registered with different jobs, and it is worth
+separating what each has now done from what no amount of data of that
+kind could do.
 
-The stable regime supplies the reference level. The comparative clause of
-\Htwo---the departure $|\text{coverage}-\text{nominal}|$ grows from the
-stable to the shift regime, per family and mechanism---and the registered
-verdict on \Hfive---the shift-regime departure on $e_{65}$ and $\annuity$
-exceeds the stable-regime departure, per arm---are computable only when
-the stable files exist; the shift-side quantities in
-Tables~\ref{tab:h2-coverage} and~\ref{tab:h5-actuarial} are already in the
-form those comparisons need. The stable half of \Htwo\ is labelled a
+The stable regime supplied the reference level, and it turned out to
+carry the paper's reframing rather than merely to anchor it. Both
+comparative clauses depend on it: \Htwo's registered growth in
+$|\text{coverage}-\text{nominal}|$ from stable to shift, per family and
+mechanism, and \Hfive's registered excess of the shift-regime departure
+on $e_{65}$ and $\annuity$ over the stable-regime departure, per arm.
+Both are now computed, and both return a split verdict rather than the
+registered universal one. The stable half of \Htwo\ was labelled a
 replication arm (Section~\ref{sec:design-regimes}) because stable-window
-miscalibration of particular arms is already in the literature. What the
-stable regime cannot do is alter any shift-regime number, and it cannot
-convert the event study into a sample of events: a shift-minus-stable
-difference is a statement about calibration at one break relative to
-calibration at none, with the first limitation above intact.
+miscalibration of particular arms is already in the literature; what the
+replication delivers here is not novelty but the discriminating power
+that Section~\ref{sec:discussion-standing} rests on. What the stable
+regime cannot do is convert an event study into a sample of events: a
+shift-minus-stable difference is a statement about calibration at one
+break relative to calibration at none, with the first limitation above
+intact.
 
 The placebo regime is a second event, used descriptively by registration.
-Its side-by-side (Table~\ref{tab:twin-crises}) can show whether the
-patterns found here---the family-level split, the joint-path collapse, the
-old-age concentration of the index extrapolators' miss---recur at a break
-of different cause and different age profile, over a nine-year horizon, in
-data a century older; the pre-specified strata carry the data-quality
-reading, and its first test year, 1914, precedes the influenza wave. What
-it cannot do: it supports no transfer regression and no formal test of
-COVID-specificity, its eleven populations overlap only partly with the
-shift regime's twenty, and recurrence or non-recurrence at two events
-leaves the effective-sample-size limitation exactly where it is.
+Its side-by-side (Table~\ref{tab:twin-crises}) shows whether the patterns
+found at the pandemic recur at a break of different cause and different
+age profile, over a nine-year horizon, in data a century older, and the
+answer is mixed in an informative way. The horizon dependence measured
+under \Hthree\ recurs: joint coverage beats independence at each arm's
+own marginal rate in 45 of the 46 admissible placebo cells even over nine
+horizons, though its level falls much further than at the pandemic, below
+the nominal independence value of $0.95^9=0.630$ in 37 of those 46 cells
+and to 0.335 for SVD Lee--Carter's native law. The full-age classical
+cores' native coverage sits at 0.761--0.787 rather than below it, and the
+conformal sign pattern does not recur at all
+(Section~\ref{sec:discussion-conformal}). What the placebo cannot do is
+unchanged by that. It supports no transfer regression and no formal test
+of COVID-specificity; its eleven populations overlap only partly with the
+shift regime's twenty, and the sparse VAR's rejection rule leaves that
+family a single admissible mechanism there; the
+pre-specified strata carry the data-quality reading, and its first test
+year, 1914, precedes the influenza wave, so the $h=1$ column is a
+pre-shock year in a way the shift regime's is not. Recurrence or
+non-recurrence at two events leaves the effective-sample-size limitation
+exactly where it is.
 
 \subsection{What this paper does not do}
 
 It does not propose a model, a repair, or a recommendation about which
-family to use. The audit did find a mechanism that restores marginal
-coverage at the break; it is stated as a signed contrast within the
-registered sub-grids (Table~\ref{tab:dm-mcs},
+family to use. The audit did find a mechanism that improves the interval
+score of the families whose native law is wrong; it is stated as a signed
+contrast within the registered sub-grids (Table~\ref{tab:dm-mcs},
 Section~\ref{sec:results-contrasts}), with its cost to the calibrated
-families stated in the same table, and it is not presented as a method
+families stated in the same table and its failure to reproduce at the
+placebo stated beside it, and it is not presented as a method
 contribution. The practitioner reading of
 Section~\ref{sec:discussion-conformal} is the content of that contrast,
-not an endorsement of any family or wrapper. Explainability of the neural
-families---which features drive their forecasts and whether the
-explanations are stable across the break---is a separate question deferred
-to a companion paper that reuses these fits.
+not an endorsement of any family or wrapper. The one recommendation the
+paper does make---that a calibration audit include a quiet control
+period---is a recommendation about measurement, and it follows from the
+fact that this study would have reported a different and wrong headline
+without one. Explainability of the neural families---which features drive
+their forecasts and whether the explanations are stable across the
+break---is a separate question deferred to a companion paper that reuses
+these fits.
