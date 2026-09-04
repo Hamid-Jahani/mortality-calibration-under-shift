@@ -1,240 +1,171 @@
-# .memory — operational pick-up state (rewritten 2026-08-28 afternoon)
+# .memory — operational pick-up state (rewritten 2026-09-04, study COMPLETE)
 
-Fast orientation for a session that has lost context. The *scientific*
-ledger is `docs/STATUS.md` (chronological, authoritative on findings and
-deviations); this file is how to RUN things and what is in flight.
-Registered documents override both: `PREREGISTRATION.md` + addenda 1–3
-(hashes in their commits), `docs/PRIOR-ART.md`, `docs/GRID.md`.
+Fast orientation for a session that has lost context. The *scientific* ledger
+is `docs/STATUS.md` (chronological, authoritative on findings and deviations);
+this file is how to RUN things and what state the work is in. Registered
+documents override both: `PREREGISTRATION.md` + addenda 1–4 (hashes in their
+commits), `docs/PRIOR-ART.md`, `docs/GRID.md`.
+
+## STATUS: the study is finished
+
+All three pre-registered regimes are swept, QA-gated (zero machine-failure
+rows in any regime), analysed, and written up. The paper compiles clean —
+0 errors, 0 overfull boxes, 0 oversized floats, 0 undefined references,
+111 pages — and is committed at `976f2e7` together with the generated tables
+and figures (previously gitignored as provisional). Tests: 211 passed.
+
+Deliverable: **`paper/main.pdf`**, source in `paper/`.
+
+| regime | rows | error rows | populations | origins | h |
+|---|---|---|---|---|---|
+| stable (control) | 26,000 | 6,480 (24.9%) | 18 (16 for GP) | 13 (1990–2014 step 2) | 1–5 |
+| shift (primary) | 2,000 | 210 (10.5%) | 20 (16 for GP) | 1 (2019) | 1–5 |
+| placebo | 1,100 | 136 (12.4%) | 11 | 1 (1913) | 1–9 |
+
+## The findings, as the paper states them
+
+1. **Most miscalibration predates the pandemic.** In the quiet control,
+   native intervals already cover far below nominal: Lee–Carter 0.702,
+   Poisson-LC 0.682, APC/RH 0.731 against 0.950.
+2. **H2's registered one-sided form is REFUTED.** The two-sided restatement
+   (addendum 3 §8) grows in only 27 of 50 cells. Coverage falls in 34 of 50,
+   but that is degradation only for arms starting below nominal; over-covering
+   arms move *toward* nominal (SVAR native 0.988→0.937, NB ensemble
+   0.988→0.956). The break **sorts** the grid by starting side.
+3. **H3 — read this carefully, an earlier draft got it wrong.** "Joint below
+   marginal in 100 of 100 pairs" is DESCRIPTIVE and near-tautological:
+   independence alone implies a gap of $0.95-0.95^5=0.176$, wider than the
+   observed means (0.127 stable, 0.168 shift). §4 and §5 already called that
+   comparison near-tautological. The defensible finding is the opposite
+   benchmark: joint coverage **exceeds** independence at each arm's own
+   marginal rate ($\text{marginal}^H$) in 50/50 stable, 50/50 shift and 45/46
+   placebo cells, by up to +0.34 — horizons are strongly positively
+   dependent, the dependence Dowd et al. (2010) name in a footnote and never
+   measure. The registered re-specified comparator (model-implied joint
+   coverage) is NOT computable from the emitted columns; no verdict is
+   claimed against it. Joint falls below the nominal independence value 0.774
+   in 21/50 stable and 30/50 shift cells.
+4. **H4** holds for the *full-age* families whose extrapolated index also
+   broke (LC 0.882/0.725/0.518 across ages 0–24/25–64/65–99 under the break),
+   and is already present in the control (0.888/0.760/0.501). This
+   contradicts Dowd et al.'s published direction (their age 84 behaved better
+   than age 65) — stated as a contribution. CBD is excluded from the class:
+   its 25–64 column is a 55–64 stub.
+5. **H5 is the actuarial headline.** Derived-quantity intervals are far worse
+   than rate-level ones and already broken in quiet decades: LC native covers
+   0.253 of realised ä₆₅ and 0.256 of e₆₅; LSTM ensemble 0.157. The
+   registered *ordering* clause holds for 14/20 arms on e₆₅, not universally.
 
 ## Where the work runs
 
 | what | where |
 |---|---|
-| Repo of record | `g:\Mortality - Explainable AI` (this tree; remote github Hamid-Jahani/mortality-calibration-under-shift, branch main) |
-| Python env for the laptop | `C:/Users/Gaming/venvs/mortcal-cpu/Scripts/python.exe` (CPU torch; use for everything here). The CUDA env `C:/Users/Gaming/venvs/mortcal` is for a future GPU hybrid only. The repo `.venv` is DEAD (zombie uv processes hold it) — delete after a reboot, never use. Never run plain `python`/`uv run`. |
-| Sweeps | compute node `tararis-ai3` = 192.168.1.47 (Ubuntu 24.04, 12 cores, 23 GB), reachable ONLY through the bastion `baazar` (= ai-server, 24 cores). Every command is nested: `/c/Windows/System32/OpenSSH/ssh.exe baazar 'ssh 192.168.1.47 "<cmd>"'`. Repo there: `~/mortality-calibration-under-shift` (arrived as a git bundle — no GitHub creds on the node; ship single files with `cat file \| ssh ... "cat > path"`). Env `.venv-server` (CPU torch 2.6.0, gpytorch 1.15.2). Data: `Dataset/` = the 7 sweep-relevant HMD files (281 MB, manifest-verified). |
-| SSH prerequisite | the Windows `ssh-agent` service must be running with `C:\Users\Gaming\.ssh\Tara\.ssh\Hamid` loaded (`ssh-add`, passphrase-protected; service set to Automatic on 2026-08-28). "Permission denied (publickey)" after a reboot = key not loaded. |
+| Repo of record | `g:\Mortality - Explainable AI` (remote github Hamid-Jahani/mortality-calibration-under-shift, branch main) |
+| Python (laptop) | `C:/Users/Gaming/venvs/mortcal-cpu/Scripts/python.exe`. Never plain `python` (WindowsApps stub) or `uv run`. The repo `.venv` is DEAD. |
+| `.47` = `tararis-ai3` | STAGING, 12 cores, 23 GB, no production load. Two hops: `ssh.exe baazar 'ssh 192.168.1.47 "<cmd>"'`. |
+| `.49` = `baazar` / `ai-server` | **PRODUCTION**, 24 cores but only ~9–11 GB free (its other services own ~15 GB). Single hop. Do not oversubscribe. |
+| Server repo/env | `~/mortality-calibration-under-shift`, env `.venv-server`. No GitHub creds there — ship files with `cat f \| ssh ... "cat > path"`. |
+| SSH prerequisite | Windows `ssh-agent` running with `C:\Users\Gaming\.ssh\Tara\.ssh\Hamid` loaded. "Permission denied (publickey)" after reboot = key not loaded. |
 
-## Sweep state (node) — SUPERSEDED by the 2026-08-29 note at the bottom
-(shift pass 1 complete; launcher killed; placebo pass 1 + capped GP pass running manually)
+**DNS workaround:** if `ssh baazar` fails with "Temporary failure in name
+resolution", pin the IP in the ProxyCommand — replace
+`-connect app.baazartehran.com:443` with `-connect 87.107.136.42:443`, keeping
+`-servername ssh.baazartehran.com`. Worked 2026-09-02.
 
-`scripts/launch_sweeps.sh shift placebo`, launched 2026-08-27 19:42 via
-`scripts/server_relaunch.sh` (JOBS=10, GP_JOBS=7, OMP/MKL/OPENBLAS threads
-pinned to 1 in the launch env). Detached (`setsid nohup`, PPID 1) — survives
-closing sessions. Shift pass 1 at 179/180 parts (SWE's last neural model
-running since 19:42; ISL took 10.3 h, NOR 7.2 h). Then: shift GP pass (~2–3 h),
-placebo pass 1 (one wave, ~8–12 h), placebo GP. Expect everything ~2026-08-29
-morning. Check:
-`ssh.exe baazar 'ssh 192.168.1.47 "ls ~/mortality-calibration-under-shift/results/shift.parts | wc -l; tail -2 ~/mortality-calibration-under-shift/results/logs/server_launch.out"'`
-Per-population wall times are ~2x the solo probe (single-thread torch).
-The run so far is CLEAN (QA gate on a 177-part snapshot: 0 machine-failure
-rows). The 20 shift CBD cells were re-run on the node after the copula NaN
-fix (all mechanisms now score 45 ages). STABLE regime NOT started: ~6 days on
-the node alone; user decision pending (bastion 24 cores would halve it).
+## Rebuilding the paper
 
-## Post-sweep order (laptop, mortcal-cpu env) — read results only at step 7
+```
+python scripts/make_tables.py --parquet results/{stable,shift,placebo}[_gp].parquet (all six) \
+    --analysis results/{stable,shift,placebo}_analysis.json \
+    --sensitivities results/sensitivities.json --out paper/tables --final
+python scripts/make_figures.py --regimes stable shift placebo \
+    --source stable=results/stable.parquet,results/stable_gp.parquet  (etc.) --out paper/figures
+# compile in a scratchpad COPY, never in paper/:
+latexmk -pdf -interaction=nonstopmode main.tex
+```
 
-1. `bash scripts/server_pull.sh shift placebo` (pulls parquet + parts + logs; purges local snapshots first).
-   STABLE lives on TWO machines — use `bash scripts/server_pull_stable.sh`
-   instead (two-source pull + local assembly, duplicate-cell abort;
-   dry-run verified 2026-08-31).
-1b. `python scripts/patch_obs_lifetable.py results/<regime>.parquet results/<regime>_gp.parquet`
-    — the server runners predate the observed-lifetable fix (2026-08-31):
-    recomputes {e0,e65,ann65}_obs/_error via the fixed code path. REQUIRED
-    for stable when it lands; shift/placebo already patched locally.
-2. `python scripts/final_qa.py results/shift.parquet results/shift_gp.parquet results/placebo.parquet results/placebo_gp.parquet` → must print QA PASS (machine=0)
-3. `python scripts/analyse.py results/shift.parquet results/shift_gp.parquet --out results/shift_analysis.json` (and placebo)
-4. `python scripts/sensitivities.py ...` → `results/sensitivities.json`
-5. `python scripts/make_tables.py --parquet ... (all four) --analysis ... --sensitivities results/sensitivities.json --out paper/tables --final`
-6. `python scripts/make_figures.py ...` → `paper/figures`
-7. compile: copy `paper/` to the scratchpad, then **`latexmk -pdf -interaction=nonstopmode main.tex`** (TeX Live 2026 on E: — remounted 2026-09-03; this is the route the paper targets, and the only one with microtype). `make` is NOT installed; call latexmk directly. Never pass `-halt-on-error=false` — not a latexmk option; it aborts with "Bad options specified" and leaves a stale first-pass `main.log` that reports phantom float/overfull counts. Fallback when E: is unmounted: `env -u ALL_PROXY <scratchpad>/tectonic/tectonic.exe -X compile --keep-logs main.tex`. Check `grep -c '^!' main.log` = 0, no "Float too large", no "Overfull".
-Then commit the generated tables/figures deliberately (they are gitignored until final).
+- `make` is NOT installed; call `latexmk` directly. **Never pass
+  `-halt-on-error=false`** — not a latexmk option; it aborts with "Bad options
+  specified" and leaves a stale first-pass `main.log` whose float/overfull
+  counts are phantom. That cost a wrong diagnosis once.
+- TeX Live 2026 lives on **E:**, which has been unmounted twice. Fallback:
+  `env -u ALL_PROXY <scratchpad>/tectonic/tectonic.exe -X compile --keep-logs main.tex`.
+- **Delete any stale `paper/main.log` before trusting a build check** — an
+  Aug-28 leftover was read as if current and reported phantom errors.
+- Check `grep -c '^!' main.log` = 0, no "Float too large", no "Overfull",
+  no "undefined".
 
 ## Rules that are easy to break
 
 - Real-data runs need `allow_real=True` (the CLI passes it) — the auditable act.
 - Never clip SVAR rates or Poisson means (addendum 3 §7): rejection only. The
-  rejection FIRES on real data (TWN 990–1000/1000 draws explosive; pboot
-  overflows on the longest panels) — that is a finding, recorded as
-  method-failure rows, reported in tab-infeasible.
+  rejection FIRES on real data — a finding, recorded as method-failure rows.
 - Losses are never imputed: `mortcal.inference` raises on non-finite input and
-  on any attempt to rank conformal cells' placeholder crps/logscore — conformal
-  contrasts use `winkler95` (interval score). CBD (45 ages) never enters a
-  ranking with 100-age families. Age-support rule (fixed 2026-08-31): arms
-  must agree on `n_ages_scored` PER CELL; cross-cell raggedness (placebo
-  98/99/100 by population) is allowed and reported.
-- Conformal cells have NO derived-quantity intervals (e0/e65/ä65 → n/a).
-- One device per regime; `device` column records it (all CPU so far).
-- Do NOT resume workflow `wf_75bb90b5-839` (dead; clobbers manual fixes).
-- Do not commit `results/parity/D_*.csv` / `E_*.csv` (raw HMD) or any
-  snapshot-derived number into .tex/.md. `results/_*` are local snapshots.
+  on any attempt to rank conformal placeholder crps/logscore — conformal
+  contrasts use `winkler95`. CBD (45 ages) never enters a ranking with
+  100-age families.
+- **Conformal cells have NO derived-quantity intervals** (e0/e65/ä65 → n/a).
+  Their samples are uniform draws inside a band, an interval convention, not
+  a predictive law. Computing coverage from them is meaningless — this fed a
+  real defect once.
+- Bootstrap p-values: B=4999, so a stored `0.0` supports only **p < 0.0002**.
+  Never write "p < 0.0001".
+- Population counts differ by regime AND family: shift 20 (GP 16), stable 18
+  for the nine non-GP families (GP 16), placebo 11. Never write a blanket
+  "twenty populations".
+- **The multi-output GP needs 40 training years** (`min_years=40`) — the
+  strictest floor in the study. It removes CHL, HKG, HRV, KOR from every GP
+  cell in every regime. Documented in §4.
+- Do not commit `results/parity/D_*.csv` / `E_*.csv` (raw HMD) or `Dataset/`.
+
+## Lessons that cost real time
+
+- **Never regex-edit LaTeX across float boundaries.** A regex meant to unwrap
+  `\begin{table}...\end{table}` matched across two floats and deleted
+  `tab-h4-age`, the entire H4 discussion and the PIT subsection heading —
+  ~230 lines, no backup. A second regex attached four captions to the wrong
+  function calls. Use anchored, exact-string edits.
+- **GP worker memory is NOT stationary.** It grows across a population's 13
+  origins and the 11 retained member fits of EnbPI/copula. An RSS reading
+  taken minutes after launch understates the peak ~3×. Budget **~3.5 GB per
+  GP worker**. JOBS=11 and JOBS=6 both OOM-killed on a 23 GB box; JOBS=4 was
+  stable. Size GP passes off the peak, never the first measurement.
+- **Size compute by available MEMORY, not cores.** The 24-core production box
+  took 2 GP workers; the 12-core staging box took 4–6 and was faster.
+- **Verifiers are not infallible.** Two adversarial findings were themselves
+  wrong (a claimed tie in the 34/16 coverage split — there is none; and a
+  claim that CBD is not the largest break contribution — it is, +0.102).
+  Check each finding against the data before applying it.
+- Heredocs mangle `\\` (backslash class in regexes collapses) — write helper
+  scripts to files with the Write tool instead of piping heredocs.
 - `pkill -f <pattern>` from an `ssh host "..."` one-liner matches the caller's
-  own command line — use `scripts/server_relaunch.sh` (bracket patterns).
-- `Start-Process -ArgumentList` joins elements without quoting — launch bash
-  via a wrapper script in a space-free path.
+  own command line — use bracket patterns, or kill by process group.
 
-## Environment traps (cost real time)
+## What remains
 
-- Windows: 12 workers importing the CUDA torch exceed the commit limit
-  (WinError 1455) — that is why sweeps left the laptop. Git Bash heredocs with
-  apostrophes/backslashes mangle — use the Write/Edit tools for files.
-- `uv sync` with torch: a killed sync leaves zombie uv.exe holding `.venv`.
-- Thread pinning belongs in the launch ENV, not a multiprocessing initializer
-  (OpenBLAS reads it at import; measured load 52 → 11).
+1. **111 pages is far beyond ASTIN Bulletin / AAS norms.** The five
+   family × mechanism tables are page-spanning longtables (three regimes of
+   column blocks ran 118pt past the text block, so regimes became ROWS). Most
+   journals would want the bulk as supplementary material, leaving ~40 pages.
+   Decide against the target journal's limits before submitting.
+2. **The 99.5% longevity-tail quantile was never emitted** by the swept
+   passes. `runner.py` now emits `{e0,e65,ann65}_q995`, and per-cell seeds
+   reproduce samples bit-identically on the same device, so a re-score of
+   shift+placebo would fill it. §5 and §8 both state plainly that no tail is
+   reported. Both machines are now free if this is wanted.
+3. Optional: `scripts/verify_quotes.py` re-checks every direct quote in the
+   paper against `literature/txt/`. Re-run it after any prose edit.
 
-## Numbers worth not re-deriving
+## Key artefacts
 
-- Oracle parity vs R StMoMo 0.4.1 (SWE males 1950–2000): beta rel diff 2.4e-14, identical loglik.
-- Training years to 2019: KOR 17, HRV 19, CHL 28, HKG 34, TWN 50 … SWE 269.
-  Design-floor cells: KOR split/EnbPI/copula/LSTM; HRV EnbPI/copula.
-- Zero-exposure rows (parser definition): 24,083 with E=0 for ≥1 sex, 15,494 both; ages ≥90.
-- Zero-death test cells 2020–24: ISL f 117 / m 68, LUX f 110 / m 72.
-- GPU A/B (solo): NB 39.6→8.3 s, NLC 34.6→4.5, CNN 53.9→9.9, LSTM ~1x; the
-  tensor cache gave NO speed-up; cross-device runs differ (dropout RNG).
-- Schnürch–Korn (2022) Table 3 PICP at nominal 95%, ages 60–89, 2007–2016:
-  LC10 74.0, LC20 74.3, ACF 77.2, RNN 86.0, FFNN 97.0, CNN 98.0.
-
-## 2026-08-29 — launcher is DEAD by design; two manual runs in flight
-Node runs: placebo pass 1 (jobs=9, log results/logs/placebo_pass1.out) and the
-shift GP pass with the addendum-4 cap (jobs=2, results/logs/shift_gp_capped.out).
-After both: launch placebo GP manually (see docs/STATUS.md 2026-08-29), then the
-post-sweep order. gp.py/runner.py on the node = commit 1c97c8f (shipped by cat).
-
-## 2026-08-29 10:20 — THREE machines' worth of runs in flight
-bastion (ssh baazar, repo ~/mortality-calibration-under-shift, env .venv-server):
-  stable halves a/b for SWE,DNK,ISL,BEL,NOR,CHE (--origins split; parts tagged).
-.47: placebo pass 1 (jobs 9) + shift GP pass (jobs 1, capped). TODO after
-placebo pass 1: placebo GP (jobs 1); stable on .47 for the other 14 pops
-(--pops list = all shift pops minus the bastion six; no --origins needed).
-Bastion sessions over the TLS proxy DROP on long commands: keep remote
-commands < ~60 s, never sleep inside them, always `(setsid nohup ... &)`.
-Pull stable from the bastion with a single-hop tar (server_pull.sh assumes .47).
-
-## 2026-08-31 — access differs by Windows profile (ASUS laptop)
-
-The section above was written on the **Gaming** machine. On the **ASUS**
-profile (`C:\Users\ASUS`, repo at `h:\Mortality - Explainable AI`) there is
-NO bastion and no `baazar` alias — both compute hosts answer directly:
-
-| host | alias to use here | what it is |
-|---|---|---|
-| 192.168.1.49 | `192.168.1.49` (config: `Host 192.168.1.49`, user hamid) | `ai-server`, 24 cores — the machine the Gaming notes call `baazar` |
-| 192.168.1.47 | **`claw-47`** (NOT the bare IP — that logs in as `asus` and is refused) | `tararis-ai3`, 12 cores |
-
-Key: `C:\Users\ASUS\.ssh\test`. Single hop, so no nested
-`ssh baazar 'ssh 192.168.1.47 "..."'` and no <60 s command limit here.
-Check progress with, e.g.:
-
-```bash
-ssh 192.168.1.49 'ls ~/mortality-calibration-under-shift/results/stable.parts | wc -l'
-ssh claw-47      'ls ~/mortality-calibration-under-shift/results/stable.parts | wc -l'
-```
-
-Also on this profile: the repo `.venv` is dead as warned, and
-`C:/Users/Gaming/venvs/mortcal-cpu` does not exist. A usable interpreter for
-throwaway parsing is
-`C:/Users/ASUS/AppData/Roaming/uv/python/cpython-3.12.13-windows-x86_64-none/python.exe`
-(bare, no project deps). Rebuild a real env before running anything from
-`src/` here.
-
-### 2026-08-31 (Gaming machine, later) — placebo COMPLETE end-to-end
-
-Placebo pulled, QA PASS, analysed, sensitivities, tables, figures
-(`make_figures.py --regimes shift placebo --source shift=results/shift.parquet,results/shift_gp.parquet --source placebo=...` — NOT `--shift/--placebo`),
-compile 0 errors / 0 float-too-large / 71 pp. Twin-crises §6 written from
-real numbers. Guard fix in `mortcal/inference.py` (per-cell age support) —
-shift analysis verified numerically identical under it. `tab-infeasible` +
-`tab-h1-rankings` are longtables now; `tab-h5-actuarial` is stacked
-(regimes as rows). Only STABLE outstanding — see below.
-
-### Sweep state observed 2026-08-31 07:40 (read-only check, nothing changed)
-
-- **shift and placebo are COMPLETE on .47** (both passes: shift, shift_gp,
-  placebo, placebo_gp parquets present). Only STABLE is still running.
-- `.49`: stable for SWE,DNK,ISL,BEL,NOR,CHE, origins split in halves,
-  2 procs x jobs=6, 45.6 h in, **80/108 parts**. Done: LC PLC CBD RH SVAR
-  NLC. Left: CNN 8, LSTM 8, NB 12. Phase profile measured from part mtimes:
-  cheap four 0-0.8 h, SVAR 3.6-15.2 h, NLC 16.8-41.6 h, CNN/LSTM/NB from
-  38 h. Estimate **~1-2 days left**.
-- `.47`: stable for the other 14 pops, jobs=10, 23.7 h in, **76/126 parts**,
-  workers at 98.8% CPU. Only the cheap four models are done. Estimate
-  **~2-4 days left**.
-- **Parts-done badly overstates progress on .47**: HRV and KOR produced
-  `rows=1196 error_rows=1196 (5s)` — every cell errored instantly — and
-  CHL/HKG were 1002/1196 and 830/1196 errors. The ten remaining populations
-  have full-length panels and will mostly SUCCEED, so they carry far more
-  compute than the four "finished" ones.
-- **STABLE covers 18 populations, not 20** — HRV (series starts 2001) and
-  KOR (2003) clear addendum 3 §4's n_train >= 15 floor at NO stable origin
-  (best case 14 and 12 years). CHL is admissible at 5/13 origins, HKG at
-  8/13, the other 16 at 13/13 → 221 of 260 (origin, pop) pairs = 442 of 520
-  triples. This supersedes the 401-buildable figure from the 2026-08-26
-  audit, which predates addendum 3 §1. **Written up properly in
-  docs/STATUS.md (2026-08-31) with the four write-up consequences** — design
-  section, tab-infeasible design-floor vs method-failure split, the
-  18-population intersection for any stable-vs-shift contrast, and the
-  per-origin effective cluster count. No code change needed.
-
-## 2026-08-31 (night) — stable GP pass APPROVED for .49; watcher armed
-
-User approved: when `.49` finishes pass 1 (108/108 parts, run_regime procs
-gone; ETA ~Sep 1 evening), launch the stable GP pass THERE. Procedure is
-fully scripted — from the laptop (Gaming profile):
-
-1. Ship current `src/mortcal/runner.py` to the bastion by cat (brings q995
-   columns + observed-lifetable fix, so stable GP rows never need
-   patch_obs_lifetable.py).
-2. Ship + run `scripts/server_launch_stable_gp.sh` (exact commands in that
-   script's header). It refuses while pass 1 is alive (FORCE=1 overrides),
-   sizes JOBS = RAM/3GB capped at 8, pins threads, runs all 20 pops
-   (HRV/KOR = instant design-floor rows), logs to
-   `results/logs/stable_gp_49.out`, parts in `results/stable_gp.parts/`.
-3. Health-check after launch; expect several days of runtime, overlapping
-   .47's neural tail.
-
-**EXECUTED 2026-09-03**: .49 pass 1 finished 108/108; runner.py + launcher
-shipped by cat; GP pass LAUNCHED with explicit `JOBS=2` — the RAM formula
-said 7 but the box showed only ~7 GB available (15 GB used by the user's
-other services; it is a production machine — never oversubscribe it).
-Log: `results/logs/stable_gp_49.out`; parts land in `stable_gp.parts/`
-(expect 20). Watchers armed in the 2026-09-03 session: .47 completion
-(was 124/126) and .49 GP health (procs=0 with parts<20 = died, likely
-OOM; resume skips done parts — relaunch same way).
-
-DNS note: if `ssh baazar` fails with "Temporary failure in name
-resolution", pin the IP in the ProxyCommand — replace
-`-connect app.baazartehran.com:443` with `-connect 87.107.136.42:443`
-(SNI stays `-servername ssh.baazartehran.com`); worked 2026-09-02.
-
-Also flagged in STATUS: after stable lands, re-score shift+placebo on .47
-with the q995 runner (seeds reproduce samples bit-identically on the same
-device; verify a probe cell's crps_h1 against the parquet first).
-
-## 2026-09-02 — .49 IS PRODUCTION, .47 IS STAGING (user, authoritative)
-
-**Never add load to `.49` (192.168.1.49, ai-server, 24 cores).** It runs a
-real production service stack — measured 2026-09-02: 1,402 processes,
-`mongod` 3.75 GB resident, `java`, four `ruby`, `devpi-server`, `uvicorn`,
-taking 23–30% user CPU continuously on their own. Our stable-half sweep was
-taking a further **~8.8 of 24 cores** (14 workers at 50–99%).
-
-**`.47` (claw-47, tararis-ai3, 12 cores) is staging — heavy load is fine.**
-Prefer it for everything, and give it the memory-hungry passes too: it had
-17 GB available against `.49`'s 7 GB, and a GP cell needs ~1.6 GB.
-
-Corollary: the reallocation instinct "move work to the idle machine" is
-WRONG here whenever the idle machine is `.49`. Idle capacity on `.49`
-belongs to production, not to us.
-
-### Swap on .49 is a non-issue (settled 2026-09-02)
-Swap showed 8127/8191 MB full, but `vmstat` si/so = **0/0** — full but
-static, i.e. idle daemon pages the kernel parked, not thrashing. Our share
-was 2,096 MB of 8,582 MB (24%); the rest is the service stack (devpi 1 GB,
-java 876 MB, four ruby ~1.5 GB, mongod 409 MB). Do not diagnose "swap full"
-as a sweep problem again — measure si/so, not usage.
-
-### Reading sweep liveness correctly
-`ps ... | grep run_regime` matches only the PARENT processes, which sit at
-0.0% CPU in `futex_do_wait` while their pool works — that is HEALTHY, not a
-stall. The workers are the children: `pgrep -P <parent>`. Misreading this
-once produced a false "the sweep is stalled" conclusion.
+- `paper/main.pdf` — the deliverable; `paper/main.tex` + `paper/sections/`
+- `results/{stable,shift,placebo}[_gp].parquet` — tracked sweep outputs
+- `results/{stable,shift,placebo}_analysis.json`, `sensitivities.json`,
+  `h5_extras.json`, `h5_extras_stable.json`
+- `scripts/`: `run_regime.py`, `server_pull_stable.sh` (two-source pull,
+  assembles BOTH passes), `server_launch_stable_gp.sh` (POPS + memory-aware
+  sizing), `patch_obs_lifetable.py`, `final_qa.py`, `analyse.py`,
+  `sensitivities.py`, `make_tables.py`, `make_figures.py`, `h5_extras.py`
+  (`--regime`), `verify_quotes.py`, `check_parity.py`
+- `docs/STATUS.md` — the scientific ledger; `docs/PRIOR-ART.md` — novelty map
+  plus the quotation audit and the Dowd preprint-vs-published correction
