@@ -53,22 +53,33 @@ from pathlib import Path
 import pandas as pd
 
 dest = Path(sys.argv[1])
-parts = sorted((dest / "stable.parts").glob("*__*.parquet"))
-if not parts:
-    raise SystemExit("no parts pulled")
-df = pd.concat([pd.read_parquet(p) for p in parts], ignore_index=True)
-# same assembly as scripts/run_regime.py; a duplicate cell would mean the two
-# machines overlapped a population -- abort loudly, never average
+# pass 1 (nine families) and the GP second pass are assembled separately, the
+# same split the other regimes use: results/<regime>.parquet and
+# results/<regime>_gp.parquet.
 key = ["regime", "pop", "sex", "origin", "model", "mechanism"]
-dup = df.duplicated(key, keep=False)
-if dup.any():
-    raise SystemExit(f"{int(dup.sum())} duplicate cells across machines, e.g. "
-                     f"{df.loc[dup, key].iloc[0].to_dict()}; fix upstream")
-out = dest / "stable.parquet"
-df.to_parquet(out, index=False)
-err = int(df["error"].notna().sum()) if "error" in df else 0
-pops = df["pop"].nunique()
-print(f"assembled {out}: rows={len(df)} error_rows={err} parts={len(parts)} pops={pops}")
+built = 0
+for parts_dir, out_name in (("stable.parts", "stable.parquet"),
+                            ("stable_gp.parts", "stable_gp.parquet")):
+    parts = sorted((dest / parts_dir).glob("*__*.parquet"))
+    if not parts:
+        print(f"WARNING: no parts in {parts_dir}, skipping {out_name}")
+        continue
+    df = pd.concat([pd.read_parquet(p) for p in parts], ignore_index=True)
+    # same assembly as scripts/run_regime.py; a duplicate cell would mean the
+    # two machines overlapped a population -- abort loudly, never average
+    dup = df.duplicated(key, keep=False)
+    if dup.any():
+        raise SystemExit(f"{int(dup.sum())} duplicate cells across machines in "
+                         f"{parts_dir}, e.g. {df.loc[dup, key].iloc[0].to_dict()}; "
+                         "the machines' --pops subsets must be disjoint")
+    out = dest / out_name
+    df.to_parquet(out, index=False)
+    err = int(df["error"].notna().sum()) if "error" in df else 0
+    print(f"assembled {out}: rows={len(df)} error_rows={err} "
+          f"parts={len(parts)} pops={df['pop'].nunique()}")
+    built += 1
+if not built:
+    raise SystemExit("no parts pulled")
 PYEOF
 
 echo "done. next: python scripts/patch_obs_lifetable.py $DEST/stable.parquet"
