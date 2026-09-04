@@ -102,7 +102,7 @@
   \large A Pre-Registered Calibration Audit of Ten Forecasting Families and
   Seven Uncertainty Mechanisms Across the COVID-19 Break}
 \author{Hamid Jahani\thanks{Affiliation to be determined.}}
-\date{Draft of \today{} --- shift and placebo results final; stable pending}
+\date{Draft of \today{}}
 
 \begin{document}
 \maketitle
@@ -110,50 +110,34 @@
 \begin{abstract}
 Annuity and pension valuations price the \emph{spread} of a mortality
 forecast, not only its centre: reserves, risk margins and longevity capital
-all rest on the claim that a nominal 95\% prediction interval contains the
-realised outcome about 95\% of the time. Stochastic mortality models have
-produced such intervals since \citet{lee1992modeling}, and neural extensions
-of Lee--Carter now produce them too, but whether any of these intervals hold
-their nominal coverage when the mortality surface breaks has never been
-tested on real data. The COVID-19 years supply the first sustained break in
-modern single-age mortality data, and the June 2026 vintage of the Human
-Mortality Database is the first with final annual data through 2024 for
-twenty populations. We pre-register a calibration audit across that break.
-Ten forecasting families (Lee--Carter, Poisson Lee--Carter, CBD, an
-age--period--cohort model, a sparse VAR, a multi-output Gaussian process, and
-four neural architectures) are crossed with seven uncertainty mechanisms
-(model-native, Poisson bootstrap, deep ensembles, Monte Carlo dropout, split
-conformal, EnbPI and a joint-path copula conformal band), giving fifty
-admissible cells. Every cell emits predictive samples through one interface
-and is scored by one code path: proper scores (CRPS, Poisson log score),
-interval scores, marginal and joint-path coverage, randomised PIT, a
-Murphy calibration--resolution decomposition, and the propagation of interval
-error into life expectancy and annuity factors. Three regimes separate
-ordinary forecast error from break-induced failure: a stable expanding-origin
-control, the COVID break (train to 2019, test 2020--2024), and a placebo break
-around 1914--1922. The crossed design lets a coverage failure be attributed to
-the architecture or to the uncertainty machinery attached to it, a separation
-no previous mortality study makes. The audit protocol---a synthetic-truth
-validated harness, oracle parity with \pkg{StMoMo}, a pre-registration hash
-committed before the first fit, and cluster-bootstrap forecast-comparison
-inference that respects the single common shock---is itself a reusable
-contribution. This draft reports the shift regime; the stable control and
-the placebo break follow under the same registered design. One registered
-direction---under-coverage for \emph{every} family---is refuted in strong
-form. The classical cores fail badly: nominal 95\% intervals built from
-data through 2019 cover between 62\% and 80\% of realised 2020--2024
-outcomes (Poisson Lee--Carter 0.62, Renshaw--Haberman 0.65, Lee--Carter
-0.69, CBD 0.80). But the failure is not a neural-versus-classical split:
-the negative-binomial distributional head (0.93 native, 0.97 under
-dropout), the dropout CNN (0.96) and the Gaussian process (0.905) hold
-near-nominal marginal coverage through the break, while the LSTM
-(0.65--0.69) and the ensembled neural Lee--Carter (0.69) break alongside
-the classical cores. Joint path coverage collapses relative to marginal for
-every family (0.30 against 0.62 for Poisson Lee--Carter) except under the
-copula conformal band, the one mechanism calibrated for the path
-(0.81--0.93 joint). Split conformal wrapping repairs exactly the families
-whose native law broke and measurably worsens the ones that were already
-calibrated---the attribution the crossed design was built to deliver.
+all rest on a nominal 95\% interval covering the realised outcome about 95\%
+of the time. Such intervals have been produced since \citet{lee1992modeling},
+and lately by neural extensions of Lee--Carter, but never audited against a
+structural break paired with a quiet control that separates break-induced
+failure from standing miscalibration. We pre-register that audit on the June
+2026 Human Mortality Database vintage, the first with final data through
+2024. Ten forecasting families crossed with seven uncertainty
+mechanisms---model-native, Poisson bootstrap, deep ensembles, Monte Carlo
+dropout, split conformal, EnbPI and a joint-path copula band---give fifty
+admissible cells, all scored on one code path, across three regimes: a quiet
+expanding-origin control (1990--2014), the COVID break (train to 2019, test
+2020--2024) and a 1914--1922 placebo.
+
+The control carries the finding: most miscalibration predates the pandemic.
+Native intervals from the Lee--Carter lineage already cover far below
+nominal in quiet decades---Lee--Carter 0.702, Poisson Lee--Carter 0.682,
+Renshaw--Haberman 0.731 against 0.950---and the registered one-sided
+hypothesis of universal under-coverage across the break is refuted: its
+two-sided restatement grows in only 27 of 50 cells, because the break mainly
+sorts arms by the side of nominal they began on, over-covering ones moving
+\emph{towards} it. Benchmarked against independence at each arm's own
+marginal rate, joint path coverage is \emph{higher} in 50 of 50 control and
+50 of 50 break cells: horizons are strongly positively dependent, a
+dependence noted in the literature but never measured. The rate-level
+figures understate what happens in money---in the quiet control the native
+Lee--Carter interval covers 0.253 of realised annuity factors and the LSTM
+deep ensemble 0.157. Most of these intervals were never calibrated to begin
+with, and the pandemic mainly re-orders them.
 \end{abstract}
 
 \noindent\textbf{Keywords:} mortality forecasting; longevity risk;
@@ -162,8 +146,20 @@ prediction; COVID-19; Lee--Carter; neural networks; pre-registration.
 
 \vspace{0.5em}
 \noindent\textbf{Pre-registration.} \texttt{PREREGISTRATION.md}, committed
-2026-08-25 before any model was fit to real data. SHA-256:\\
-\texttt{\small bbbe3860a5446d063e186e56555afa893b07c36cf15a990d07567471affe50be}
+2026-08-25 before any model was fit to real data, with four registered
+addenda, \texttt{PREREGISTRATION-ADDENDUM-1..4.md}: addendum~1
+(data-prerequisite strata and sensitivities), 2 (scoring-target
+clarifications) and 3 (defect handling, scoring repairs and hypothesis
+status, including the two-sided restatement of \Htwo{} and the re-specified
+\Hthree{} comparator of \S8), all committed 2026-08-26 and still before any
+real-data fit, and 4 (a sixty-year training-window cap for the Gaussian
+process), committed 2026-08-29 during the sweeps and before any GP cell on a
+longer panel had produced a result. SHA-256, in that order:\\
+\texttt{\small bbbe3860a5446d063e186e56555afa893b07c36cf15a990d07567471affe50be}\\
+\texttt{\small 8b43083afae9f0eaafce5e89381349d74cbbafb94022b56d1f2f39032a308889}\\
+\texttt{\small 1618e9fdcc1d6cbc760ce40ea496c1285fe44b8fc7520e8687e2101343ebdbc1}\\
+\texttt{\small cca2881a3a7ae6a17bbec7a4c6440192a6f9aa1cdd5766c13ef0aaec8ddeb16f}\\
+\texttt{\small 586e01780cceeea32878d1a493662c2883d017396459dc3442a6053f101a564b}
 
 \input{sections/01-introduction}
 \input{sections/02-related-work}
@@ -178,7 +174,7 @@ prediction; COVID-19; Lee--Carter; neural networks; pre-registration.
 \section*{Reproducibility statement}
 Code, the pre-registration document, the data manifest
 (\texttt{data/MANIFEST.sha256}) and the \pkg{StMoMo} oracle dump are in the
-project repository \todoinline{public URL at submission}. HMD data are not
+project repository, whose public URL is released on acceptance. HMD data are not
 redistributed; the manifest pins the vintage so any table can be tied to the
 exact input files. Seeds are recorded per grid cell and per ensemble member.
 
@@ -189,29 +185,37 @@ exact input files. Seeds are recorded per grid cell and per ensemble member.
 \subsection{Proper scores for conformal cells}
 Conformal wrappers emit intervals, not distributions; the harness draws
 uniformly inside each interval so that the single sample interface is
-preserved. CRPS, log score and PIT for these cells are therefore reported
-here, flagged, and never ranked against distributional mechanisms
-(Section~\ref{sec:design-mechanisms}).
-\begin{table}[htbp]\centering
-\caption{Flagged proper scores for the three conformal mechanisms.}
-\label{tab:conformal-secondary}
-\inputtable{tab-conformal-secondary}
-\end{table}
+preserved. CRPS, log score and PIT computed from those draws therefore
+describe a placeholder density. They are carried per cell in the released
+results files under a \texttt{secondary} flag, are read only against other
+conformal cells, and are never ranked against distributional mechanisms
+(Section~\ref{sec:design-mechanisms}). They are deliberately not printed
+beside the distributional scores of Section~\ref{sec:results}: a reader who
+compares a conformal cell's CRPS with a native cell's CRPS is comparing a
+convention with a forecast, and a shared table invites exactly that. The
+same convention governs the derived quantities, whose $e_0$, $e_{65}$ and
+annuity quantiles for a conformal cell come from the filler draws and are
+reported as not applicable throughout (Addendum~2, \S3).
 
 \subsection{Robustness}
-Pre-registered secondary runs: the shift regime with 2024 dropped
-(provisional-revision sensitivity), with the age cap lowered from 99 to 90,
-with USA and CHL dropped, and split into register-based versus census-based
-populations; the placebo regime without GBR\_SCO, on the neutral stratum
-only, and with Denmark's 1921--1922 removed (Addendum~1).
-\begin{table}[htbp]\centering
-\caption{Sensitivity of the headline coverage contrasts to the pre-specified
-data sensitivities: 2024 dropped, age cap 90, USA and CHL dropped,
-register versus census exposures; placebo without GBR\_SCO, neutral stratum
-only, DNK without 1921--1922.}
-\label{tab:robustness}
-\inputtable{tab-robustness}
-\end{table}
+The pre-registered secondary runs re-score the headline coverage contrasts
+on pre-specified subsets of the same fits rather than refitting: the shift
+regime with 2024 dropped (provisional-revision sensitivity), with USA and
+CHL dropped, and split into register-based versus census-based populations;
+the placebo regime without GBR\_SCO, on the neutral stratum only, and with
+Denmark's 1921--1922 removed (Addendum~1). Each slice is recomputed by
+\texttt{scripts/sensitivities.py} into \texttt{results/sensitivities.json},
+released with the code: it carries, for every family--mechanism arm in every
+slice, mean 95\% coverage over the rows the slice retains, joint path
+coverage wherever the slice keeps the whole path, and the row and
+error-class counts behind each mean. Two limits are worth stating plainly.
+A slice that drops a horizon cannot report joint path coverage, because the
+runner emits one indicator for the whole path rather than the per-horizon
+indicators a shortened path would need; and the registered age-cap
+sensitivity, ages capped at 90 rather than 99, is not among the slices---the
+age-band decomposition of Section~\ref{sec:results-age}, which scores
+$0$--$24$, $25$--$64$ and $65$--$99$ separately, is what this paper reports
+about the old-age stratum instead.
 
 \bibliographystyle{plainnat}
 \bibliography{references}

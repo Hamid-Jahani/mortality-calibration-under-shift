@@ -845,11 +845,13 @@ def tab_h1(df: pd.DataFrame, w: TableWriter):
 
 def tab_h2(df: pd.DataFrame, w: TableWriter):
     cols = ["coverage_50", "coverage_80", "coverage_95", "winkler_95"]
-    colspec, head, body = block_table(df, cols, ["cov$_{50}$", "cov$_{80}$", "cov$_{95}$", "$\\IS_{95}$"], fmt_levels)
+    colspec, head, body = block_table(df, cols, ["cov$_{50}$", "cov$_{80}$", "cov$_{95}$", "$\\IS_{95}$"], fmt_levels, stacked=True)
     notes = [regime_note(df, r) for r in EXPECTED_REGIMES]
     notes += [DESCRIPTIVE_NOTE, CONFORMAL_NOTE, CBD_NOTE, gp_note(df),
               "$\\IS_{95}$: mean Winkler / interval score of the 95\\% interval on log rates (negatively oriented)."]
-    w.write("tab-h2-coverage", colspec, head, body, notes)
+    w.write_longtable("tab-h2-coverage", colspec, head, body, notes,
+                      caption=("Empirical coverage of nominal 50/80/95\% central intervals and mean 95\% interval score, by family, mechanism and regime, with the number of cells behind each mean. Conformal mechanisms are scored at their construction level only, so their 50\% and 80\% columns are blank by design (Addendum~2, \S3). Error rows are excluded from every mean and counted in Table~\ref{tab:infeasible}."),
+                      label="tab:h2-coverage")
 
 
 def tab_h3(df: pd.DataFrame, w: TableWriter):
@@ -861,7 +863,8 @@ def tab_h3(df: pd.DataFrame, w: TableWriter):
         return st
 
     colspec, head, body = block_table(df, cols, ["marginal", "joint path", "gap"],
-                                      lambda row, m, u, c: f3(row[c]), per_block_stats=stats_with_gap)
+                                      lambda row, m, u, c: f3(row[c]),
+                                      per_block_stats=stats_with_gap, stacked=True)
     notes = [regime_note(df, r) for r in EXPECTED_REGIMES]
     notes += [DESCRIPTIVE_NOTE,
               "Marginal = mean per-cell 95\\% coverage over horizons and scored ages; "
@@ -869,13 +872,16 @@ def tab_h3(df: pd.DataFrame, w: TableWriter):
               "lies inside the 95\\% band; gap = joint $-$ marginal. Conformal rows use "
               "the wrapper's own interval bounds (addendum 3 \\S6); the copula arm is the "
               "only mechanism that constructs a joint band.", CBD_NOTE, gp_note(df)]
-    w.write("tab-h3-joint", colspec, head, body, notes)
+    w.write_longtable("tab-h3-joint", colspec, head, body, notes,
+                      caption=("Marginal coverage of nominal 95\% intervals, pooled over horizons, against joint path coverage over the whole horizon set ($H=5$ in the shift and stable regimes, $H=9$ in the placebo), and their difference, by family, mechanism and regime. Conformal rows enter with both quantities read from their interval bounds at the construction level (Addendum~3, \S6)."),
+                      label="tab:h3-joint")
 
 
 def tab_h4(df: pd.DataFrame, w: TableWriter):
     cols = ["coverage_95_band0_24", "coverage_95_band25_64", "coverage_95_band65_99"]
     colspec, head, body = block_table(df, cols, ["0--24", "25--64", "65--99"],
-                                      lambda row, m, u, c: f3(row[c]))
+                                      lambda row, m, u, c: f3(row[c]),
+                                      stacked=True)
     notes = [regime_note(df, r) for r in EXPECTED_REGIMES]
     notes += [DESCRIPTIVE_NOTE,
               "Empirical coverage of the nominal 95\\% interval by age band (runner "
@@ -885,7 +891,9 @@ def tab_h4(df: pd.DataFrame, w: TableWriter):
               "Registered direction (worse at 65--99 than 25--64) is contradicted "
               "by Dowd et al.; a reversal is reported as informative (addendum 3 \\S8).",
               gp_note(df)]
-    w.write("tab-h4-age", colspec, head, body, notes)
+    w.write_longtable("tab-h4-age", colspec, head, body, notes,
+                      caption=("Empirical coverage of nominal 95\% intervals within three age bands (0--24, 25--64, 65--99), by family, mechanism and regime, with the number of cells behind each mean. CBD is fitted on ages 55--99, so it contributes no 0--24 value and its 25--64 column is a 55--64 stub; its row is not comparable with the full-age families'. Error rows are excluded from every mean."),
+                      label="tab:h4-age")
 
 
 def _h5_stats(ok: pd.DataFrame, err: pd.DataFrame, cols_: list[str]) -> pd.DataFrame:
@@ -971,7 +979,7 @@ def tab_murphy(df: pd.DataFrame, w: TableWriter):
             return "n/a"
         return f3(row[c], 4)
 
-    colspec, head, body = block_table(df, cols, ["REL", "RES", "UNC", "PIT-REL"], fmt)
+    colspec, head, body = block_table(df, cols, ["REL", "RES", "UNC", "PIT-REL"], fmt, stacked=True)
     notes = [regime_note(df, r) for r in EXPECTED_REGIMES]
     notes += [DESCRIPTIVE_NOTE,
               "Murphy (1973) partition of the Brier score of the 95\\% hit indicator "
@@ -983,7 +991,9 @@ def tab_murphy(df: pd.DataFrame, w: TableWriter):
               "is the reliability term of the PIT-histogram decomposition "
               "(distributional rows only; n/a for conformal rows).", CBD_NOTE, gp_note(df)]
     # 14 columns at 2.5 pt spacing ran 7.4 pt past the text block
-    w.write("tab-murphy", colspec, head, body, notes, tabcolsep="2pt")
+    w.write_longtable("tab-murphy", colspec, head, body, notes, tabcolsep="2pt",
+                      caption=("Murphy decomposition of the 95\% interval-hit Brier score (reliability, resolution, uncertainty) and the PIT-scale reliability against the uniform reference, by family, mechanism and regime; with one constant nominal level the resolution term is zero by construction (table footnote). PIT-scale column: distributional arms only."),
+                      label="tab:murphy")
 
 
 def _pit_stats(ok: pd.DataFrame, err: pd.DataFrame, cols_: list[str]) -> pd.DataFrame:
@@ -998,7 +1008,8 @@ def tab_pit(df: pd.DataFrame, w: TableWriter):
     cols = ["pit_ks_stat", "share_p05"]
     colspec, head, body = block_table(df, cols, ["KS", "share $p<0.05$"],
                                       lambda row, m, u, c: f3(row[c]),
-                                      rows_filter=distributional, per_block_stats=_pit_stats)
+                                      rows_filter=distributional,
+                                      per_block_stats=_pit_stats, stacked=True)
     notes = [regime_note(df, r) for r in EXPECTED_REGIMES]
     notes += [DESCRIPTIVE_NOTE,
               "Distributional mechanisms only: conformal PIT values are placeholders "
@@ -1009,7 +1020,9 @@ def tab_pit(df: pd.DataFrame, w: TableWriter):
               "draws; PIT values across ages and horizons within a population are "
               "dependent, so the share is descriptive (addendum 2 \\S4), never a test.",
               CBD_NOTE, gp_note(df)]
-    w.write("tab-pit", colspec, head, body, notes)
+    w.write_longtable("tab-pit", colspec, head, body, notes,
+                      caption=("Distributional arms only: mean Kolmogorov--Smirnov distance of the randomised PIT from uniformity, and the share of population--sex cells whose nominal KS $p$-value falls below $0.05$, by family, mechanism and regime; conformal rows are left blank because their PIT is a placeholder. The $p$-value is descriptive: PIT values within a cell are dependent across ages and horizons (Addendum~2, \S4), and formal inference on calibration is population-clustered."),
+                      label="tab:pit")
 
 
 def _fmt_pvals(pv: dict) -> str:

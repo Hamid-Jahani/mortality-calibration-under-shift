@@ -4,17 +4,35 @@
 \noindent\textit{Every table in this section is a generated fragment
 (\texttt{paper/tables/<name>.tex}, one \texttt{booktabs} body per hook)
 produced by the analysis stage from the per-cell results files; every
-figure is a generated \texttt{figures/<name>.pdf}. No number in this
-section is typed by hand. The shift-regime and placebo columns are final:
-each is read from its regime's two results files
+figure is a generated \texttt{figures/<name>.pdf}. No number in those
+fragments is typed by hand; every figure quoted in the running prose below
+is transcribed from them and was checked back against them. All three
+regimes are final: every column is
+read from its regime's two results files
 (\texttt{results/<regime>.parquet} and
 \texttt{results/<regime>\_gp.parquet}) after that regime's post-sweep QA
-gate passed. The stable columns of every regime-indexed table are pending
-placeholders---that regime's results files do not yet exist in final
-form---and the fragments carry a first-line marker to that effect until
-all three regimes are present. Each table's note states the regime, the
-number of populations, and---where a contrast is involved---the number of
-cells dropped by the common-cell restriction of Addendum~3 (\S11).}
+gate passed. Each table's note states the regime, the number of
+populations, and---where a contrast is involved---the number of cells
+dropped by the common-cell restriction of Addendum~3 (\S11).}
+
+The study is complete. The three registered regimes were swept on the
+same grid, through the same predictive-sample interface and the same
+evaluation code path: the stable control (13 expanding origins,
+1990--2014 in steps of two, $h=1,\dots,5$), the shift regime (train to
+2019, test 2020--2024, $h=1,\dots,5$) and the placebo break (train to
+1913, test 1914--1922, $h=1,\dots,9$). The stable sweep produced 26{,}000
+cell rows of which 6{,}480 are error rows (24.9\%), the shift sweep 2{,}000
+of which 210 (10.5\%), and the placebo sweep 1{,}100 of which 136
+(12.4\%). No error row of any regime is a machine failure: the post-sweep
+gate that refuses to generate a table while a broken-run row exists passed
+on all three sets of final files. Every error row is classified in
+Section~\ref{sec:results-infeasible} and excluded from every mean below.
+
+The single sentence that organises the rest of this section is that the
+stable control is not a quiet backdrop against which the break stands out.
+Most of the miscalibration this paper measures is already present with
+nothing broken, and the pandemic mainly re-orders the grid rather than
+degrading it uniformly.
 
 \subsection{Validation gates}
 
@@ -23,8 +41,9 @@ result was read. The one substantive finding from gate~1---the mild
 over-dispersion of two-stage SVD Lee--Carter on Poisson data---is carried
 into the reading of the SVD-LC rows below. A fourth, post-sweep gate
 (\texttt{scripts/final\_qa.py}) classifies every cell that produced no
-valid row before any table is generated; its output is the first table of
-this section.
+valid row before any table is generated; it passed on all three regimes'
+final files, with the machine class empty in each. Its output is the first
+table of this section.
 
 \subsection{What was scored: design-floor and method-failure cells}
 \label{sec:results-infeasible}
@@ -34,58 +53,142 @@ this section.
 \inputtable{tab-infeasible}
 
 Table~\ref{tab:infeasible} lists every (population, family, mechanism) cell
-of the primary grid that produced no valid row, in the classes of the
-QA gate; the unabridged ledger, one row per affected cell with the full
-recorded reason, is Appendix~\ref{app:infeasible}. The shift sweep
-produced 2{,}000 cell rows, of which 210 are error rows: 126 structural,
-56 method, 28 in the gate's residual class, and none machine---the gate
-that refuses to generate tables while a broken-run row exists passed on
-the final files.
+of the primary grid that produced no valid row, by regime, in the classes
+of the QA gate; the unabridged ledger, one row per affected cell with the
+full recorded reason, is Appendix~\ref{app:infeasible}. Of the shift
+regime's 210 error rows, 126 are structural, 56 method, 28 in the gate's
+residual class and none machine. Of the stable regime's 6{,}480, 3{,}376
+are structural, 1{,}106 method, 1{,}998 residual and none machine; the
+share is larger than in the shift regime because thirteen expanding
+origins reach back to 1990, and a design floor that binds at one origin
+binds at every earlier one. Of the placebo regime's 136, 98 are method and
+38 residual, with no structural row at all and none machine: it is the one
+regime in which the registered design floor never binds, because the
+eleven placebo populations were registered with continuous 1908--1922
+coverage and a start year no later than 1900
+(	exttt{PREREGISTRATION.md}), and---with the stable regime---one of the two in which
+the method class is not the sparse VAR alone.
 
 \emph{Structural} cells are design-floor cells: the panel is shorter than
 the mechanism's calibration or ensemble-member requirement, or falls under
 the registered admissibility floor of $n_{\text{train}}\ge 15$ complete
-training years (Addendum~3, \S4). The 126 structural rows trace the
-training lengths of Table~\ref{tab:populations} exactly: KOR, the shortest
-shift panel, appears under every mechanism with a calibration demand; HRV
-joins it wherever the demand grows from the split wrapper's single
-calibration block to the ten refits of EnbPI and the copula wrapper; CHL
+training years (Addendum~3, \S4). The 126 structural rows of the shift
+regime trace the training lengths of Table~\ref{tab:populations} exactly:
+KOR, the shortest shift panel, appears under every mechanism with a
+calibration demand; HRV joins it already in the split arms of the three
+families with the widest windows (the sparse VAR, CNN-LC and the LSTM),
+and then in every family's EnbPI and copula arms, where the split
+wrapper's single calibration block becomes ten staggered refits; CHL
 enters under the largest windowed demands (the EnbPI and copula arms of
 the sparse VAR, CNN-LC and LSTM), and the LSTM's construction alone adds
-HKG.
-These cells are a property of the design, not a failure of any method.
+HKG. The same four populations, joined by TWN wherever the ten staggered
+refits are required, account for most of the stable regime's structural
+rows at the early origins, where their panels are one to five years long.
+Four further short-panel populations---EST, LTU, LUX and LVA---enter the
+structural class nowhere but the EnbPI and copula arms of CNN-LC and the
+LSTM, the four heaviest cells in the design, contributing 56 of the 420
+structural rows those cells carry between them; all four appear again in
+the method class, under every arm of the sparse VAR. These cells are a property of the design, not a failure of
+any method.
 
 \emph{Method} cells are those in which a family's own sampler declines to
-produce a predictive law on that panel under a registered rule. In the
-shift regime this class is exclusively the sparse VAR's
-explosive-coefficient-draw rejection (Addendum~3, \S7---rejection and
-never clipping): it fires on 11 rows over six populations under the
-native law (CHL, HKG, HRV, JPN, KOR, TWN), on 15 rows over nine
-populations under the Poisson bootstrap, and on 8--11 rows in each
-conformal arm; these rows are read below as a property of the family
-under its own registered rule. The Poisson-composition overflow guard
-never fired.
+produce a predictive law on that panel under a registered rule, and two
+registered rules can fire: the sparse VAR's explosive-coefficient-draw
+rejection (Addendum~3, \S7---rejection and never clipping) and the
+Poisson-composition overflow guard. In the shift regime the class belongs
+to the sparse VAR alone. Its rejection rule fires on 11 rows over six
+populations under the native law (CHL, HKG, HRV, JPN, KOR, TWN) and on
+8--11 rows in each conformal arm, and its Poisson-bootstrap arm loses 15
+rows over nine populations, 8 of them to that rejection and 7 to the
+overflow guard on the longest panels (CHE, FIN, ISL, LUX, SWE). In the
+stable regime the sparse VAR accounts for 1{,}105 of the 1{,}106 method
+rows---1{,}027 rejected draws, over as many as fifteen populations in the
+split-conformal arm, and 78 overflow rows in its bootstrap arm---and the
+remaining row is a single CNN-LC ensemble failure in ISL, the overflow
+guard again. The placebo divides the same way: 92 rejected-draw rows and 4
+overflow rows, all sparse VAR, plus 2 CNN-LC rows in ITA under EnbPI and
+the copula wrapper. The overflow guard therefore fires in all three
+regimes---79, 7 and 6 rows---and always on the longest exposure panels,
+where a bootstrap refit can push a fitted Poisson rate past the
+composition sampler's representable range. Every one of these rows is read
+below as a property of the family under its own registered rule, never as
+a machine failure.
 
-The 28 residual rows (class \emph{other}) all belong to the multi-output
-GP: cells whose trailing block of complete years is shorter than the
-family's minimum training block (Section~\ref{sec:design-families}; the
-sixty-year cap of Addendum~4 is Section~\ref{sec:design-deviations}).
-They are design-floor in character---a family-specific admissibility
-requirement rather than a sampler failure---and are classed apart because
-the floor is the family's own, not the registered mechanism floor.
+The residual class (\emph{other}) collects admissibility failures whose
+floor is a family's own rather than the registered mechanism floor. All 28
+shift-regime rows belong to the multi-output GP: cells whose trailing
+block of complete years is shorter than the family's minimum training
+block. In the stable regime the class has three sources: 1{,}416 rows in
+which the origin precedes a population's first observed year, so no
+training panel exists to fit (1{,}288 across the nine non-GP families and
+128 in the GP); 574 GP rows under the family's trailing-block floor; and 8
+rows in LUX where the banded VAR's own regression-row minimum binds.
+
+That GP floor is worth stating in the open, because it changes what the GP
+row of every table means. The multi-output GP needs forty training years:
+its separable age$\times$time kernel is fitted by exact marginal
+likelihood, and a shorter panel leaves the time-kernel length-scale
+unidentified against the nugget (Section~\ref{sec:design-families}; the
+sixty-year cap of Addendum~4 is Section~\ref{sec:design-deviations}). The
+forty-year floor---not the fifteen-year admissibility rule---is what
+removes CHL, HKG, HRV and KOR from every GP cell. The GP family is
+therefore read on sixteen populations in the shift regime where the other
+nine families are read on twenty, and on sixteen in the stable regime
+where the other nine are read on eighteen. Its means are not taken over
+the same panel set as anyone else's, and no contrast in this paper crosses
+that boundary without the common-cell restriction.
 
 Error rows of every class are excluded from every mean in this paper, and
 every contrast between arms below is computed on the intersection of cells
 in which each compared arm produced a valid row, with the intersection
 size reported (Addendum~3, \S11).
 
-\subsection{Calibration where nothing breaks: the stable regime}
+\subsection{Calibration where nothing breaks: the stable control}
+\label{sec:results-stable}
 
-The stable regime has not yet been run: the stable rows of every
-regime-indexed table in this section are a pending placeholder until
-\texttt{results/stable.parquet} exists, and no stable-derived quantity---
-including the second, comparative clause of \Htwo\ and \Hfive---is stated
-as a result in this draft.
+The stable regime is the control the registration demanded, and it carries
+the paper's first finding. Over 13 expanding origins from 1990 to 2014, on
+panels with no structural break in them, with the horizons, the grid and
+the code path of the shift regime, the classical intervals already cover
+far below nominal. Under their own predictive law, SVD Lee--Carter covers
+0.702 at the nominal 95\% level, Poisson Lee--Carter 0.682 and APC/RH
+0.731; CBD reaches 0.901 on its 45-age support. The shortfall is not an
+artefact of the tail level: SVD Lee--Carter covers 0.365 at a nominal 0.50
+and 0.562 at 0.80, Poisson Lee--Carter 0.324 and 0.522. The point-forecast
+neural mechanisms are worse still---the LSTM-$\kappa_t$ ensemble covers
+0.638 and its dropout arm 0.667, the neural-LC ensemble 0.758---while the
+arms that carry a count likelihood or a full posterior do not under-cover
+in the quiet regime at all: the NB head covers 0.975 natively and 0.988
+under the deep ensemble, the sparse VAR 0.988, CNN-LC under dropout 0.954
+and the multi-output GP 0.945. The first three over-cover rather than sit
+at nominal, and that slack is precisely what the break later consumes in
+the \Htwo\ reading below.
+
+The other registered failures are present in the control too. Joint path
+coverage is below marginal in all fifty stable cells, with a mean gap of
+0.127---a descriptive fact that is largely arithmetic, as
+Section~\ref{sec:results-joint} insists, but whose level is not: 21 of the
+50 control cells hold the whole five-year path less often than 0.774, the
+rate a perfectly calibrated forecaster with independent horizons would
+manage. The age profile of the Lee--Carter failure is already the profile
+the break is supposed to produce: 0.888 at ages 0--24, 0.760 at 25--64 and
+0.501 at 65--99 (Section~\ref{sec:results-age}). And for two of the arms that
+break, the derived-quantity intervals of \Hfive---the quantities an
+actuary actually quotes---are worse in the quiet regime than any
+rate-level number in this section: SVD Lee--Carter under its native
+law covers 0.253 for $\annuity$ at 2\% and 0.256 for $e_{65}$, and the
+LSTM ensemble 0.157 for $\annuity$, against a nominal 0.95
+(Section~\ref{sec:actuarial}). The propagation is not universal---in the
+same control the sparse VAR's native law holds 0.980 for $\annuity$ and
+0.983 for $e_{65}$, and CBD's bootstrap arm 0.934 for $\annuity$---but for
+the index-extrapolating families an annuity factor computed from these
+models carries essentially no reliable interval even when nothing breaks.
+
+The consequence for the rest of the paper is a change of baseline. The
+shift regime is not to be read against the nominal level, which most of
+these arms never attained, but against this control. What the break does
+to a family is the difference between its two columns, and that difference
+turns out to depend on which side of nominal the family started.
 
 \subsection{H1 as a harness-validity check: ranking by RMSE versus ranking by proper scores}
 
@@ -95,18 +198,18 @@ as a result in this draft.
 
 Table~\ref{tab:h1-rankings} ranks the distributional arms---the
 family--mechanism cells whose samples constitute a predictive
-distribution---three times within the shift regime: by mean RMSE on log
-rates, by mean CRPS on log rates and by mean Poisson log score. Two
-exclusions are by construction. The conformal arms do not appear, because
-their CRPS, log score and PIT are placeholder scores from
-uniform-in-interval samples and are never ranked against a distributional
-mechanism. CBD is ranked in a separate block: it is fit on ages 55--99
-and therefore scored on 45 ages, and a mean over a different age support
-is not the same quantity as a mean over ages 0--99. Means are taken
-within population--sex first and then across populations, never
-exposure-weighted, and the ranking is computed on the common cells of the
-block (22 of 40 units kept; the dropped 18 trace the sparse VAR, GP and
-LSTM failure cells of Table~\ref{tab:infeasible}).
+distribution---three times within each regime: by mean RMSE on log rates,
+by mean CRPS on log rates and by mean Poisson log score. Two exclusions
+are by construction. The conformal arms do not appear, because their CRPS,
+log score and PIT are placeholder scores from uniform-in-interval samples
+and are never ranked against a distributional mechanism. CBD is ranked in
+a separate block: it is fit on ages 55--99 and therefore scored on 45
+ages, and a mean over a different age support is not the same quantity as
+a mean over ages 0--99. Means are taken within population--sex first and
+then across populations, never exposure-weighted, and the ranking is
+computed on the common cells of the block (22 of 40 units kept in the
+shift regime; the dropped 18 trace the sparse VAR, GP and LSTM failure
+cells of Table~\ref{tab:infeasible}).
 
 \Hone\ as registered---rankings by RMSE and by CRPS disagree, with rank
 correlation below one and at least one top-three inversion, in the shift
@@ -142,107 +245,193 @@ block; the second contains zero, so at the resolution thirteen
 correlated clusters afford, the log-score ordering is indistinguishable
 from one unrelated to the RMSE ordering.
 
+The other two regimes say that this is a property of the metrics, not of
+the break. In the stable control, on the 217 of 520 units the common-cell
+restriction keeps, the two correlations are $0.81$ and $-0.18$; in the
+placebo, on 9 of 22 units, $0.85$ and $0.16$. The RMSE-versus-log-score
+divergence is if anything wider with nothing broken than through COVID.
+\Hone\ is retained as what it was registered to be: a validity check on
+the harness, confirming that the evaluation is measuring the
+distributional object and not a point forecast in disguise, in every
+regime.
+
 \subsection{H2: marginal coverage across the break}
 
-\begin{table}[p]\centering
-\caption{Empirical coverage of nominal 50/80/95\% central intervals and
-mean 95\% interval score, by family, mechanism and regime, with the number
-of cells behind each mean. Conformal mechanisms are scored at their
-construction level only, so their 50\% and 80\% columns are blank by
-design (Addendum~2, \S3). Error rows are excluded from every mean and
-counted in Table~\ref{tab:infeasible}; a regime whose results file does
-not yet exist appears as a pending row.}
-\label{tab:h2-coverage}
+% tab-h2-coverage is a page-spanning longtable fragment generated by
+% scripts/make_tables.py; its caption and label live in the fragment.
 \inputtable{tab-h2-coverage}
-\end{table}
 
 Table~\ref{tab:h2-coverage} reports, for every admissible family--mechanism
-cell, the mean empirical coverage at 50, 80 and 95\%, the mean 95\%
-interval score, and the number of cells behind each mean; conformal rows
-carry the 95\% columns only, because a conformal wrapper constructs one
-interval at one level and its coverage and interval score are read from
-that interval's bounds. The interval score is the width-penalised
-companion that keeps a vague interval from passing as a calibrated one.
+cell and every regime, the mean empirical coverage at 50, 80 and 95\%, the
+mean 95\% interval score, and the number of cells behind each mean;
+conformal rows carry the 95\% columns only, because a conformal wrapper
+constructs one interval at one level and its coverage and interval score
+are read from that interval's bounds. The interval score is the
+width-penalised companion that keeps a vague interval from passing as a
+calibrated one.
 
-\Htwo\ as registered has two clauses. The comparative clause---the
-shortfall exceeds the stable-regime shortfall---awaits the stable regime
-and is not tested here. The universal clause---nominal 95\% intervals
-under-cover in the shift regime \emph{for every model family}---is
-refuted as a universal, and the refutation is the more informative
-result. The classical cores under their own predictive law do under-cover,
-severely: Poisson Lee--Carter 0.624, APC/RH 0.654, SVD-LC 0.692, CBD
-0.799 (on its 45-age support). But the distributional NB head covers
-0.933 natively, 0.956 under the deep ensemble and 0.972 under dropout;
-CNN-LC under dropout covers 0.962; the multi-output GP 0.905; the sparse
-VAR 0.937--0.938 on the cells its rejection rule admits. Three of those
-arms sit at or above nominal, so the direction of the miscalibration is
-not even uniformly downward.
+\Htwo\ as registered has a one-sided form and a two-sided restatement, and
+the two verdicts differ. \textbf{The one-sided form---nominal 95\%
+intervals under-cover in the shift regime \emph{for every model
+family}---is not supported.} The classical cores under their own
+predictive law do under-cover, severely: Poisson Lee--Carter 0.624,
+APC/RH 0.654, SVD-LC 0.692, CBD 0.799 on its 45-age support. But the
+distributional NB head covers 0.933 natively, 0.956 under the deep
+ensemble and 0.972 under dropout; CNN-LC under dropout covers 0.962; the
+multi-output GP 0.905; the sparse VAR 0.937--0.938 on the cells its
+rejection rule admits. Several of those arms sit at or above nominal
+through the break, so the direction of the miscalibration is not even
+uniformly downward, and the registered universal fails on its own terms.
+
+The two-sided quantity registered in Addendum~3 (\S8),
+$|\text{coverage}-0.95|$, hypothesised to grow from the stable control to
+the shift regime, gives the sharper verdict. It grows in 27 of the 50
+admissible cells---a bare majority, not a general degradation. Raw
+coverage falls in 34 of 50, which is the number a paper without a control
+would have reported as damage; but a fall is a degradation only for a cell
+that began below nominal, and 16 of the 50 cells began above it.
+
+What the break does is sort the grid by which side of nominal each arm
+started on. Of the sixteen arms that over-covered in the stable control,
+eleven move \emph{towards} nominal under COVID: the sparse VAR's native
+law from 0.988 to 0.937, its Poisson-bootstrap arm from 0.996 to 0.938,
+the NB head from 0.988 to 0.956 under the deep ensemble, from 0.988 to
+0.972 under dropout and from 0.975 to 0.933 natively. For these families
+the pandemic is not a stress test that they fail; it consumes the slack
+their own predictive law had built in. Of the thirty-four arms at or below
+nominal in the control, twenty-two move further away: Poisson Lee--Carter
+from 0.682 to 0.624, APC/RH from 0.731 to 0.654, CBD from 0.901 to 0.799,
+SVD Lee--Carter from 0.702 to 0.692. The registered expectation was that
+the break would push the whole grid off nominal; what it does is spread
+the grid apart from both sides.
+
+Read against the control, then, the honest statement of the shift-regime
+result is not that COVID broke these intervals. Poisson Lee--Carter's
+native band missed 0.318 of observations before the pandemic existed and
+0.376 during it. The pandemic contributes the last six percentage points
+of a thirty-three-point shortfall from nominal.
 
 The registration deliberately declined a directional claim on
 neural-versus-classical ordering, and the working conjecture that
 motivated the audit---coverage degradation larger for the neural
-families---is refuted in its strong form. The split does not run along
-the architecture class at all: LSTM-$\kappa_t$ (0.647 ensemble, 0.685
-dropout) and the neural-LC ensemble (0.694) break exactly like the
+families---is refuted in its strong form, in both regimes. The split does
+not run along the architecture class at all: LSTM-$\kappa_t$ (0.638
+ensemble and 0.667 dropout in the control, 0.647 and 0.685 under the
+break) and the neural-LC ensemble (0.758 and 0.694) break exactly like the
 classical cores, while their sibling neural arms with a count likelihood
 or dropout smoothing (NB head, CNN-LC dropout) are the best-covered arms
-in the study. What separates the broken arms from the calibrated ones is
-the family--mechanism pair, not the presence of a neural network---the
-finding the crossed design exists to expose, taken up in
-Section~\ref{sec:results-contrasts}.
+in the study in every regime. What separates the broken arms from the
+calibrated ones is the family--mechanism pair, not the presence of a
+neural network---the finding the crossed design exists to expose, taken up
+in Section~\ref{sec:results-contrasts}.
 
-The interval score orders the same failure: the broken natives pay twice,
-in missed observations and in width---Poisson Lee--Carter native 4.456,
-neural-LC ensemble 4.321, APC/RH 3.401, against NB native 1.684 and
-CNN-LC dropout 1.677. The largest interval score in the table, neural-LC
-dropout at 5.559 with coverage 0.811, is an arm buying part of its
-coverage with indiscriminate width. Wrapping any family in a conformal
-band moves its 95\% coverage into a narrow range regardless of how broken
-the native law is: 0.848--0.944 for split and EnbPI, 0.939--0.981 for
-the copula arm---the repair whose cost is priced in
-Table~\ref{tab:dm-mcs}.
+The interval score orders the same failure and, again, orders it the same
+way in both regimes: the broken natives pay twice, in missed observations
+and in width---Poisson Lee--Carter native 3.056 in the control and 4.456
+under the break, neural-LC ensemble 3.925 and 4.321, APC/RH 2.398 and
+3.401, against NB native 1.455 and 1.684 and CNN-LC dropout 1.653 and
+1.677. The largest interval score in the table, neural-LC dropout at 5.559
+under the break with coverage 0.811 (5.068 and 0.816 in the control), is
+an arm buying part of its coverage with indiscriminate width. Wrapping any
+family in a conformal band moves its 95\% coverage into a narrow range
+regardless of how broken the native law is: in the control 0.890--0.948
+for split and EnbPI and 0.951--0.985 for the copula arm, under the break
+0.848--0.944 and 0.939--0.981---the repair whose cost is priced in
+Table~\ref{tab:dm-mcs} and, crucially, a repair whose sign is the same in
+both regimes.
 
 \subsection{H3: joint path coverage}
+\label{sec:results-joint}
 
-\begin{table}[p]\centering
-\caption{Marginal coverage of nominal 95\% intervals, pooled over horizons,
-against joint path coverage over the whole horizon set ($H=5$ in the shift
-and stable regimes, $H=9$ in the placebo), and their difference, by family,
-mechanism and regime. Conformal rows enter with both quantities read from
-their interval bounds at the construction level (Addendum~3, \S6).}
-\label{tab:h3-joint}
+% tab-h3-joint is a page-spanning longtable fragment generated by
+% scripts/make_tables.py; its caption and label live in the fragment.
 \inputtable{tab-h3-joint}
-\end{table}
 
 Table~\ref{tab:h3-joint} sets, for each family--mechanism cell, mean
 marginal coverage at 95\% beside mean joint path coverage at the same
 nominal level and the gap between the two: the difference between the
 coverage a mortality paper reports and the coverage a liability depends
-on. The registered direction of \Hthree---joint path coverage materially
-below marginal for every family---holds in every row of the table: the
-gap is negative for all 50 admissible arms, without exception. For the
-broken classical natives the collapse is near-total: Poisson Lee--Carter
-falls from 0.624 marginal to 0.298 joint, SVD-LC from 0.692 to 0.417,
-APC/RH from 0.654 to 0.330, CBD from 0.799 to 0.504. The gap is not a
-symptom of bad marginal calibration that good calibration removes: the
-best-covered marginal arms lose it too---NB dropout falls from 0.972 to
-0.897, CNN-LC dropout from 0.962 to 0.870---so an arm whose reported
-marginal coverage is nominal can still miss between one in ten and one in
-three whole trajectories.
+on. Joint coverage lies below marginal in 100 of 100 (regime, cell)
+pairs---all fifty admissible arms in the stable control and all fifty
+under the break, without a single exception---with a mean gap of 0.127 in
+the control and 0.168 under the break. That count is descriptive and
+largely arithmetic, and it is reported as such rather than as a result.
+Joint coverage is bounded above by the smallest marginal coverage on the
+path, and at nominal 0.95 over five horizons independence alone would give
+$0.95^5 = 0.774$, a gap of 0.176 that is \emph{larger} than either
+observed mean. Section~\ref{sec:design-status} and
+Section~\ref{sec:metrics-coverage} call the registered marginal comparison
+near-tautological; nothing in this table contradicts them, and the
+universality of the sign is not evidence of miscalibration.
+
+The informative benchmark is not the marginal rate but independence
+\emph{at each arm's own marginal rate}: an arm covering $c$ marginally
+would hold $c^{H}$ of its paths if its horizons were independent. Measured
+against that, almost every arm does better than independence---in 50 of 50
+stable cells and 50 of 50 shift cells, by between $+0.007$ and $+0.344$ in
+the control and between $+0.014$ and $+0.328$ under the break, and in 45 of
+the 46 placebo cells over nine horizons, the exception being the sparse
+VAR's bootstrap arm at 0.748 against a benchmark of 0.756. Mortality forecast
+errors are strongly positively dependent down the path: a trajectory
+inside its band at $h=1$ is far likelier than chance to be inside it at
+$h=5$, because the same drift error persists across every horizon of the
+same path. That dependence is what \citet{dowd2010backtesting} named in a
+footnote and did not measure, and measuring it across ten families, seven
+mechanisms and three regimes is what \Hthree\ contributes here. It also
+means the marginal-to-joint gap cannot be read as miscalibration on its
+own: most of it is arithmetic, and the dependence works in the
+forecaster's favour, not against it.
+
+What is supportable as a practical statement is the level of joint
+coverage, not the size of the gap. Joint path coverage falls below 0.774
+in 21 of the 50 stable cells and 30 of the 50 shift cells. For those arms
+a reader of the marginal column is being sold a band that fails to hold
+the whole five-year path more often than a genuinely nominal pointwise
+construction would fail even with no horizon dependence helping it, and
+nine more cells sit below that line under the break than in the control.
+
+For the broken classical natives the collapse is near-total in both
+regimes: Poisson Lee--Carter falls from 0.682 marginal to 0.422 joint in
+the control and from 0.624 to 0.298 under the break, SVD-LC from 0.702 to
+0.495 and from 0.692 to 0.417, APC/RH from 0.731 to 0.465 and from 0.654
+to 0.330, CBD from 0.901 to 0.781 and from 0.799 to 0.504. The gap is not
+a symptom of bad marginal calibration that good calibration removes: the
+best-covered marginal arms lose it too---the NB dropout arm falls from
+0.988 to 0.956 in the control and from 0.972 to 0.897 under the break,
+CNN-LC dropout from 0.954 to 0.855 and from 0.962 to 0.870, the sparse VAR
+natively from 0.988 to 0.951 and from 0.937 to 0.819---so an arm whose
+reported marginal coverage is nominal can still miss whole trajectories at
+a rate no reader of its marginal column would expect---from roughly one in
+twenty for the best-covered arms to one in five for the worst of them, the
+NB head's native law under the break, whose 0.933 marginal coverage sits
+against 0.795 joint.
 
 The one mechanism constructed to be joint over $h=1,\dots,H$ behaves as
-constructed: the copula-conformal arm holds joint path coverage between
-0.805 (CBD) and 0.927 (SVD-LC) across the ten families, with gaps of
-$-0.049$ to $-0.136$---the smallest in its family block in every family
-but the NB head, whose dropout arm's gap of $-0.075$ is narrower still.
-The registered comparator for \Hthree\ is not the marginal rate but each
-model's own simulated-path-implied joint coverage (Addendum~3, \S8),
-computed from the same predictive paths, so that the
-realised-minus-implied gap can take either sign; that quantity is not
-among the columns the runner emits. \todo{model-implied joint coverage
-column (Addendum~3 \S8) is not emitted by the runner; add it to the
-analysis stage or record the omission as a deviation in
-Section~\ref{sec:design-deviations}}
+constructed, and does so in both regimes: the copula-conformal arm holds
+joint path coverage between 0.894 and 0.942 across the ten families in the
+control, with gaps of $-0.043$ to $-0.064$, and between 0.805 (CBD) and
+0.927 (SVD-LC) under the break, with gaps of $-0.049$ to $-0.136$---the
+smallest in its family block in every family but the NB head, whose
+dropout arm's gap under the break, $-0.075$, is narrower still.
+
+The registered comparator itself is not available, and the verdict on
+\Hthree\ has to be stated with that absence in it. Addendum~3 (\S8)
+re-specified the \Hthree\ comparator as each cell's own
+simulated-path-implied joint coverage, computed from the same predictive
+paths, so that the realised-minus-implied gap could take either sign; the
+runner's column contract carries realised joint coverage but does not emit
+the implied quantity, as Section~\ref{sec:metrics-coverage} records rather
+than carries silently. That quantity is not recoverable from the columns
+the runner wrote, so the registered paired test is not run and \Hthree\ is
+not adjudicated in the form it was registered in. What stands in its place
+is two measurements with different standing. The marginal-to-joint gap is
+descriptive, near-tautological in sign, and labelled as such. The
+comparison against each arm's own independence benchmark is neither, and
+it is the measurement of horizon dependence the prior literature left
+unmade. The implied comparator is recomputable from the recorded per-row
+seeds and would split the residual part of the gap into horizon dependence
+and miscalibration; it is declared unfinished business rather than an
+omission discovered after the fact.
 
 \begin{figure}[htbp]\centering
 \inputfigure{fig-joint-vs-marginal-shift}
@@ -256,86 +445,87 @@ counterparts are the same figure on those regimes' files.}
 \end{figure}
 
 \subsection{H4: where in age the intervals fail}
+\label{sec:results-age}
 
-\begin{table}[p]\centering
-\caption{Empirical coverage of nominal 95\% intervals within the age bands
-$0$--$24$, $25$--$64$ and $65$--$99$, by family, mechanism and regime.
-CBD is fit on ages 55--99: its $0$--$24$ entry is blank and its
-$25$--$64$ entry covers ages 55--64 only, as the table note states.
-Conformal rows are read at the same bands the wrappers calibrate on.}
-\label{tab:h4-age}
+% tab-h4-age is a page-spanning longtable fragment generated by
+% scripts/make_tables.py; its caption and label live in the fragment.
 \inputtable{tab-h4-age}
-\end{table}
 
-Table~\ref{tab:h4-age} gives, for each family--mechanism cell, the 95\%
-coverage within the three registered age bands, so that the $65$--$99$
-and $25$--$64$ columns can be read against each other as \Hfour\
-requires; the conformal wrappers are Mondrian-stratified on the same
-bands, so a conformal row is read at the resolution it was calibrated at.
-CBD contributes no $0$--$24$ value and a $25$--$64$ value restricted to
-ages 55--64, which the table note records so that its row is not read
-against the full-age families.
+\Hfour\ as registered---shift-regime coverage at ages 65--99 lower than at
+25--64 \emph{for every family}---is not supported as a universal; the age
+profile of the failure is family-specific. It is supported, sharply and
+consistently, for the full-age families whose extrapolated period index
+\emph{also} broke in Table~\ref{tab:h2-coverage}. SVD Lee--Carter falls
+from 0.882 at ages 0--24 to 0.725 at 25--64 and 0.518 at 65--99 under the
+break; APC/RH from 0.732 to 0.661 to 0.589; and the LSTM ensemble most
+steeply of all, 0.893 to 0.687 to 0.426. For these arms the old ages are
+where the interval fails, and they fail there by a wide margin: an
+interval sold as 95\% contains the realised old-age rate in about half of
+the cells.
 
-\Hfour\ as registered---shift-regime coverage at ages 65--99 lower than
-at 25--64 \emph{for every family}---is refuted as a universal: the age
-profile of the failure is family-specific, and no single clean pattern
-spans the table. The registered direction does hold, sharply, for the
-three families that forecast through an extrapolated period index and
-broke in Table~\ref{tab:h2-coverage}: SVD-LC native falls from 0.725 at
-25--64 to 0.518 at 65--99, APC/RH from 0.661 to 0.589, and
-LSTM-$\kappa_t$ most steeply of all, 0.687 to 0.426 (ensemble) and 0.733
-to 0.463 (dropout), against markedly better 0--24 rows in each case
-(0.882--0.920 for SVD-LC and the LSTM, 0.732--0.744 for APC/RH): for
-these arms the COVID miss is concentrated where COVID mortality was, at
-the old ages. But Poisson Lee--Carter is uniformly
-poor across all three bands (0.639 / 0.602 / 0.639)---its failure has no
-age profile---and three arms reverse the registered direction outright:
-CBD covers 0.849 at 65--99 against 0.626 at its 55--64 stub, CNN-LC
-ensemble 0.880 against 0.847, and neural-LC dropout 0.934 against 0.874.
-The neural-LC dropout arm instead collapses at the young ages: 0.538 at
-0--24, the lowest band entry of any arm outside the index-driven
-families. The calibrated families (NB head, sparse VAR, GP) are
-near-flat in age, and the Mondrian-stratified wrappers flatten even the
-broken families' profiles (SVD-LC split: 0.944 / 0.897 / 0.945). The
-reversal anticipated by \citet{dowd2010backtesting}, which Addendum~3
-(\S8) pre-committed to reporting as informative, is therefore present in
-the table---but only for particular family--mechanism pairs, not as the
-complement of a uniform old-age failure.
+The control settles what the break contributed. The same gradient is
+already there with nothing broken---SVD Lee--Carter runs 0.888 / 0.760 /
+0.501 across the three bands in the stable regime and the LSTM ensemble
+0.858 / 0.700 / 0.409---so the old-age concentration is a standing
+property of index extrapolation rather than a pandemic effect. What
+2020--2024 adds is small: Lee--Carter's old-age coverage moves from 0.501
+to 0.518, and the LSTM ensemble's from 0.409 to 0.426. Both move
+\emph{towards} nominal, because a band that already misses half its old-age
+outcomes has little room left to lose.
 
-\begin{figure}[htbp]\centering
-\inputfigure{fig-coverage-by-age-shift}
-\caption{Single-age empirical coverage of nominal 95\% intervals (mean
-over horizons), one panel per family, mechanisms as lines with conformal
-arms dashed, shift regime, on the common cells of each panel. Ages a
-family does not score are left blank and CBD's panel states its age
-support; the horizontal line is the nominal level. The stable and placebo
-counterparts are the same figure on those regimes' files.}
-\label{fig:coverage-by-age}
-\end{figure}
+This is the one hypothesis whose registered direction the prior literature
+disputed. \citet{dowd2010backtesting}, backtesting six classical models on
+one population, find the age-65 forecasts biased upward with realised
+values at or below the lower bound while the age-84 forecasts show ``only
+a very slight upward bias'' (Section~\ref{sec:related})---the higher age
+behaving better, which is the opposite of the registered \Hfour\ direction.
+Across three regimes, ten families and up to twenty populations---twenty in
+the shift regime and sixteen there for the GP, eighteen in the stable
+control for the nine non-GP families and again sixteen for the GP, eleven
+in the placebo---we find the reverse for the full-age index-extrapolating
+cores, and we find it in quiet years as well as across the break.
+
+The reversal is nonetheless common enough to be worth stating plainly:
+under the break, coverage at 65--99 exceeds coverage at 25--64 in 34 of the
+50 cells. Most of those are conformal arms, whose Mondrian strata are
+calibrated on these bands separately and which therefore flatten or invert
+the profile by construction; but eight of the twenty arms carrying a
+family's own uncertainty reverse it too---CBD natively (0.849 at 65--99
+against 0.626 at its 55--64 stub) and under the bootstrap (0.876 against
+0.668), CNN-LC under dropout (0.985 against 0.944) and as an ensemble
+(0.880 against 0.847), the multi-output GP (0.909 against 0.900),
+neural-LC under dropout (0.934 against 0.874), and Poisson Lee--Carter
+natively (0.639 against 0.602) and under the bootstrap (0.664 against
+0.619). Five of those eight reverse only in the arithmetic: Poisson
+Lee--Carter is uniformly poor across all three bands under the break
+(0.639 / 0.602 / 0.639) and in the control (0.721 / 0.664 / 0.676), its
+bootstrap arm likewise, the GP is flat and near-nominal (0.908 / 0.900 /
+0.909), and CNN-LC's two arms reverse by 0.041 and 0.033. A margin of five
+hundredths or less is no age profile at all, in either direction.
+
+CBD is excluded from the supported class for a different reason. It
+extrapolates two period indices by a bivariate random walk with drift and
+its native interval broke (0.901 to 0.799), so on the stated criterion it
+belongs there; but it is fitted on ages 55--99, so its 25--64 column is a
+55--64 stub and its bands are not comparable with the full-age families'.
+Its reversal is also not a break effect: it is already present in the
+control, 0.913 at 65--99 against 0.861 at the stub and 0.930 against 0.888
+under the bootstrap. What COVID does to CBD is deepen an old-age advantage
+its restricted support already gave it rather than create one. The
+neural-LC ensemble is the remaining exception in the other direction: it
+covers only 0.619 at ages 0--24 against 0.793 and 0.633 above, so its
+failure is concentrated at the young ages, where the exposure is largest
+and the deaths fewest.
 
 \subsection{PIT uniformity, reliability and the Murphy decomposition}
 
-\begin{table}[htbp]\centering
-\caption{Distributional arms only: mean Kolmogorov--Smirnov distance of the
-randomised PIT from uniformity, and the share of population--sex cells
-whose nominal KS $p$-value falls below $0.05$, by family, mechanism and
-regime; conformal rows are left blank because their PIT is a placeholder.
-The $p$-value is descriptive: PIT values within a cell are dependent
-across ages and horizons (Addendum~2, \S4), and formal inference on
-calibration is population-clustered.}
-\label{tab:pit}
+% tab-pit is a page-spanning longtable fragment generated by
+% scripts/make_tables.py; its caption and label live in the fragment.
 \inputtable{tab-pit}
-\end{table}
 
-\begin{table}[p]\centering
-\caption{Murphy decomposition of the 95\% interval-hit Brier score
-(reliability, resolution, uncertainty) and the PIT-scale reliability
-against the uniform reference, by family, mechanism and regime; with one
-constant nominal level the resolution term is zero by construction
-(table footnote). PIT-scale column: distributional arms only.}
-\label{tab:murphy}
+% tab-murphy is a page-spanning longtable fragment generated by
+% scripts/make_tables.py; its caption and label live in the fragment.
 \inputtable{tab-murphy}
-\end{table}
 
 Table~\ref{tab:pit} reports, for the distributional arms, the mean KS
 distance of the randomised PIT from the uniform and the share of cells
@@ -343,35 +533,54 @@ whose nominal KS $p$-value is below $0.05$; the $p$-value is descriptive
 only, because PIT values across ages and horizons within a cell are
 dependent, and the shape of each departure is read from
 Figure~\ref{fig:pit-hist}. The ordering matches
-Table~\ref{tab:h2-coverage}---the smallest KS distances belong to the GP
-(0.172), the NB head (0.182--0.189) and the sparse VAR (0.188), the
-largest to Poisson Lee--Carter (0.374) and APC/RH (0.325)---but the
-levels carry the sharper message: no arm is distributionally calibrated
-through the break. Even for the best arms the share of cells whose
-nominal KS $p$-value falls below 0.05 never drops beneath 0.844, and for
-most arms it is 0.925--1.000. Coverage at a single level is a much
-weaker property than PIT uniformity: the NB head's 95\% interval can be
-essentially nominal while its predictive distribution, read over all
-levels at once, is still rejected as uniform in nearly every cell.
+Table~\ref{tab:h2-coverage} in the shift regime---the smallest KS
+distances belong to the GP (0.172), the NB head (0.182--0.189) and the
+sparse VAR (0.188), the largest to Poisson Lee--Carter (0.374) and APC/RH
+(0.325)---but the levels carry the sharper message: no arm is
+distributionally calibrated through the break, and no arm is
+distributionally calibrated without one either. The calibrated end of the
+ordering is the same in the control---sparse VAR 0.166, the NB head
+0.172--0.194, the GP 0.192---but the poorly-calibrated end re-orders
+between the regimes. In the control the three largest distances belong to
+the neural arms (LSTM ensemble 0.335, LSTM dropout 0.322,
+CNN-LC ensemble 0.291), with SVD-LC at 0.279, Poisson Lee--Carter at 0.278
+and APC/RH mid-pack at 0.227; under the break the Poisson-likelihood
+classicals take the worst places (Poisson Lee--Carter 0.374 and 0.365,
+APC/RH 0.325 and 0.319) and the LSTM arms fall back to 0.287 and 0.264.
+Which arms are worst calibrated distributionally is therefore not a fixed
+property: a PIT ranking read off one regime does not transfer to the
+other, even though the well-calibrated end does. The share of cells whose
+nominal KS $p$-value falls
+below 0.05 never drops beneath 0.905 in the control or 0.844 under the
+break, sitting at 0.925--1.000 for most arms in both. Coverage at a single
+level is a much weaker property than PIT uniformity: the NB head's 95\%
+interval can be essentially nominal while its predictive distribution,
+read over all levels at once, is still rejected as uniform in nearly every
+cell, in a quiet decade as much as through a pandemic.
 
 Table~\ref{tab:murphy} decomposes the Brier score of the 95\% hit
 indicator: with a constant forecast probability there is one bin, so
 reliability is the squared coverage gap, resolution is zero by
 construction, and uncertainty is the base-rate term. The reliability
-column spans two orders of magnitude across arms---0.1515 for Poisson
-Lee--Carter native, 0.1311 for APC/RH and 0.1226 for the LSTM ensemble
-at the broken end, against 0.0015 for CNN-LC dropout, 0.0022 for NB
-dropout and 0.0012--0.0223 for the conformal rows---which restates the
-coverage table as a proper-score share. The PIT-scale reliability beside
-it, the chi-square-type distance from uniformity that a single level's
-coverage cannot see, orders the arms the same way (Poisson Lee--Carter
-0.1904 down to NB dropout 0.0302) but never approaches zero, in
-agreement with the KS column of Table~\ref{tab:pit}: the calibrated arms
-are calibrated at 95\%, not everywhere. \todo{Section~\ref{sec:metrics}
-describes a Murphy decomposition of the interval score and of exceedance
-Brier scores with an isotonic recalibration; the harness emits the
-one-bin hit-indicator form and the PIT-scale form above---reconcile the
-metrics text with the emitted columns before submission}
+column spans two orders of magnitude across arms in both regimes---under
+the break 0.1515 for Poisson Lee--Carter native, 0.1311 for APC/RH and
+0.1226 for the LSTM ensemble against 0.0015 for CNN-LC dropout, 0.0022 for
+NB dropout and 0.0012--0.0223 for the conformal rows; in the control
+0.1324 for the LSTM ensemble, 0.1142 for Poisson Lee--Carter and 0.0921
+for SVD-LC against 0.0013 for the NB head natively, 0.0016 for the sparse
+VAR and 0.0021 for CNN-LC dropout---which restates the coverage table as a
+proper-score share and shows the same spread with no break present. The
+PIT-scale reliability beside it, the chi-square-type distance from
+uniformity that a single level's coverage cannot see, orders the arms the
+same way (under the break Poisson Lee--Carter 0.1904 down to NB dropout
+0.0302; in the control the LSTM ensemble 0.1427 and Poisson Lee--Carter
+0.1197 down to NB head 0.0232) but never approaches zero, in agreement
+with the KS column of Table~\ref{tab:pit}: the calibrated arms are
+calibrated at 95\%, not everywhere. The two decompositions reported are
+the two the harness emits, and they are the two Section~\ref{sec:metrics}
+specifies: Murphy's one-bin partition of the interval-hit Brier score and
+the divergence form on the PIT scale. The isotonic (CORP) estimator is not
+emitted and no hypothesis rests on it.
 
 \begin{figure}[htbp]\centering
 \inputfigure{fig-pit-hist-shift}
@@ -400,56 +609,72 @@ and placebo counterparts are the same figure on those regimes' files.}
 % scripts/make_tables.py; it carries its own \caption and \label{tab:dm-mcs}.
 \inputtable{tab-dm-mcs}
 
-Table~\ref{tab:dm-mcs} shows the two registered inference procedures, and
-its loss column is the reason it is one table: a contrast among
-distributional arms is decided on CRPS on log rates, while any contrast
-that includes a conformal arm is decided on the per-horizon 95\% interval
-score, because a conformal cell's CRPS is a placeholder. Every entry is
-computed on the intersection of cells in which each compared arm produced
-a valid row, and the kept and dropped counts are part of the table.
+Table~\ref{tab:dm-mcs} shows the two registered inference procedures in
+all three regimes, and its loss column is the reason it is one table: a
+contrast among distributional arms is decided on CRPS on log rates, while
+any contrast that includes a conformal arm is decided on the per-horizon
+95\% interval score, because a conformal cell's CRPS is a placeholder.
+Every entry is computed on the intersection of cells in which each
+compared arm produced a valid row, and the kept and dropped counts are
+part of the table.
 
 The model confidence set over the classical families under their own
 predictive law is formed over the four full-age families only: the
-five-family set including CBD is skipped, with its reason recorded in the
-table, because a mean CRPS over 45 ages is not comparable with one over
-100 and the registration forbids working around an incomparable loss. On
-the 29 common cells the 90\% set retains \{SVD-LC native, sparse VAR
-native\} (elimination $p$-values 0.13 and 1.00), eliminating Poisson
-Lee--Carter and APC/RH at $p=0.00$---with the caveat, carried from
-Table~\ref{tab:infeasible}, that the sparse VAR is scored only on the
-cells its own rejection rule admits.
+five-family set including CBD is skipped in every regime, with its reason
+recorded in the table, because a mean CRPS over 45 ages is not comparable
+with one over 100 and the registration forbids working around an
+incomparable loss. In the control, on 297 common cells, the 90\% set
+retains the sparse VAR's native arm alone, eliminating SVD-LC, Poisson
+Lee--Carter and APC/RH at $p=0.03$ each. Under the break, on 29 common
+cells, it retains \{SVD-LC native, sparse VAR native\} (elimination
+$p$-values 0.13 and 1.00), eliminating Poisson Lee--Carter and APC/RH at
+$p<0.0005$---with the caveat, carried from Table~\ref{tab:infeasible}, that
+the sparse VAR is scored only on the cells its own rejection rule admits.
+The set widens under the break because thirteen origins of evidence are
+replaced by one, not because the eliminated families improved.
 
-The within-family conformal sets on the interval score split three ways.
-In five families---SVD-LC, LSTM-$\kappa_t$, NB head, neural-LC and sparse
-VAR---EnbPI is the sole survivor, eliminating the split and copula arms
-at $p$-values between 0.00 and 0.08; in Poisson Lee--Carter the copula
-arm is the sole survivor ($p=0.01$ against both others); and in CBD,
-CNN-LC, the GP and APC/RH all three wrappers are retained. Read with
-Table~\ref{tab:h3-joint}, the EnbPI wins are a width result, not a
-calibration result: the interval score at a single level rewards the
-narrowest band that roughly covers, which EnbPI's residual recycling
-produces, while the copula arm's wider joint band is what actually holds
-path coverage. The two registered procedures answer different questions
-and disagree accordingly.
+The within-family conformal sets separate the wrappers far more sharply
+under the break than in the control, and the pattern is informative. In
+the control, seven of the ten families retain all three wrappers---the
+quiet regime cannot tell a split band, an EnbPI band and a copula band
+apart on the single-level interval score---with only CBD and the sparse
+VAR reduced to EnbPI alone and the NB head to \{copula, EnbPI\}. Under the
+break the sets collapse: in five families---SVD-LC, LSTM-$\kappa_t$, NB
+head, neural-LC and sparse VAR---EnbPI is the sole survivor, eliminating
+the split and copula arms at $p$-values between 0.00 and 0.08; in Poisson
+Lee--Carter the copula arm is the sole survivor ($p=0.01$ against both
+others); and in CBD, CNN-LC, the GP and APC/RH all three wrappers are
+retained. Read with Table~\ref{tab:h3-joint}, the EnbPI wins are a width
+result, not a calibration result: the interval score at a single level
+rewards the narrowest band that roughly covers, which EnbPI's residual
+recycling produces, while the copula arm's wider joint band is what
+actually holds path coverage. The two registered procedures answer
+different questions and disagree accordingly.
 
 The Diebold--Mariano block prices the conformal repair of
 Table~\ref{tab:h2-coverage} and is the attribution finding of the crossed
-design. The contrast is defined for the seven families with a native
-arm. Split conformal is significantly \emph{better} than the native law
-for exactly the four classical cores whose native intervals broke:
+design. The contrast is defined for the seven families with a native arm,
+and its most important property is that its sign is the same in the
+control as under the break, family by family, without exception. Under
+the break, split conformal is significantly \emph{better} than the native
+law for exactly the four classical cores whose native intervals broke:
 Poisson Lee--Carter ($\Delta=1.895$, $p=0.004$), APC/RH ($\Delta=1.039$,
 $p=0.013$), SVD-LC ($\Delta=0.700$, $p=0.018$) and CBD ($\Delta=0.318$,
 $p=0.017$), with $G=19$ population clusters each. It is significantly
 \emph{worse} for exactly the three families whose native law was already
-calibrated: the NB head ($\Delta=-1.024$, $p=0.000$, $G=19$), the
+calibrated: the NB head ($\Delta=-1.024$, $p<0.0002$, $G=19$), the
 multi-output GP ($\Delta=-0.413$, $p=0.009$, $G=16$) and the sparse VAR
-($\Delta=-0.318$, $p=0.000$, $G=14$). No family is left where the
-wrapper is free: conformalisation is insurance that pays out precisely
-when the model's own uncertainty was wrong and costs a premium precisely
-when it was right. Which side of the line a family falls on is a
-property of the family--mechanism pair, not of the wrapper---the
-sharpest form of the study's central claim that architecture and
-uncertainty mechanism are separate factors.
+($\Delta=-0.318$, $p<0.0002$, $G=14$). In the control the same seven signs
+appear: $\Delta=+1.038$ for Poisson Lee--Carter ($p=0.032$), $+0.694$ for
+SVD-LC ($p=0.006$), $+0.451$ for APC/RH ($p=0.086$) and $+0.108$ for CBD
+($p=0.198$), against $-0.873$ for the NB head, $-0.772$ for the GP and
+$-0.236$ for the sparse VAR, all three at $p\le0.0002$. No family is left
+where the wrapper is free: conformalisation is insurance that pays out
+precisely when the model's own uncertainty was wrong and costs a premium
+precisely when it was right. Which side of the line a family falls on is a
+property of the family--mechanism pair, not of the wrapper and not of the
+pandemic---the sharpest form of the study's central claim that
+architecture and uncertainty mechanism are separate factors.
 
 \subsection{Twin crises: 1914--1922 beside 2020--2024}
 
@@ -458,10 +683,9 @@ uncertainty mechanism are separate factors.
 shift (train to 2019, test 2020--2024, twenty populations) side by side:
 marginal 95\% and joint path coverage by family and mechanism, with the
 placebo strata of Addendum~1 as a further column. Joint coverage spans
-$H=9$ placebo and $H=5$ shift horizons---not one scale. Sparse VAR's
-empty placebo cells are a finding, not a gap: every native draw on the
-pre-1914 panels tripped the registered explosive-path rejection
-(Table~\ref{tab:infeasible}).}
+$H=9$ placebo and $H=5$ shift horizons---not one scale. The sparse
+VAR's empty placebo cells are a finding rather than a gap, and are
+read in the text below.}
 \label{tab:twin-crises}
 \inputtable{tab-twin-crises}
 \end{table}
@@ -476,13 +700,38 @@ nominal 0.95), the point-forecast neural mechanisms are worst
 through COVID calibrated sit near the top of the placebo ordering too
 (NB head 0.849, multi-output GP 0.820). Joint path coverage collapses
 in the same order---0.146 (neural-LC ensemble), 0.172 (LSTM),
-0.293--0.335 (the classical cores) over nine horizons---so the H3 gap
-is not a COVID artefact either. Sparse VAR is the one family with no
-placebo verdict: every native draw on the pre-1914 panels tripped the
-registered explosive-path rejection (zero valid rows,
-Table~\ref{tab:infeasible}), which also empties the common-cell
-intersection (addendum 3~\S11) of the registered classical model
-confidence set in this regime.
+0.293--0.335 (the classical cores) over nine horizons---so the
+marginal-to-joint gap of \Hthree\ is not a COVID artefact either, though
+over nine horizons its descriptive part is more nearly arithmetic still
+($0.95^9 = 0.630$), and the informative reading is the one
+Section~\ref{sec:results-joint} gives: 45 of the 46 placebo arms beat
+independence at their own marginal rate, and 37 of them nonetheless hold
+the nine-year path less often than 0.630. Sparse VAR is the one family
+with no placebo verdict under its native law, and none under any conformal
+wrapper: on all but one cell per arm the pre-1914 native draws tripped the
+registered explosive-path rejection, and the remaining cell fails the
+admissibility rule, leaving zero valid rows in four of its five arms
+(Table~\ref{tab:infeasible}). Only its Poisson-bootstrap arm survives, on
+nine rows, where it covers 0.969 marginally against 0.748 jointly---the
+closest to nominal of any placebo arm, though on the thinnest evidence in
+the table, and closer than CBD's own-law arms only because those
+over-cover (0.986--0.988). The four empty arms also empty the common-cell intersection
+(Addendum~3, \S11) of the registered classical model confidence set in
+this regime.
+
+Against the stable control the placebo makes the sorting mechanism of
+\Htwo\ visible from the other side, with the caveat that the two regimes
+share neither populations, era nor horizon count. The classical cores
+cover \emph{better} through the 1914--1922 break than in the quiet
+1990--2014 decades---Lee--Carter 0.787 against 0.702, Poisson Lee--Carter
+0.780 against 0.682, APC/RH 0.761 against 0.731, CBD 0.986 against
+0.901---because a model estimated on the volatile pre-1914 panels
+produces much wider bands, which is a form of accidental calibration
+rather than a better law. The arms that were calibrated in the control
+lose the most: the NB head falls from 0.975 to 0.849 and the GP from
+0.945 to 0.820. Coverage moves towards the middle from both directions
+here as it does under COVID; the crisis re-orders the grid rather than
+degrading it uniformly, which is the same finding in a different century.
 
 The exception is CBD, and it is the most instructive cell in the table:
 near-nominal through the placebo break (0.986 marginal, 0.918 joint)
@@ -491,7 +740,7 @@ concentrated its excess mortality at young-adult ages, below CBD's
 age-55 support, while COVID's excess fell at the old ages CBD models.
 Whether an interval survives a crisis therefore depends not only on the
 family's dynamics but on where in the age range the crisis lands---the
-age-localisation of miscalibration that H4 establishes \emph{within}
+age-localisation of miscalibration that \Hfour\ establishes \emph{within}
 the shift regime, operating here \emph{between} regimes.
 
 The Addendum~1 strata sharpen the reading. In the neutral
@@ -503,81 +752,108 @@ Within one family and one regime, coverage failure scales with the size
 of the break.
 
 The paired mechanism contrasts, however, do not transfer. The
-split-conformal rescue that is decisive under COVID
-(Section~\ref{sec:results-contrasts}) is absent here: on the interval
-score, native versus split is insignificant for every full-age
-classical core (Lee--Carter $\Delta=-0.091$, $p=0.689$; Poisson
-Lee--Carter $p=0.127$; APC/RH $p=0.563$), and the NB head's native law
-significantly beats its own wrapper ($\Delta=-0.461$, $p=0.008$)---a
-calibration window drawn from the pre-1914 years knows as little about
-the coming shock as the model it corrects. The ensemble-versus-dropout
-verdicts flip family by family between the two crises: CNN-LC,
-indistinguishable under COVID ($p=0.739$), favours dropout here
-($\Delta=+0.531$, $p=0.0002$); LSTM, which favours dropout under COVID
-($p=0.0006$), is indistinguishable here ($p=0.478$). A family's
-fragility is predictable from its past crisis; which uncertainty
-mechanism patches it best is not.
+split-conformal rescue that is decisive under COVID---and, as
+Section~\ref{sec:results-contrasts} shows, already decisive in the
+quiet control---is absent here: on the interval score, native versus
+split is insignificant for every full-age classical core (Lee--Carter
+$\Delta=-0.091$, $p=0.689$; Poisson Lee--Carter $p=0.127$; APC/RH
+$p=0.563$), and the NB head's native law significantly beats its own
+wrapper ($\Delta=-0.461$, $p=0.008$)---a calibration window drawn from
+the pre-1914 years knows as little about the coming shock as the model it
+corrects. The ensemble-versus-dropout verdicts flip family by family
+between the two crises: CNN-LC, indistinguishable under COVID
+($p=0.739$), favours dropout here ($\Delta=+0.531$, $p=0.0002$); LSTM,
+which favours dropout under COVID ($p=0.0006$), is indistinguishable
+here ($p=0.478$). A family's fragility is predictable from its past
+crisis; which uncertainty mechanism patches it best is not.
 
 \subsection{Architecture or mechanism? Contrasts within sub-grids}
 \label{sec:results-contrasts}
 
 The payoff of the crossed design. Each contrast below is pre-registered and
 computed as a paired difference within the admissible sub-grid named, on
-the common cells of that sub-grid.
+the common cells of that sub-grid, and each is now read in the stable
+control as well as under the break.
 
 \begin{enumerate}
 \item \emph{Conformal versus native.} Does wrapping a fit in a conformal
-  band change its shift-regime interval score and coverage? The native
-  versus split-conformal block of Table~\ref{tab:dm-mcs} carries this
-  contrast, per family, on the interval score, and its answer is signed by
-  the family: the wrapper significantly improves the four classical cores
-  whose native law broke and significantly worsens the NB head, GP and
-  sparse VAR, whose native law had not. The width side of the question is
-  read from the interval-score column of Table~\ref{tab:h2-coverage}: for
-  the broken families the wrapper buys its coverage while \emph{shrinking}
-  the score (Poisson Lee--Carter 4.456 native against 2.674 split), for
-  the calibrated ones it pays in width (NB head 1.684 native against
-  2.717 split).
+  band change its interval score and coverage? The native versus
+  split-conformal block of Table~\ref{tab:dm-mcs} carries this contrast,
+  per family, on the interval score, and its answer is signed by the
+  family and \emph{identical in sign in both regimes}: the wrapper
+  improves the four classical cores whose native law was broken
+  (Lee--Carter $\Delta=+0.694$ in the control against $+0.700$ under the
+  break; Poisson Lee--Carter $+1.038$ against $+1.895$; APC/RH $+0.451$
+  against $+1.039$; CBD $+0.108$ against $+0.318$) and worsens the NB
+  head, the GP and the sparse VAR, whose native law was not ($-0.873$
+  against $-1.024$; $-0.772$ against $-0.413$; $-0.236$ against
+  $-0.318$). The break changes the significance of two of the seven---CBD
+  from $p=0.198$ to $p=0.017$ and APC/RH from $p=0.086$ to $p=0.013$---and
+  the magnitude of the repair for the Poisson families, but it changes no
+  family's side. Conformalisation is therefore not a pandemic remedy: it
+  helps families whose native law was wrong and costs families whose law
+  was right, in quiet decades exactly as through a break. The width side
+  of the question is read from the interval-score column of
+  Table~\ref{tab:h2-coverage}, and again does not depend on the regime:
+  for the broken families the wrapper buys its coverage while
+  \emph{shrinking} the score (Poisson Lee--Carter 3.056 native against
+  2.056 split in the control, 4.456 against 2.674 under the break), for
+  the calibrated ones it pays in width (NB head 1.455 native against 2.335
+  split in the control, 1.684 against 2.717 under the break).
 \item \emph{Ensemble versus Monte Carlo dropout, neural families only.} Do
   two mechanisms on the same architecture give the same coverage?
   Descriptively, Table~\ref{tab:h2-coverage} answers no---on the same
-  CNN-LC architecture, dropout covers 0.962 against the ensemble's 0.882,
-  and on neural-LC 0.811 against 0.694. The registered paired test agrees
-  and adds a sign that the descriptive reading does not supply: on the
-  interval score the two mechanisms differ significantly on two of the four
-  neural families, \emph{in opposite directions}. Dropout is favoured on
-  LSTM-on-$\kappa_t$ ($\Delta = +0.224$, $t = 3.78$, $p = 0.0006$) and the
-  ensemble on neural-LC ($\Delta = -1.238$, $t = -4.18$, $p < 0.0001$),
-  while CNN-LC ($p = 0.739$) and the NB head ($p = 0.139$) are
-  indistinguishable. The mechanism is therefore not separable from the
-  architecture it wraps: no single ordering of the two survives a change of
-  family, which is the crossed design's reason for existing.
+  CNN-LC architecture, dropout covers 0.962 against the ensemble's 0.882
+  under the break and 0.954 against 0.863 in the control, and on neural-LC
+  0.811 against 0.694 and 0.816 against 0.758. The registered paired test
+  agrees and adds a sign that the descriptive reading does not supply: on
+  the interval score the two mechanisms differ significantly, \emph{in
+  opposite directions}, on two of the four neural families under the
+  break. Dropout is favoured on LSTM-on-$\kappa_t$ ($\Delta = +0.224$,
+  $t = 3.78$, $p = 0.0006$) and the ensemble on neural-LC
+  ($\Delta = -1.238$, $t = -4.18$, $p < 0.0002$), while CNN-LC
+  ($p = 0.739$) and the NB head ($p = 0.139$) are indistinguishable. All
+  four signs are the same in the control, on 434--442 common cells rather
+  than 38--40 (LSTM $+0.156$, $p=0.005$; neural-LC $-1.142$, $p=0.0002$;
+  NB head $+0.049$, $p=0.019$; CNN-LC $+0.001$, $p=0.991$), so the
+  opposing directions are a property of the family, not of the break. The
+  mechanism is not separable from the architecture it wraps: no single
+  ordering of the two survives a change of family, which is the crossed
+  design's reason for existing.
 \item \emph{Bootstrap versus native, classical families only.} Does adding
-  parameter uncertainty move a classical interval toward nominal at the
-  break? Descriptively the movement is positive and small (SVD-LC 0.692
-  to 0.727, CBD 0.799 to 0.830 in Table~\ref{tab:h2-coverage}), nowhere
-  near the repair a conformal wrapper delivers. The registered paired test
-  makes the smallness precise: the semiparametric bootstrap improves the
+  parameter uncertainty move a classical interval toward nominal?
+  Descriptively the movement is positive and small in both regimes
+  (SVD-LC 0.702 to 0.726 in the control and 0.692 to 0.727 under the
+  break, CBD 0.901 to 0.921 and 0.799 to 0.830 in
+  Table~\ref{tab:h2-coverage}), nowhere near the repair a conformal
+  wrapper delivers. The registered paired test makes the smallness
+  precise: under the break the semiparametric bootstrap improves the
   interval score significantly on three of the five classical families---
-  SVD-LC ($\Delta = -0.112$, $p < 0.0001$), Poisson Lee--Carter
-  ($\Delta = -0.115$, $p < 0.0001$) and Renshaw--Haberman
+  SVD-LC ($\Delta = -0.112$, $p < 0.0002$), Poisson Lee--Carter
+  ($\Delta = -0.115$, $p < 0.0002$) and Renshaw--Haberman
   ($\Delta = -0.101$, $p = 0.0002$)---leaves CBD unchanged ($p = 0.681$),
   and significantly \emph{worsens} sparse VAR ($\Delta = +0.168$,
   $p = 0.0008$, on the 22 cells where its native arm survives the
-  explosive-draw rejection of Addendum~3~\S7). The three improvements are
+  explosive-draw rejection of Addendum~3~\S7). The control gives the same
+  three improvements at the same order of magnitude ($-0.100$, $-0.073$
+  and $-0.075$, each at $p \le 0.0002$, on 442 cells) and the same sparse
+  VAR penalty ($+0.237$, $p < 0.0002$, on 223 cells), with CBD favouring
+  its native arm there ($+0.096$, $p = 0.016$). The three improvements are
   an order of magnitude smaller than the conformal repair of the same
   families in the contrast above (for Poisson Lee--Carter, $-0.115$ against
   $+1.895$ in favour of the wrapper): resampling the estimator moves a
-  broken interval, but it does not fix it.
+  broken interval, but it does not fix it, and it does not fix it in quiet
+  periods either.
 \item \emph{Joint-path conformal versus split conformal, all families.} The
   \Hthree\ mechanism contrast: the within-family conformal confidence sets
   of Table~\ref{tab:dm-mcs} on the interval score, read with the joint
   column of Table~\ref{tab:h3-joint}. The two tables pull in opposite
   directions by construction: the copula arm holds joint path coverage of
-  0.805--0.927 where the split arm holds 0.692--0.862, yet on the
-  single-level interval score the copula arm survives as sole set member
-  only for Poisson Lee--Carter and is eliminated in five families where
-  EnbPI's narrower band wins. A practitioner who needs the path pays for
-  it at the level; the study reports the price rather than adjudicating
-  it.
+  0.894--0.942 in the control and 0.805--0.927 under the break, where the
+  split arm holds 0.760--0.842 and 0.692--0.862, yet on the single-level
+  interval score the copula arm survives as sole set member only for
+  Poisson Lee--Carter under the break and is eliminated in five families
+  where EnbPI's narrower band wins. A practitioner who needs the path pays
+  for it at the level; the study reports the price rather than
+  adjudicating it.
 \end{enumerate}

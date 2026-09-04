@@ -55,7 +55,8 @@ analysis is a simulation: French male deaths perturbed by ``two years of
 excess mortality followed by one year of lower mortality'', because in 2021
 real post-shock data did not exist. They exist now. The HMD vintage of
 15~June~2026 (Methods Protocol v6) is the first with final single-age data
-through 2024 for twenty populations. This paper uses it.
+through 2024 for the twenty HMD populations audited here. This paper uses
+it.
 
 \subsection{What the literature measures}
 
@@ -149,9 +150,11 @@ forecast by both, and by the proper scores that combine them.
 
 The question is whether the prediction intervals of stochastic,
 machine-learning and neural mortality forecasting models attain their
-nominal coverage when the evaluation window crosses the COVID-19 break, and
+nominal coverage when the evaluation window crosses the COVID-19 break,
 whether the answer depends on the model family, on the uncertainty
-mechanism, or on both. The last clause is the design. Existing comparisons
+mechanism, or on both, and whether it differs from what the same intervals
+do when nothing breaks. The middle clause is the design; the last one is
+the control that turns out to carry most of the finding. Existing comparisons
 vary the model and inherit whatever uncertainty machinery each model happens
 to ship with, so a coverage failure cannot be attributed: is the
 architecture wrong about the future, or is the interval construction wrong
@@ -164,9 +167,13 @@ That separation is what makes this a study rather than a bake-off.
 Three regimes separate ordinary forecast error from break-induced failure: a
 \emph{stable} control (expanding origins 1990--2014, every test year before
 2020); the \emph{shift} regime (train to 2019, test 2020--2024); and a
-\emph{placebo} break (train to 1913, test 1914--1922, spanning the First
-World War and the 1918 influenza pandemic) that asks whether whatever we
-find is specific to COVID-19 or is simply what intervals do at any break.
+\emph{placebo} break on the eleven populations with usable pre-1914 data
+(train to 1913, test 1914--1922, spanning the First World War and the 1918
+influenza pandemic) that asks whether whatever we find is specific to
+COVID-19 or is simply what intervals do at any break. The population count
+differs by regime and by family---twenty across the break and sixteen for
+the Gaussian process, eighteen and sixteen in the stable control, eleven in
+the placebo---so it is stated wherever a mean is taken.
 
 Five hypotheses were fixed and hash-stamped before any model touched real
 data. They are reproduced verbatim from the pre-registration.
@@ -195,57 +202,165 @@ from nominal by more than the corresponding stable-regime departure.
 \end{hypothesis}
 
 No directional claim is registered about neural-versus-classical ordering;
-the crossed design estimates it. The shift-regime results reward that
-neutrality: the coverage split runs through the middle of the neural group,
-not between neural and classical (Section~\ref{sec:results}).
+the crossed design estimates it. The results reward that neutrality in both
+regimes: the coverage split runs through the middle of the neural group
+rather than between neural and classical, and it is already open in the
+stable control, before any break arrives (Section~\ref{sec:results}).
 
 \subsection{Contributions}
 
 This paper proposes no new mortality model. Its contributions, stated here
-with the shift-regime results in hand (the stable control and the placebo
-break are forthcoming under the same registered design), are:
+with all three regimes complete, are:
 \begin{enumerate}
-\item \emph{The audit.} The first evaluation of probabilistic mortality
-  forecasts---classical, neural and conformal---against realised 2020--2024
-  mortality across twenty populations, with every interval constructed
-  strictly from pre-2020 data. Its headline: the nominal 95\% intervals of
-  the classical cores covered between 62\% and 80\% of realised outcomes
-  (Poisson Lee--Carter 0.62, Renshaw--Haberman 0.65, Lee--Carter 0.69,
-  CBD 0.80).
+\item \emph{The audit, and the finding the control forces.} The first
+  evaluation of probabilistic mortality forecasts---classical, neural and
+  conformal---against realised 2020--2024 mortality across twenty HMD
+  populations, sixteen of them for the multi-output Gaussian process, whose
+  forty-year training floor removes four (Table~\ref{tab:infeasible}), with
+  every interval constructed strictly from pre-2020 data, run beside a
+  stable control of thirteen expanding origins over 1990--2014 on the
+  eighteen populations that clear the registered training floor (sixteen
+  again for the Gaussian process), in which no test year is later than 2019.
+  The control is what changes the answer to the title question: most of the
+  miscalibration predates the pandemic. In the stable regime the native
+  95\% intervals of the classical cores already cover 0.702 (Lee--Carter),
+  0.682 (Poisson Lee--Carter) and 0.731 (Renshaw--Haberman) of realised
+  outcomes; across the break they cover 0.692, 0.624 and 0.654. For those
+  three the break widens a failure that was there beforehand rather than
+  creating one---for Lee--Carter it barely widens it at all, a departure
+  from nominal of 0.248 in the control against 0.258 across the break---and
+  a study that had run the shift regime alone would have misattributed the
+  whole of it to COVID-19. CBD is the family in which the break contributes
+  most, and it is the control that shows it: its native interval covers
+  0.901 in the quiet decades and 0.799 across 2020--2024, so about
+  two-thirds of its shift-regime departure from nominal is break-induced and
+  about a third of it is not.
 \item \emph{The crossed design.} Model family and uncertainty mechanism as
   separate factors, so that a coverage failure can be attributed to the
   architecture, to the mechanism, or to their interaction. Claims are stated
   as contrasts within admissible sub-grids, never as main effects over a
   ragged grid. The design delivers its attribution: the failure is not a
   neural-versus-classical split. The negative-binomial distributional head
-  (0.93 native, 0.97 under dropout), the dropout CNN (0.96) and the
-  Gaussian process (0.905) held near-nominal marginal coverage through the
-  break, while the LSTM (0.65--0.69) and the ensembled neural Lee--Carter
-  (0.69) broke alongside the classical cores. The universal clause of
-  \Htwo---under-coverage for \emph{every} family---is thereby refuted in
-  strong form on the shift data alone (its stable-regime comparison clause
-  awaits the stable runs). Consistently, split conformal wrapping
-  significantly improves the 95\% interval score for exactly the four
-  families whose native law broke (LC, Poisson LC, Renshaw--Haberman, CBD;
-  Diebold--Mariano with wild cluster bootstrap, $p \le .018$) and
-  significantly worsens it for arms that were already calibrated (the
-  negative-binomial head, the Gaussian process, the sparse VAR,
-  $p \le .009$).
-\item \emph{Resolution of the failure.} By horizon: joint path coverage
-  over $h=1,\dots,5$ collapses relative to marginal for every family
-  (0.30 against 0.62 for Poisson Lee--Carter, 0.42 against 0.69 for
-  Lee--Carter), except under the copula conformal band, the one mechanism
-  calibrated for the path, which holds 0.81--0.93 joint (\Hthree). By age
-  (\Hfour) and in economic terms (life expectancy and annuity-factor
-  intervals, \Hfive), reported in Sections~\ref{sec:results}
-  and~\ref{sec:actuarial}; the 1914--1922 placebo, still to be completed,
-  supplies the second event.
+  (0.933 native, 0.972 under dropout) and the CNN under dropout (0.962) hold
+  marginal coverage near nominal through the break, and the Gaussian process
+  stays within five points of it at 0.905, though degraded from 0.945 in the
+  control; the LSTM (0.647 ensembled, 0.685 under dropout, and no better in
+  the control at 0.638 and 0.667) and the ensembled neural Lee--Carter
+  (0.758 stable, 0.694 shift) sit with the classical cores far below nominal
+  in both regimes. The mechanism contrast is likewise not a pandemic effect:
+  on the 95\% interval score $\IS$ the native interval is beaten by its
+  split conformal wrapper for the same four classical families in the
+  control as across the break and with the same sign, though not at the same
+  effect size---Lee--Carter alone is unchanged ($+0.694$ stable against
+  $+0.700$ shift), while the Poisson Lee--Carter contrast grows by
+  four-fifths ($+1.038$ to $+1.895$), Renshaw--Haberman more than doubles
+  ($+0.451$ to $+1.039$) and CBD nearly trebles ($+0.108$ to $+0.318$), and
+  all four are significant across the break where only the Lee--Carter and
+  Poisson Lee--Carter arms are significant in the control. The native
+  interval beats its wrapper, significantly in both regimes, for the same
+  three well-specified arms (negative-binomial head $-0.873$ against
+  $-1.024$; Diebold--Mariano with a wild cluster bootstrap over
+  populations). Conformal
+  wrapping repairs families whose native law was wrong and damages families
+  whose native law was right, in quiet periods as much as in the pandemic.
+  The 1914--1922 placebo, on eleven populations, supplies the second event
+  and does not reproduce that ordering intact: it reverses the contrast for
+  the four classical families, though none of the four reversals is
+  significant ($p$ from 0.071 to 0.689), while the native advantage of the
+  negative-binomial head ($-0.461$, $p=0.008$) and of the Gaussian process
+  ($-0.172$, indistinguishable from zero) persists as it stands in the other
+  two regimes.
+\item \emph{Registered directions that fail, reported as such.} The
+  pre-registration is the asset of this study precisely because it obliges
+  us to report the registered directions that the data contradict: two are
+  contradicted outright, and a third, \Hfive's comparative clause, returns a
+  split verdict. \Htwo\ registered one-sided
+  under-coverage in the shift regime for \emph{every} family, worsening on
+  the stable regime; the two-sided departure $\lvert c - 0.95 \rvert$ of
+  empirical coverage $c$ from nominal, the quantity fixed in the registered
+  addendum, grows from stable to shift in 27 of the 50 primary cells, and
+  raw coverage falls in 34 of 50---but a fall is degradation only for an arm
+  that began below nominal, one marginal exception aside, and most of the
+  arms that began above it move \emph{towards} nominal as the break arrives
+  (sparse VAR native 0.988 to 0.937; negative-binomial ensemble 0.988 to
+  0.956). What the pandemic mostly does to this grid is sort families by the
+  side of nominal they started on. That sorting is a tendency and not a law:
+  it describes 33 of the 50 cells. Five over-covering arms widen their
+  departure instead---four copula-conformal bands, of which the Poisson
+  Lee--Carter's crosses nominal on the way down (0.960 to 0.939, its
+  registered departure growing from 0.010 to 0.011, the marginal exception
+  above), and the CNN under dropout, which sits above nominal in both
+  regimes (0.954 to 0.962)---while twelve under-covering arms move back
+  towards nominal, eight of them conformal wrappers recalibrated on pre-2020
+  residuals (EnbPI on Lee--Carter, 0.890 to 0.915) and the rest led by the
+  LSTM arms, which sit too far below nominal to fall much further (ensemble
+  0.638 to 0.647). The tendency is still a more informative answer than the
+  registered one, and it is not the answer we would have reached without the
+  control.
+  \Hfour\ likewise fails in its universal form, and in doing so settles a
+  disagreement with the published prior: \citet{dowd2010backtesting} found
+  their age~84 forecasts better behaved than their age~65 ones, whereas here
+  the native Lee--Carter interval covers 0.888, 0.760 and 0.501 across ages
+  0--24, 25--64 and 65--99 and the LSTM ensemble 0.858, 0.700 and
+  0.409---in the stable control, again before any break. The old-age
+  concentration is real for the Lee--Carter line and the LSTM arms and is
+  not universal: the CBD arms, whose logit-linear structure is built for
+  old age, cover worse in middle age than above 65 (native, shift regime:
+  0.626 against 0.849).
+\item \emph{Resolution of the failure by horizon and in money.} Joint path
+  coverage over $h=1,\dots,5$ lies below marginal coverage in all 100 of the
+  100 (regime, cell) pairs scored, with a mean gap of 0.127 in the stable
+  regime and 0.168 across the break. That count is descriptive and largely
+  arithmetic: independent horizons alone would put joint coverage at
+  $0.95^{5} = 0.774$, a gap of 0.176 wider than either mean, so the
+  registered marginal-versus-joint comparison cannot on its own evidence
+  miscalibration and we do not read it as the study's strongest result. The
+  informative benchmark is each arm's joint coverage against independence
+  \emph{at its own marginal rate}, and against that benchmark the grid
+  measures what the literature has only asserted: joint coverage exceeds the
+  own-marginal independence value in 50 of 50 stable cells, 50 of 50 shift
+  cells and 45 of 46 placebo cells, by as much as 0.34. Horizons are
+  strongly positively dependent---the dependence
+  \citet{dowd2010backtesting} name in a footnote and never measure---and
+  quantifying it is what \Hthree\ contributes here. The registered
+  re-specified comparator, each cell's model-implied joint coverage
+  (Addendum~3, \S8), is not computable from the columns the production
+  runner emitted, so \Hthree\ carries no registered verdict in this paper
+  and we say so where the verdict would go; the practical reading that does
+  survive is that joint coverage falls below the nominal independence value
+  0.774 in 21 of the 50 stable cells and in 30 of 50 across the break. The
+  copula conformal band, the only mechanism calibrated for the path, narrows
+  the marginal-to-joint gap furthest on average without closing it
+  (0.805--0.927 joint coverage across the break), and is not narrowest
+  everywhere: on the negative-binomial head the dropout arm's gap across the
+  break, 0.075, beats the copula band's 0.085. \Hfive\ is the result an
+  actuary should read first, and it is the sharpest instance of the pattern
+  above: the derived quantities are far worse calibrated than the rates they
+  are built from---in every arm whose derived coverage is computable but
+  three: the two CBD arms, fit and integrated on ages 55--99 alone, whose
+  $e_{65}$ and $\annuity$ intervals are no worse than their rate intervals
+  (the Poisson bootstrap covers 0.934 of annuity factors in the control
+  against 0.921 of rates), and the sparse VAR's native law, level in the
+  control at 0.980 against 0.988 until the break separates the two scales
+  (0.586 against 0.937)---and this too is a property of quiet periods. In
+  the stable control the native Lee--Carter 95\% interval covers 0.253 of
+  realised annuity factors $\annuity$ and 0.256 of realised $e_{65}$, and
+  the LSTM ensemble 0.157 of annuity factors. A nominal 95\% interval on the
+  price of a life annuity, from models in routine use, contains the realised
+  value about a quarter of the time in a period with no pandemic in it. The
+  registered clause was comparative---a larger departure from nominal across
+  the break than in the control---and in that strict form it holds for 14 of
+  the 20 distributional arms on $e_{65}$ and 12 of 20 on $\annuity$: the
+  exceptions are the arms already so far below nominal in the control that
+  the break could only move them towards it
+  (Sections~\ref{sec:results} and~\ref{sec:actuarial}).
 \item \emph{The protocol.} A pre-registered, synthetic-truth-validated,
   oracle-parity-checked evaluation harness in which every model emits
   predictive samples through one interface and is scored through one code
   path, with cluster-bootstrap forecast-comparison inference that respects
   the fact that a pandemic is one shock, not twenty. The harness is reusable
-  for any future break.
+  for any future break, and the stable control is the part of it that other
+  studies most often omit.
 \end{enumerate}
 
 Section~\ref{sec:related} places the audit in the literature.
@@ -253,7 +368,8 @@ Section~\ref{sec:data} describes the data and the conventions that make
 Poisson scoring of fractional deaths well defined. Section~\ref{sec:design}
 sets out the regimes, the grid, the interface and the validation gates.
 Section~\ref{sec:metrics} defines every metric. Sections~\ref{sec:results}
-and~\ref{sec:actuarial} report the shift-regime and placebo results and
-their actuarial reading; the stable-control columns remain pending and no
-claim in this draft rests on them. Section~\ref{sec:discussion} pre-commits the
-limitations and Section~\ref{sec:conclusion} concludes.
+and~\ref{sec:actuarial} report all three regimes and the actuarial reading
+of them, with the stable control carried alongside the shift regime in
+every table so that the pandemic's own contribution can be read off.
+Section~\ref{sec:discussion} pre-commits the limitations and
+Section~\ref{sec:conclusion} concludes.

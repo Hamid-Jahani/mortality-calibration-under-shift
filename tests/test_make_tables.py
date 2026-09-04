@@ -118,6 +118,28 @@ FAMILY_MECH_TABLES = ("tab-h2-coverage", "tab-h3-joint", "tab-h4-age", "tab-h5-a
                       "tab-murphy", "tab-pit", "tab-twin-crises")
 
 
+def _stacked(text):
+    """Parse a stacked family x mechanism table into {(family, mech, regime): cells}.
+
+    In the stacked layout the family and mechanism are printed only on the
+    first regime row of each block, so a line-by-line match on the family name
+    finds one row in three. This carries the labels forward.
+    """
+    out, fam, mech = {}, "", ""
+    for ln in _body(text).splitlines():
+        if "&" not in ln or ln.startswith("\\") or ln.startswith("%"):
+            continue
+        cells = [c.strip() for c in ln.rstrip("\ ").split("&")]
+        if len(cells) < 3:
+            continue
+        if cells[0]:
+            fam = cells[0]
+        if cells[1]:
+            mech = cells[1]
+        out[(fam, mech, cells[2])] = cells
+    return out
+
+
 def _read(out, name):
     return (Path(out) / f"{name}.tex").read_text(encoding="utf-8")
 
@@ -202,8 +224,13 @@ def test_all_tables_written_and_stamped(rows, analysis, tmp_path):
         # a float page and are emitted as longtables (measured 2026-08-28);
         # tab-infeasible and tab-h1-rankings joined them when the placebo
         # columns landed (measured 2026-08-31)
+        # and the four family x mechanism tables joined when the stable control
+        # landed: three regimes of column blocks ran up to 118 pt past the text
+        # block, so they carry the regimes as ROWS and span pages instead
+        # (measured 2026-09-04)
         if p.stem in ("tab-infeasible-full", "tab-h5-actuarial", "tab-dm-mcs",
-                      "tab-infeasible", "tab-h1-rankings"):
+                      "tab-infeasible", "tab-h1-rankings", "tab-h2-coverage",
+                      "tab-h3-joint", "tab-pit", "tab-murphy", "tab-h4-age"):
             assert "\\begin{longtable}" in text and "\\end{longtable}" in text
             assert "\\begin{tabular}" not in text
         else:
@@ -224,8 +251,13 @@ def test_float_sizes(rows, analysis, tmp_path):
     mt.build_all(rows, analysis, None, tmp_path)
     for name in mt.TABLE_NAMES:
         text = _read(tmp_path, name)
+        # page-spanning longtable fragments: three regimes of column blocks
+        # overflowed the text block horizontally, so these carry the regimes as
+        # ROWS and span pages, with their own caption and label
         if any(k in str(name) for k in ("tab-infeasible-full", "tab-h5-actuarial",
-                                        "tab-dm-mcs", "tab-infeasible", "tab-h1-rankings")):
+                                        "tab-dm-mcs", "tab-infeasible", "tab-h1-rankings",
+                                        "tab-h2-coverage", "tab-h3-joint",
+                                        "tab-pit", "tab-murphy", "tab-h4-age")):
             # page-spanning longtable fragments size themselves (own caption/label)
             assert "\\begin{longtable}" in text, name
             continue
@@ -248,13 +280,13 @@ def test_conformal_scores_never_ranked(rows, analysis, tmp_path):
     assert "split" not in _body(pit)
     assert f"{CONF_CRPS:.3f}" not in pit
     # conformal rows ARE in the coverage table, with 50/80 shown as n/a
+    # stacked layout: one row per regime, so take the shift row (the one with data)
     h2 = _read(tmp_path, "tab-h2-coverage")
-    conf_line = [ln for ln in h2.splitlines() if "& split &" in ln][0]
+    conf_line = " & ".join(_stacked(h2)[("Lee--Carter (SVD)", "split", "shift")])
     assert conf_line.count("n/a") == 2 and "0.950" in conf_line
     # murphy: hit-based columns present, PIT reliability n/a on the conformal row
     mu = _read(tmp_path, "tab-murphy")
-    conf_line = [ln for ln in mu.splitlines() if "& split &" in ln][0]
-    cells = [c.strip() for c in conf_line.split("&")]
+    cells = _stacked(mu)[("Lee--Carter (SVD)", "split", "shift")]
     assert cells[3:7] == ["0.0100", "0.0000", "0.0500", "n/a"]
 
 
@@ -303,13 +335,14 @@ def test_error_rows_enter_no_mean(rows, analysis, tmp_path):
     # LC/native: two valid rows at cov95 = 0.90 plus one error row at 0.0. The
     # mean must be 0.900 (0.600 with the error row in) and n / n_err = 2 / 1.
     h2 = _read(tmp_path, "tab-h2-coverage")
-    lc_native = [ln for ln in h2.splitlines() if ln.startswith("Lee--Carter (SVD) & native")][0]
-    cells = [c.strip() for c in lc_native.split("&")]
+    cells = _stacked(h2)[("Lee--Carter (SVD)", "native", "shift")]
     assert cells[5] == "0.900" and cells[7] == "2" and cells[8] == "1"   # cov95, n, n_err
-    for name, col in (("tab-h3-joint", 3), ("tab-twin-crises", 3)):   # [fam, mech, stable/placebo pending, cov95]
-        line = [ln for ln in _read(tmp_path, name).splitlines()
-                if ln.startswith("Lee--Carter (SVD) & native")][0]
-        assert [c.strip() for c in line.split("&")][col] == "0.900", name
+    # tab-h3-joint is stacked (regime column); tab-twin-crises keeps regime blocks
+    j = _stacked(_read(tmp_path, "tab-h3-joint"))[("Lee--Carter (SVD)", "native", "shift")]
+    assert j[3] == "0.900"
+    line = [ln for ln in _read(tmp_path, "tab-twin-crises").splitlines()
+            if ln.startswith("Lee--Carter (SVD) & native")][0]
+    assert [c.strip() for c in line.split("&")][3] == "0.900"
     h1 = _read(tmp_path, "tab-h1-rankings")
     lc_h1 = [ln for ln in h1.splitlines() if ln.startswith("Lee--Carter (SVD) & native")][0]
     assert [c.strip() for c in lc_h1.split("&")][2] == "0.300"          # mean(0.31, 0.29), not with 7.7777
@@ -385,8 +418,14 @@ def test_gp_block_pending_until_second_pass(rows, analysis, tmp_path):
         assert f"{GP_COV95:.3f}" not in text, name
     # the block sits inside the tabular at the family's grid position, spanning the regime's columns
     h2 = _read(tmp_path, "tab-h2-coverage")
-    gp_line = [ln for ln in h2.splitlines() if ln.startswith("multi-output GP")][0]
-    assert "\\multicolumn{6}{l}{GP: \\emph{pending} (second-pass parquet)}" in gp_line
+    gp_rows_ = [c for k, c in _stacked(h2).items() if k[0] == "multi-output GP"]
+    assert gp_rows_, "no GP block in the stacked table"
+    span = "\\multicolumn{6}{l}{GP: \\emph{pending} (second-pass parquet)}"
+    # only the regime that HAS rows shows the GP pending span; the other two
+    # regimes are absent from the fixture and show the regime pending span
+    shift_row = [c for k, c in _stacked(h2).items()
+                 if k[0] == "multi-output GP" and k[2] == "shift"]
+    assert shift_row and span in " & ".join(shift_row[0])
     tc = _read(tmp_path, "tab-twin-crises")
     gp_line = [ln for ln in tc.splitlines() if ln.startswith("multi-output GP")][0]
     assert "\\multicolumn{3}{l}{GP: \\emph{pending} (second-pass parquet)}" in gp_line
@@ -407,11 +446,12 @@ def test_gp_rows_merge_by_regime(rows, gp_rows, analysis, tmp_path):
         assert "second-pass parquet" not in _body(text), name
         assert "multi-output GP & native" in text, name
     h2 = _read(tmp_path, "tab-h2-coverage")
-    gp_native = [ln for ln in h2.splitlines() if ln.startswith("multi-output GP & native")][0]
-    cells = [c.strip() for c in gp_native.split("&")]
+    st = _stacked(h2)
+    cells = st[("multi-output GP", "native", "shift")]
     assert cells[5] == f"{GP_COV95:.3f}" and cells[7] == "2"
-    gp_split = [ln for ln in h2.splitlines() if "multi-output GP" not in ln and "& split &" in ln]
-    assert len(gp_split) == 2                     # LC/split and GP/split (family label only on first row)
+    # both families' split arms are present as their own stacked blocks
+    assert ("Lee--Carter (SVD)", "split", "shift") in st
+    assert ("multi-output GP", "split", "shift") in st
     h1 = _read(tmp_path, "tab-h1-rankings")
     ranks = [int(ln.split("&")[3]) for ln in _body(h1).splitlines()
              if ln.startswith(("Lee--Carter", "Poisson", "multi-output GP"))]
