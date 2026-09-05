@@ -549,3 +549,151 @@ def test_cli_smoke(rows, analysis, tmp_path, capsys):
     with pytest.raises(SystemExit):
         mt.main(["--help"])
     assert "strata.placebo" in capsys.readouterr().out
+
+
+# ---------------------------------------------------------------------------
+# the abridged "main manuscript" variant (--variant main, docs/SPLIT-SPEC.md)
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def rows_two_regimes(rows):
+    """The same arms in a stable control as well as the shift regime, so the
+    abridged variant's stable-vs-shift columns and its derived quantities
+    (the two-sided coverage change, the age gradient) have both endpoints."""
+    stable = rows.copy()
+    stable["regime"] = "stable_2010"
+    stable["origin"] = 2010
+    # move coverage so the derived columns are non-trivial and signed both ways
+    stable["coverage_95"] = stable["coverage_95"] - 0.05
+    stable["coverage_95_band65_99"] = 0.80
+    stable["joint_path_coverage_95"] = 0.45
+    return pd.concat([rows, stable], ignore_index=True)
+
+
+def _n_body_rows(text):
+    """Body lines of a fragment (every line that ends a tabular row), header
+    and span rows included -- the page-budget bound the abridged variant
+    exists to satisfy."""
+    body = _body(text).split("\\midrule", 1)[-1]
+    return sum(1 for ln in body.splitlines() if ln.rstrip().endswith("\\\\"))
+
+
+def test_main_variant_writes_only_its_own_files(rows_two_regimes, analysis, tmp_path):
+    written = mt.build_all(rows_two_regimes, analysis, None, tmp_path,
+                           sources=["_snap.parquet"], snapshot=True, variant="main")
+    assert sorted(p.name for p in written) == sorted(f"{n}.tex" for n in mt.MAIN_TABLE_NAMES)
+    assert sorted(p.name for p in tmp_path.glob("*.tex")) == sorted(
+        f"{n}.tex" for n in mt.MAIN_TABLE_NAMES)
+    # the abridged names must never join TABLE_NAMES: the default run writes
+    # paper/tables, which paper/main.tex builds from, byte for byte
+    assert not set(mt.MAIN_TABLE_NAMES) & set(mt.TABLE_NAMES)
+
+
+def test_default_variant_untouched_by_the_abridged_path(rows_two_regimes, analysis, tmp_path):
+    written = mt.build_all(rows_two_regimes, analysis, None, tmp_path)
+    assert sorted(p.name for p in written) == sorted(f"{n}.tex" for n in mt.TABLE_NAMES)
+    assert not list(tmp_path.glob("*-main.tex"))
+
+
+def test_main_variant_stamp_caption_and_supplement_pointer(rows_two_regimes, analysis, tmp_path):
+    mt.build_all(rows_two_regimes, analysis, None, tmp_path,
+                 sources=["_snap.parquet"], snapshot=True, variant="main")
+    for name in mt.MAIN_TABLE_NAMES:
+        text = _read(tmp_path, name)
+        # same provenance header and snapshot stamp as the unabridged fragment
+        assert text.startswith("% GENERATED SNAPSHOT - NOT FINAL - regenerate from results/")
+        assert "do not hand-edit" in text
+        # a self-contained float: caption and label live IN the fragment
+        assert "\\begin{table}" in text and "\\caption{" in text and "\\label{tab:" in text
+        assert "\\begin{longtable}" not in text
+        assert "\\begin{tablenotes}\\scriptsize" in text
+        assert "\\scriptsize\\renewcommand{\\arraystretch}{0.90}\\setlength{\\tabcolsep}{" in text
+        # the caption says it is abridged and names the supplementary table
+        caption = text.split("\\caption{", 1)[1]
+        full = name[: -len(mt.MAIN_VARIANT_SUFFIX)]
+        assert "Abridged view" in caption
+        assert mt.SUPPLEMENT_REF[full] in caption
+        assert mt.SUPPLEMENT_REF[full] in text.split("\\begin{tablenotes}", 1)[1]
+
+
+def test_supplement_numbers_follow_the_declared_order():
+    """The 'full grid is Table~Sn' pointers are generated from one ordered
+    tuple, never typed into a fragment."""
+    assert set(mt.MAIN_VARIANT_SOURCES) <= set(mt.TABLE_NAMES)
+    for i, name in enumerate(mt.SUPPLEMENT_TABLE_ORDER):
+        assert mt.SUPPLEMENT_REF[name] == f"Table~S{i + 1}"
+    assert mt.supplement_ref("tab-h2-coverage") == "Table~S3"
+
+
+def test_main_variant_fits_a_page(rows_two_regimes, analysis, tmp_path):
+    """~50 body rows is one typeset page in this style (measured 2026-08-31);
+    an abridged fragment is a float and cannot span pages, so it must stay
+    well inside that."""
+    mt.build_all(rows_two_regimes, analysis, None, tmp_path, variant="main")
+    for name in mt.MAIN_TABLE_NAMES:
+        assert _n_body_rows(_read(tmp_path, name)) <= 34, name
+
+
+def test_main_variant_never_averages_cbd_into_a_full_age_envelope(analysis, tmp_path):
+    """RESTRICTED_AGE_FAMILIES is the authority: CBD (45 scored ages) keeps its
+    own sub-block and its own conformal row in every abridged fragment."""
+    extra = [_row("SWE", "female", "CBD", "split_conf", coverage_95=0.11,
+                  coverage_50=np.nan, coverage_80=np.nan),
+             _row("SWE", "female", "NLC", "split_conf", coverage_95=0.99,
+                  coverage_50=np.nan, coverage_80=np.nan)]
+    rows = pd.DataFrame([*[_row("SWE", "female", "LC", "native")], *extra])
+    mt.build_all(rows, analysis, None, tmp_path, variant="main")
+    text = _read(tmp_path, "tab-h2-coverage-main")
+    envelope = [ln for ln in _body(text).splitlines() if ln.startswith("envelope &")]
+    assert envelope, "no full-age conformal envelope row"
+    # CBD's coverage is the sentinel: it must not enter the full-age envelope
+    assert all("0.11" not in ln for ln in envelope)
+    assert "0.990" in " ".join(envelope)               # the full-age family did
+    assert f"{mt.fam('CBD')} & conformal" in _body(text)
+    notes = text.split("\\begin{tablenotes}", 1)[1]
+    ranges = [ln for ln in notes.splitlines() if "Range of" in ln]
+    assert ranges and "CBD" not in ranges[0].split("CBD (M5) conformal")[0]
+
+
+def test_main_h3_independence_benchmark(rows_two_regimes, analysis, tmp_path):
+    """The benchmark is c^H with c the cell-mean coverage and H the regime's
+    horizon count -- the definition behind the counts Section 6 quotes."""
+    mt.build_all(rows_two_regimes, analysis, None, tmp_path, variant="main")
+    text = _read(tmp_path, "tab-h3-joint-main")
+    line = [ln for ln in _body(text).splitlines()
+            if ln.startswith(mt.fam("LC") + " & native")][0]
+    cells = [c.strip() for c in line.split("&")]
+    # stable block: coverage 0.85 over h = 5 (the fixture's horizon count)
+    assert cells[2] == "0.850"
+    assert cells[5] == f"{0.85 ** 5:.3f}"
+    assert cells[6] == f"{float(cells[3]) - 0.85 ** 5:+.3f}"
+
+
+def test_main_h5_drops_the_conformal_rows_that_are_all_na(rows_two_regimes, analysis, tmp_path):
+    mt.build_all(rows_two_regimes, analysis, None, tmp_path, variant="main")
+    text = _read(tmp_path, "tab-h5-actuarial-main")
+    assert "split" not in _body(text) and "envelope" not in _body(text)
+    assert str(CONF_E0) not in text and "55.55" not in text
+    assert "n/a throughout" in text or "are n/a" in text
+    # e0 is the dropped pair; e65 and the annuity survive
+    assert "$e_{65}$ cov" in text and "$e_0$ cov" not in text
+
+
+def test_main_variant_cli(rows_two_regimes, analysis, tmp_path, capsys):
+    pq = tmp_path / "_tiny_snapshot.parquet"
+    rows_two_regimes.to_parquet(pq)
+    aj = tmp_path / "_tiny_analysis.json"
+    aj.write_text(json.dumps(analysis["shift"]), encoding="utf-8")
+    out = tmp_path / "submission-tables"
+    missing = tmp_path / "no_such_file.txt"
+    assert mt.main(["--parquet", str(pq), "--analysis", str(aj), "--out", str(out),
+                    "--variant", "main", "--hmd-deaths", str(missing),
+                    "--hmd-exposures", str(missing)]) == 0
+    assert sorted(p.name for p in out.glob("tab-*.tex")) == sorted(
+        f"{n}.tex" for n in mt.MAIN_TABLE_NAMES)
+    assert "variant: main" in capsys.readouterr().out
+
+
+def test_unknown_variant_refused(rows, analysis, tmp_path):
+    with pytest.raises(SystemExit):
+        mt.build_all(rows, analysis, None, tmp_path, variant="compact")

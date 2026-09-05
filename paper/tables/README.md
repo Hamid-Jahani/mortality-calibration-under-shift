@@ -43,6 +43,62 @@ Conventions the producer enforces:
 - A machine-failure error row (`scripts/final_qa.py` class) aborts
   generation. Duplicate cells across the supplied parquets abort too.
 
+## `--variant main`: the abridged fragments for the venue-fitted manuscript
+
+`docs/SPLIT-SPEC.md` rule 4. Each of the five hypothesis tables costs 3 typeset
+pages on its own and the venue-fitted manuscript has room for about 5 pages of
+exhibits in total, so it needs one-page views — **generated**, never
+hand-trimmed. Same script, same parquet inputs, same provenance header and the
+same snapshot stamp; only how much of the grid is printed changes:
+
+    python scripts/make_tables.py --parquet ... --analysis ... \
+        --sensitivities results/sensitivities.json --variant main --final
+    # --out defaults to paper/submission/tables for this variant
+
+Written: `tab-h1-rankings-main`, `tab-h2-coverage-main`, `tab-h3-joint-main`,
+`tab-h4-age-main`, `tab-h5-actuarial-main` — and nothing else. The default
+(`--variant full`) is untouched and still writes exactly the twelve
+`TABLE_NAMES` fragments into `paper/tables/`, which is what `paper/main.tex`
+builds from.
+
+The abridgement doctrine, stated once so the manuscript text and the generator
+agree: **the twenty own-law arms in full, the thirty conformal arms as a
+per-mechanism envelope, stable + shift only, no per-cell counts.** Per table:
+
+| fragment | body | dropped |
+|---|---|---|
+| `tab-h1-rankings-main` | shift regime only, 18 full-age arms + the CBD block | the stable and placebo blocks; their rank correlations are in the note |
+| `tab-h2-coverage-main` | 20 own-law arms, 3 + 1 envelope rows, stable and shift side by side, plus a generated signed `Δ|cov−0.95|` | the placebo, the 50/80 levels, `n` / `n_err`, the 30 conformal arms individually |
+| `tab-h3-joint-main` | as H2, plus the generated independence benchmark `c^H` at each arm's own marginal rate and `joint − c^H` | the placebo (`H=9`), `n` / `n_err`, the 30 conformal arms individually |
+| `tab-h4-age-main` | shift bands 0–24 / 25–64 / 65–99 plus the gradient `Δ = cov(65–99) − cov(25–64)` for shift **and** for the stable control | the stable and placebo band triples, `n` / `n_err`, the 30 conformal arms individually |
+| `tab-h5-actuarial-main` | the 20 own-law arms only, `e65` and annuity, stable and shift | the placebo, the `e0` pair, `n` / `n_err`, and the 30 conformal rows (every one of their cells is `n/a` by construction, so no number is lost) |
+
+Rules the abridged path enforces:
+
+- **Envelope rows are a summary, not a cell.** `mean [min, max]` over the
+  full-age families carrying one wrapper; both endpoints are named in the note
+  so each resolves to a row of the supplementary table. `RESTRICTED_AGE_FAMILIES`
+  is the authority: CBD (45 scored ages) never enters a full-age envelope and
+  keeps its own sub-block and its own conformal row.
+- **Thin arms carry a dagger** with their row count in the note, because the
+  `n` / `n_err` columns are gone (sparse VAR native is scored on 297 of 520
+  stable units, its bootstrap on 238).
+- **Caption and label live inside the fragment** (`TableWriter.write_float`,
+  unlike `write`), so an abridged exhibit cannot be typeset without saying that
+  it is abridged and naming the supplementary table that carries the full grid.
+  Input them at top level, **not** inside a `table` float:
+  `\inputtable{tab-h2-coverage-main}`.
+- **Supplement S-numbers are generated**, from `SUPPLEMENT_TABLE_ORDER` in
+  `scripts/make_tables.py`: `paper/submission/supp/S3-full-tables.tex` must
+  input the unabridged fragments in that order (`tab-populations` = Table S1,
+  … `tab-infeasible-full` = Table S12). Reorder there and the constant moves
+  with it; a test pins the mapping.
+- **New quantities.** `Δ|cov−0.95|` (H2), `c^H` and `joint − c^H` (H3) and the
+  age gradients (H4) are computed only in this path and appear in no
+  supplementary table. `c^H` is defined as the cell-mean coverage raised to the
+  regime's horizon count `H` (the `h` column: 5 in stable and shift, 9 in the
+  placebo) — the definition behind the counts Section 6 quotes.
+
 `tab-conformal-secondary` and `tab-robustness` are not yet produced.
 `paper/sections/*.tex` pulls fragments in with `\inputtable{<name>}`; a
 missing fragment is rendered as a red `\todo{}` placeholder by the

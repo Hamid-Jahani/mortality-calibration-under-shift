@@ -1,0 +1,54 @@
+% =============================================================================
+% VENUE-FITTED MANUSCRIPT -- Annals of Actuarial Science (<= 35 pp), with an
+% online supplement in supplement.tex.
+%
+% The full 110-page study is paper/main.tex and is NOT modified by this tree.
+% Rules governing what may be compressed or moved: docs/SPLIT-SPEC.md.
+% Venue rules with sources and dates: COMPLIANCE.md.
+%
+% Build:  latexmk -pdf -interaction=nonstopmode -halt-on-error manuscript.tex
+% =============================================================================
+\documentclass[11pt,a4paper]{article}
+\input{preamble}
+
+\title{Do Mortality Prediction Intervals Survive a Pandemic?\\[0.4em]
+  \large A Pre-Registered Calibration Audit of Ten Forecasting Families and
+  Seven Uncertainty Mechanisms Across the COVID-19 Break}
+\author{%
+  Hamid Jahani\thanks{Corresponding author.
+    Email address: \texttt{hamid.jahani@modares.ac.ir} (Hamid Jahani).}\\[0.45em]
+  \normalsize Department of Data Science, Faculty of Interdisciplinary Science and Technology,\\
+  \normalsize Tarbiat Modares University, Tehran, Iran}
+\date{5 September 2026}
+
+\begin{document}
+\maketitle
+\input{frontmatter}
+
+\vspace{0.5em}
+\noindent\textbf{Pre-registration.} \texttt{PREREGISTRATION.md}, committed 2026-08-25 before
+any model was fit to real data, with four registered addenda. Hashes, dates and the addenda's
+content are in Supplementary Section~S1.
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-data}
+\input{sections/04-design}
+\input{sections/05-metrics}
+\input{sections/06-results}
+\input{sections/07-actuarial-impact}
+\input{sections/08-discussion}
+\input{sections/09-conclusion}
+
+\section*{Supplementary material}
+The online supplement carries the full family $\times$ mechanism $\times$ regime tables behind
+every result reported here (Tables~S2--S12), all twelve diagnostic figures
+(Figures~S1--S12), the pre-registration and its addenda, the full methods detail, the
+robustness slices, and the complete ledger of cells that produced no valid row.
+
+\input{backmatter}
+
+\bibliographystyle{plainnat}
+\bibliography{../references}
+
+\end{document}

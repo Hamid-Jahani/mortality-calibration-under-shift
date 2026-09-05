@@ -1,0 +1,452 @@
+\section{Pre-registration, addenda and validation gates}
+\label{supp:prereg}
+
+This section carries the documentary basis of the manuscript's
+pre-registration claim. It reproduces, in the order in which they were
+written, (i) what was registered on 2026-08-25 before any model was fit to
+real Human Mortality Database data, (ii) the four registered addenda, each
+hash-stamped in its own commit, with the SHA-256 digest of every document and
+a clause-by-clause account of what each addendum fixed, and (iii) the three
+validation gates that had to pass before any real-data number could be read,
+including the synthetic-truth design, the \pkg{StMoMo} oracle-parity result
+and the life-table parity check.
+
+It supports two statements the manuscript makes and does not have room to
+document. The first is the integrity claim of Section~4: none of the four
+addenda changes a population list, a split year, a horizon, a test-window
+observation or the metric list. A reader can check that claim only against
+the addenda themselves, which are therefore given here in substance rather
+than summarised. The second is the harness-validity claim: every coverage
+number in the paper is a statement about a forecasting method only if the
+evaluation code measures coverage correctly, and Section~\ref{supp:gates}
+below is the evidence that it does. The deviations from the registered design
+are \emph{not} here: they stay in the manuscript, in Section~4, because they
+are findings rather than housekeeping.
+
+\subsection{What was registered, and when}
+\label{supp:prereg-what}
+
+The registration is the file \texttt{PREREGISTRATION.md}, committed
+2026-08-25, before any model had been fit to real HMD data. It pins the data
+vintage (HMD bulk files, last modified 2026-06-15, Methods Protocol~v6,
+checksummed in \texttt{data/MANIFEST.sha256}), the global seed 20260825 with
+per-ensemble-member seeds recorded in the results metadata, and the following
+analytic choices.
+
+\paragraph{Question.} Do the prediction intervals of stochastic,
+machine-learning and neural mortality forecasting models attain their nominal
+coverage when the evaluation window crosses a structural break (COVID-19),
+and does the answer depend on the model family, the uncertainty mechanism, or
+both?
+
+\paragraph{The five hypotheses, as registered.} These are the sentences fixed
+before estimation; Addendum~3~\S8 later recorded how the prior-art map
+changes the reading of each, and the manuscript reports the resulting
+deviations in the main text.
+
+\begin{itemize}
+\item \Hone: model rankings by RMSE and by CRPS disagree (rank correlation
+  below one; at least one top-three inversion) in the shift regime.
+\item \Htwo: nominal 95\% intervals under-cover in the shift regime for every
+  model family; the shortfall exceeds the stable-regime shortfall.
+\item \Hthree: joint path coverage over $h=1,\dots,5$ is materially below
+  marginal coverage at the same nominal level for every family (reported gap;
+  test: paired difference greater than zero).
+\item \Hfour: coverage failure is non-uniform in age; shift-regime coverage at
+  ages 65--99 is lower than at ages 25--64 for every family.
+\item \Hfive: interval miscalibration propagates to derived quantities; the
+  empirical coverage of 95\% intervals for $e_{65}$ and the annuity factor
+  $\annuity$ at 2\% departs from nominal by more than the corresponding
+  stable-regime departure.
+\end{itemize}
+
+No directional claim was registered about neural-versus-classical ordering;
+the crossed design estimates it.
+
+\paragraph{Data.} HMD $1\times1$ deaths and central exposures, ages 0--99
+(the registration already records that cells with $E=0$ are all at ages 90 and
+above in this vintage, and excludes the $110{+}$ open group and the
+model-smoothed old ages), sexes modelled separately, Poisson likelihood with
+log-exposure offset throughout; rates are never modelled as Gaussian on the
+raw scale.
+
+\paragraph{Regimes and populations.} \emph{Shift} (primary): train to 2019,
+test 2020--2024, $h=1,\dots,5$, on the twenty populations whose final annual
+data reach 2024 in this vintage (BEL, CHE, CHL, DNK, EST, FIN, HKG, HRV, ISL,
+JPN, KOR, LTU, LUX, LVA, NOR, PRT, SVK, SWE, TWN, USA). \emph{Stable}
+(control): expanding origin, train to $T$ for $T=1990,1992,\dots,2014$, test
+$T+1,\dots,T+5$ with all test years at or before 2019, the same twenty
+populations subject to each population's own start year. \emph{Placebo
+break}: train to 1913, test 1914--1922, $h=1,\dots,9$, on the eleven
+populations with continuous 1908--1922 coverage and a start year no later
+than 1900 (CHE, DNK, FIN, FRATNP, GBRTENW, GBR\_SCO, ISL, ITA, NLD, NOR,
+SWE), Belgium excluded for its missing occupation-era rows and FRACNP and
+GBRCENW excluded as overlapping variants of FRATNP and GBRTENW.
+
+\paragraph{Factors.} Ten model families (Lee--Carter by SVD with a random
+walk with drift; Poisson Lee--Carter; CBD~M5; APC/Renshaw--Haberman~M2-A;
+sparse VAR on log rates; multi-output Gaussian process; neural-LC with
+Richman--Wuethrich embeddings; shallow CNN-LC; LSTM on $\kappa_t$;
+distributional Poisson/NB-head network) crossed with seven uncertainty
+mechanisms (model-native; semiparametric Poisson bootstrap; deep ensemble
+with $M=10$; Monte Carlo dropout; split conformal; EnbPI; copula/joint
+conformal). The registration states in advance that not every cell is
+admissible, enumerates the admissible sub-grid in \texttt{docs/GRID.md} at 50
+primary cells, and requires every claim to be stated as a contrast within an
+admissible sub-grid, never as a full-factorial main effect. Conformal
+calibration sets are drawn only from data available at the training cutoff.
+
+\paragraph{Metrics.} All computed from predictive samples through one code
+path: RMSE and MAE on $\log \hat m_x$ and the $e_0$ error; CRPS by the sample
+estimator on $\log m_x$; the Poisson log score on observed deaths rounded to
+the nearest integer, with CRPS on death counts as the registered sensitivity;
+Winkler/interval score and empirical coverage at 50/80/95\%; randomised PIT
+with a uniformity test; calibration-by-age curves; joint path coverage over
+$h$ per population--sex--age trajectory; the Murphy
+calibration--resolution decomposition; interval coverage and error for
+$e_{65}$, $e_0$ and $\annuity$ at 2\% interest from each predictive sample's
+period life table; and, for inference, Diebold--Mariano per population--sex on
+CRPS with a wild cluster bootstrap over populations and a model confidence
+set at 90\%.
+
+\paragraph{Splits discipline and planned robustness.} Expanding-origin time
+splits only; hyperparameters tuned on inner time splits (the final five
+pre-cutoff years of each training window); the test years touched exactly
+once, by the final scoring run. The registered secondary runs are STMF weekly
+data for break timing, sensitivity to 2024-provisional revisions (re-run the
+shift regime dropping 2024) and sensitivity to an age cap of 90 rather
+than~99.
+
+\subsection{The hash ledger}
+\label{supp:prereg-hashes}
+
+Each document below was committed before the work it governs and stamped with
+the SHA-256 digest of its own bytes, so any later edit is detectable. In the
+order registered:
+
+\begin{itemize}
+\item \texttt{PREREGISTRATION.md}, 2026-08-25, before any real-data fit:\\
+  \texttt{\small bbbe3860a5446d063e186e56555afa893b07c36cf15a990d07567471affe50be}
+\item \texttt{PREREGISTRATION-ADDENDUM-1.md}, 2026-08-26, commit
+  \texttt{5f2e3cb}, still before any real-data fit:\\
+  \texttt{\small 8b43083afae9f0eaafce5e89381349d74cbbafb94022b56d1f2f39032a308889}
+\item \texttt{PREREGISTRATION-ADDENDUM-2.md}, 2026-08-26, commit
+  \texttt{577ce52}, still before any real-data fit:\\
+  \texttt{\small 1618e9fdcc1d6cbc760ce40ea496c1285fe44b8fc7520e8687e2101343ebdbc1}
+\item \texttt{PREREGISTRATION-ADDENDUM-3.md}, 2026-08-26, commit
+  \texttt{01f154a}, still before any real-data fit:\\
+  \texttt{\small cca2881a3a7ae6a17bbec7a4c6440192a6f9aa1cdd5766c13ef0aaec8ddeb16f}
+\item \texttt{PREREGISTRATION-ADDENDUM-4.md}, 2026-08-29, during the
+  production sweeps and before any GP cell on a panel longer than sixty years
+  had produced a result:\\
+  \texttt{\small 586e01780cceeea32878d1a493662c2883d017396459dc3442a6053f101a564b}
+\end{itemize}
+
+Addendum~3 additionally cross-references the prior-art map
+\texttt{docs/PRIOR-ART.md} (SHA-256
+\texttt{\small 3f36fb62615deedb1dea9505e313581ace8ed3be3eb4962c63cdfd58164bdd12}),
+committed immediately before it, whose verdicts drive the hypothesis-status
+clauses of \S8 of that addendum.
+
+None of the four addenda changes a population list, a split year, a horizon, a
+test-window observation or the metric list. Addenda~1, 2 and~3 were written
+before any model had been fit to real data at all; Addendum~4 was written
+during the sweeps, and its scope, cause and disclosure are set out in
+Section~\ref{supp:add4} and, as a deviation, in the manuscript.
+
+\subsection{Addendum 1: data-prerequisite strata and sensitivities}
+\label{supp:add1}
+
+Addendum~1 arises from the HMD documentation check recorded in
+\texttt{docs/DATA-PREREQS.md} and adds pre-specified sensitivity analyses
+only.
+
+For the \emph{placebo} regime the primary panel is unchanged. Belgium's
+exclusion is confirmed by HMD's own data-series gap warning for 1914--1918,
+and FRACNP is never used, not even as a sensitivity, because HMD flags its
+1919 civilian denominators as implausible. The eleven placebo populations are
+stratified from HMD's country documentation, and the strata are reported
+alongside the pooled placebo result: \emph{neutral, register-based} (CHE, DNK,
+FIN, ISL, NLD, NOR, SWE), whose only break in the window is the 1918
+influenza pandemic and which is therefore the clean analogue for the
+1918-versus-2020 comparison; \emph{belligerent, total series} (FRATNP,
+GBRTENW, ITA), in which HMD reconstructs military deaths at male ages of
+roughly 18--45; and \emph{civilian-only} (GBR\_SCO), in which deaths abroad
+are excluded by construction. Three secondary sensitivities are pre-specified:
+drop GBR\_SCO, whose 1912--1938 population rests on an ad-hoc spline HMD
+itself calls unreliable; report the neutral stratum alone; and report Denmark
+with and without 1921--1922, the 1921 South Jutland territorial change falling
+inside the test window.
+
+For the \emph{shift} regime the addendum records that HMD carries no per-year
+provisional flag and re-issues whole series at each release, pins the vintage
+by DOI 10.4054/HMD.Countries.20260615, and names the known denominator risks:
+USA 2020--2025 exposures blend preliminary 2020-census inputs, CHL exposures
+rest on the 2017 census pending revision, and TWN 2024 deaths are provisional
+per STMF, while the register-based populations (the Nordic countries, CHE,
+NLD, EST, LVA, LTU) are effectively final. Beyond the already-registered
+drop-2024 run it adds three sensitivities: drop USA and CHL entirely; a
+register-based versus census-based contrast; and a re-run on the next HMD
+vintage if one is released before submission, with any change in headline
+coverage reported as a vintage-revision effect.
+
+The addendum also records that HMD's Lexis-triangle split for 1918 (Methods
+Protocol~v6, Appendix~A) affects only how raw $1\times1$ death squares are
+apportioned into triangles and leaves \texttt{Deaths\_1x1} untouched where the
+raw data were already $1\times1$: a data-appendix sentence with no modelling
+consequence.
+
+\subsection{Addendum 2: scoring-target clarifications}
+\label{supp:add2}
+
+Addendum~2 clarifies how two registered metrics are computed and changes no
+hypothesis, population, split, horizon or metric.
+
+\begin{enumerate}
+\item \emph{Rate-scale scores evaluate the predictive law of the observed
+  rate.} The registration says CRPS, Winkler scores, coverage and PIT are
+  computed ``on $\log m_x$''. The observed $m_x=D/E$ carries Poisson sampling
+  noise that a model's latent-rate samples do not, so scoring latent samples
+  against observed rates would count observation noise as miscalibration,
+  most severely at young ages and in small populations. Rule: every
+  rate-scale score is computed on Poisson-inclusive predictive samples,
+  $D^{\ast}\sim\mathrm{Poisson}(E\,m^{\ast})$ drawn on the model's own rate
+  paths and converted to log crude rates---the same construction already
+  registered for the count-scale metrics. Native, bootstrap, ensemble and
+  conformal mechanisms are treated identically, so the crossed design is
+  unaffected.
+\item \emph{Zero-death cells: half-count continuity correction, no masking.}
+  Log rates, observed and sampled alike, use $\max(D,\tfrac12)/E$, the
+  standard demographic continuity correction applied to both sides of every
+  score. Cells are not dropped; the number of zero-death cells per
+  (population, sex, regime) is reported. Count-scale metrics need no
+  correction.
+\item \emph{Conformal cells are scored on their intervals, at their
+  construction level.} Coverage and Winkler scores for conformal cells come
+  from the interval bounds themselves at the construction level of 95\%; the
+  50\% and 80\% columns are reported as not applicable for those cells; and
+  CRPS, log score and PIT for them remain flagged secondary. This removes a
+  scoring bias against conformal arms that taking empirical quantiles of
+  uniform-in-interval samples would otherwise create.
+\item \emph{PIT uniformity: statistic and a caveated $p$-value.} The
+  Kolmogorov--Smirnov statistic is reported with its nominal $p$-value, which
+  is descriptive because PIT values across ages and horizons within a
+  population are dependent. Formal inference on calibration uses the
+  population-clustered procedures already registered.
+\end{enumerate}
+
+\subsection{Addendum 3: defect handling, scoring repairs and hypothesis status}
+\label{supp:add3}
+
+Addendum~3 was registered before any model had been fit to real data and
+before any real-data result existed. Sections~1--7 and 9--11 specify
+computation on cases the original text already covers; \S8 records
+hypothesis-status clarifications forced by the prior-art map, made while no
+result existed. Each clause is cited in the manuscript at the point where it
+applies.
+
+\paragraph{\S1 Zero-exposure training cells: $W=\ind\{E>0\}$.} An audit of the
+2026-06-15 vintage found 99 cells with $E=0.00$, every one with $D=0.00$, at
+ages 95--99 in seven (population, sex) series of the shift training panel
+(CHE female 1, CHE male 10, FIN male 27, ISL female 13, ISL male 30, LUX male
+6, SWE male 12), verified as structural zeros: HMD's 1~January population
+count is 0.00 at both corners of every one of the 99 Lexis squares. Under the
+registered Poisson likelihood such a cell contributes an identically zero
+log-likelihood, score and Fisher information, so the maximum-likelihood
+estimate with the cell included equals the estimate under indicator weights
+exactly, and only the numerical evaluation of $0\log 0$ fails. Every family
+therefore carries cell weights $W=\ind\{E>0\}$, \pkg{StMoMo}'s \texttt{wxt}
+convention: the numerically correct evaluation of the registered objective,
+recorded as a clarification and not a deviation. The per-family
+specifications, and the measured row losses for the sparse VAR's
+common-complete-subsample rule, are reproduced in
+Section~\ref{supp:methods-zeros}.
+
+\paragraph{\S2 Training-year contiguity; Belgium.} The training window for
+every (population, sex) is the maximal contiguous block of complete years
+ending at the origin. The binding case is BEL, whose 1914--1918 deaths and
+exposures are missing at every age, so BEL trains on 1919--2019 in the shift
+regime. BEL remains excluded from the placebo regime as already registered.
+
+\paragraph{\S3 Zero-exposure cells in a test window.} Scoring masks ages
+exactly as the runner's age mask does---an age is scored only if every
+horizon's observation is finite---with \texttt{n\_ages\_scored} reported and
+\texttt{cov95\_by\_age} null on masked ages. Derived quantities are computed
+on the maximal contiguous scored age range starting at age~0, on the
+predictive and observed sides symmetrically, with the range reported. The
+binding cells are in the placebo test window at ages 98--99 (CHE male~1, FIN
+male~3, ISL female~5, ISL male~1).
+
+\paragraph{\S4 Minimum training length.} A (origin, population, sex) triple is
+admissible only with at least fifteen complete training years; inadmissible
+triples are recorded as such and not scored, and the per-origin effective
+cluster count is reported alongside every stable-regime summary (the stable
+panel is unbalanced, growing from 27 to 33 buildable population--sex cells
+between origins 1990 and 2014). The measured motivation is recorded in the
+addendum: at origin~1994 with three training years, CHL males wrote an
+LC/native \texttt{coverage\_95} of 0.784 as an apparently valid row.
+
+\paragraph{\S5 Rate-scale truth uses rounded deaths.} The rate-scale observed
+truth is $\log(\max(\text{round}(D),\tfrac12)/E)$, so that both sides of every
+rate-scale score live on the same lattice. The measured motivation: scoring
+fractional Lexis-split deaths against an integer lattice moved the PIT KS
+statistic from 0.019 to 0.133 at $\lambda=2$ and cost 2.2 percentage points of
+95\% coverage at $\lambda=5$---a false-positive generator aimed squarely at
+\Htwo\ and \Hfour. HMD death counts are non-integer for nine of the twenty
+shift populations and exactly integer for the other eleven, and the
+per-population non-integer share is reported. The observed \emph{life table}
+of \Hfive\ keeps raw fractional deaths and a $10^{-10}$ rate floor, because at
+an age where nobody died $m=0$ is the correct life-table statement, while the
+half-count would shift ISL female 2020 $e_0$ by $-0.370$ years, beyond
+gate~3's 0.15-year tolerance. The two conventions in the same cell are
+deliberate.
+
+\paragraph{\S6 Conformal cells: scored from their own bounds.} Each wrapper
+exposes its interval at its own construction level (the wrapper's $\alpha$,
+not a hard-coded 0.95), and coverage and Winkler scores are computed from
+those bounds directly, with no uniform-in-interval sampling and no Poisson
+composition---the radius is calibrated on observed residuals and already
+contains observation noise, and composing again was measured to inflate width
+by 150.7\% at $\lambda=10$. Conformal calibration residuals use the same
+half-count convention as the scorer, replacing a rate floor under which a
+single zero-death calibration cell inflated a SWE female band radius from
+1.44 to 12.94 nats; the conformal quantile ignores non-finite residuals.
+
+\paragraph{\S7 Sparse VAR: explosive draws are rejected, not clipped.} A
+coefficient draw whose companion-matrix spectral radius is at least one is
+rejected and redrawn, capped at one hundred attempts per path; a path that
+cannot produce a stable draw makes the cell an error row. Predictive rates and
+Poisson means are never clipped to rescue a divergent draw, because clipping
+would convert divergence into a bounded interval and silently flatter the
+family's coverage. Without the rule, real panels produced predictive $m_x$ up
+to $3\times10^{45}$ and a hard failure in the Poisson composer.
+
+\paragraph{\S8 Hypothesis-status clarifications.} Recorded from the prior-art
+map while no real-data result existed. \Hone\ is demoted from headline
+hypothesis to harness-validity check, the point-versus-proper-score ranking
+divergence being already published; the residual claim is its magnitude under
+pre-registration, per population and unweighted by exposure. \Htwo\ is
+restated two-sided: the tested quantity is
+$|\text{empirical coverage}-\text{nominal}|$, hypothesised to increase from
+the stable to the shift regime with direction free to differ by (family,
+mechanism), the registered one-sided form being already falsified in the
+stable regime by published neural intervals. \Hthree's comparator is
+re-specified to each model's own simulated-path-implied joint coverage,
+computable from the same predictive sample paths, because the registered
+comparison with the marginal rate is bounded toward confirmation
+($0.95^5=0.774$ under independence) and would be near-unfalsifiable; the
+realised-minus-implied gap can be of either sign. \Hfour's registered
+direction is contradicted by \citet{dowd2010backtesting}, and the addendum
+pre-commits to reporting a reversal as an informative result rather than
+re-testing until confirmation. \Hfive\ is restricted to the ex-post coverage
+of derived-quantity intervals, the construction of such intervals being prior
+art, with \citet{cairns2011mortality}'s attenuation finding as the named
+alternative.
+
+\paragraph{\S9 Conformal calibration horizon covers the placebo.} The
+calibration horizon must be at least the longest scored horizon in every
+regime, so the wrappers' calibration horizon moves from eight to nine and no
+placebo horizon reuses a radius calibrated for a shorter one. The shift regime
+is unaffected.
+
+\paragraph{\S10 Zero-death-cell reporting.} The count is per (population, sex,
+regime), computed on the full age range 0--99 from the observed test window
+before any model age mask, with the criterion $D<0.5$---the threshold at which
+the half-count correction binds, and the criterion under which HMD's
+fractional deaths make a test of $D=0$ under-count by 43\% in the placebo. The
+corrected figures for the 2020--2024 window are ISL female 117 of 500 (23.4\%),
+ISL male 68 of 500, LUX female 110 of 500 (22.0\%) and LUX male 72 of 500; the
+addendum records that a previously cited 52 cells (10.4\%) had been computed
+on HMD's \emph{Total} column, which the study never models.
+
+\paragraph{\S11 Contrasts on common cells.} Conformal arms fail on short
+panels and native arms fail where fits diverge---different cells, by
+mechanism---so any contrast between mechanisms or families is computed on the
+intersection of (origin, population, sex) cells in which every compared arm
+produced a valid row, with the intersection size reported and the full
+uncensored tables carried in the supplement. Error rows are never silently
+dropped from a denominator: every table reports its cell count.
+
+\subsection{Addendum 4: the sixty-year training-window cap for the GP}
+\label{supp:add4}
+
+Addendum~4 is the one addendum registered during the production sweeps, on
+2026-08-29, before any GP cell on a panel longer than sixty years had produced
+a result. It applies to the multi-output Gaussian process under every
+mechanism in every regime.
+
+\emph{Cause.} The exact multitask GP's kernel memory scales with
+$(\text{years}\times\text{ages})^2$: a 269-year panel is 26{,}900 points and a
+5.8~GB kernel per fit, and the EnbPI and copula-conformal mechanisms refit the
+family ten times per cell. On the compute node the second-pass GP sweep
+stalled after nineteen hours with one worker holding 10.7~GB, the machine
+swapping, and fourteen of twenty populations untouched; six had completed
+(CHL, HKG, TWN, LUX, and KOR and HRV as design-floor errors). The arm as
+specified is infeasible on long panels on the available hardware.
+
+\emph{Rule.} The GP family trains on the trailing sixty complete years of each
+training panel (\texttt{max\_years = 60}), applied through the runner's
+per-family keyword arguments so that every mechanism sees the same family.
+Panels shorter than sixty complete years are unaffected.
+
+\emph{Why sixty, and why this is not outcome-driven.} Sixty is the longest
+panel the arm completed without a cap (LUX), so the rule changes nothing
+already computed and is defined by feasibility rather than by results; the
+four populations already completed have panels of 28--60 years and their cells
+are identical under the rule, so they are kept. Sixty is also more than twice
+the 27-year window used by the family's source paper
+\citep{huynh2021multi}, which the pre-registration cites as the reference
+specification. Disclosure, recorded in the addendum itself: before any cap was
+contemplated, a single diagnostic on one population had shown a trailing
+forty-year window scoring \emph{better} than the full 269-year panel
+(\texttt{docs/STATUS.md}, 2026-08-27); the cap chosen here is sixty, not
+forty, it was not selected by score, and the earlier observation is recorded
+so that the reader can judge. No other family, mechanism, regime, metric,
+hypothesis or inference rule changes, and the results tables state the window
+for the GP family.
+
+\subsection{Validation gates}
+\label{supp:gates}
+
+Three gates had to pass before any real-data result could be read. All three
+passed, and gates~1 and~2 were re-run after the weighted-fit rewrite of
+Addendum~3~\S1. If gate~1 had failed, every coverage number in this paper
+would have been measuring a bug rather than a forecasting method.
+
+\paragraph{Gate 1: synthetic truth.} Data are simulated from a known Poisson
+Lee--Carter process---40 ages, 60 training years, horizons $1$--$10$,
+exposures $10^5$, thirty independent worlds, 1{,}500 predictive samples per
+world---and pushed through the same code path the real-data runs use. The
+gate is a confidence-interval test in
+\texttt{tests/test\_synthetic\_calibration.py}: the correctly specified
+Poisson Lee--Carter must attain nominal 95\% coverage within Monte Carlo
+tolerance and produce a near-uniform PIT histogram, and the harness must
+detect an injected break as under-coverage. It does both.
+
+Each neural and GP family passed its own sub-gate on the same synthetic
+worlds: finite and bounded point error over $h=1,\dots,5$; distinct recorded
+member seeds for every ensemble; and, for the distributional NB head,
+reproduction of an NB-simulated world's coverage through the Poisson
+composition of Section~\ref{supp:methods-interface}. One documented finding
+came out of the gate and is carried into the interpretation of every SVD-LC
+row in the paper: the two-stage SVD Lee--Carter is mildly \emph{over}-dispersed
+on Poisson data, because the SVD $\kappa_t$ carries observation noise into the
+random-walk innovation variance, so its intervals are slightly wide and its
+PIT centre-heavy. This is a property of the method, not of the harness.
+
+\paragraph{Gate 2: oracle parity against R \pkg{StMoMo}.} The Python Poisson
+Lee--Carter must match R \pkg{StMoMo} (version 0.4.1 under R~4.6.1) on a
+shared subset. On Swedish males, 1950--2000, ages 0--99, the two fits have
+\emph{identical} Poisson log-likelihood and maximum relative differences of
+$3.1\times10^{-15}$ in $\alpha_x$, $2.4\times10^{-14}$ in $\beta_x$ and
+$1.5\times10^{-13}$ in $\kappa_t$ when the Newton iteration is run to its cap.
+The qualifier matters and is stated rather than suppressed: the agreement
+quoted is the fixed point of the iteration, not an early-stopped fit. The
+\pkg{StMoMo} parameter dump is tracked in the repository, so the check can be
+re-run without an R installation.
+
+\paragraph{Gate 3: life-table parity.} Our period life table computed on HMD's
+published $m_x$ must reproduce HMD's published $e_0$ and $e_{65}$ within
+0.15~years at spot checks. It does. The tolerance is the size of the
+documented $a_x$ simplifications between our routine and HMD's, which are set
+out in Section~\ref{supp:methods-lifetable}.

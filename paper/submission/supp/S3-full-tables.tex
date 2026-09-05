@@ -1,0 +1,256 @@
+% =============================================================================
+% S3 -- Full per-cell tables (Tables S1-S10)
+%
+% Every exhibit here is the UNABRIDGED generated fragment from paper/tables/,
+% pulled by \inputtable so that no number is ever transcribed by hand. The
+% manuscript's abridged views (Tables 3-7) are generated from the same parquet
+% inputs by the same script; this section is the evidence they are views of.
+%
+% Order is fixed and is what the manuscript cites as S1...S10:
+%   S1 tab-populations   S2 tab-h1-rankings  S3 tab-h2-coverage
+%   S4 tab-h3-joint      S5 tab-h4-age       S6 tab-h5-actuarial
+%   S7 tab-pit           S8 tab-murphy       S9 tab-dm-mcs
+%   S10 tab-twin-crises
+% The two infeasible-cell ledgers (S11, S12) belong to Section S6.
+% =============================================================================
+
+\clearpage
+\section{Full per-cell tables}
+\label{sec:supp-tables}
+
+This section carries the ten unabridged result tables in full. Each is the
+complete family $\times$ mechanism $\times$ regime fragment, written by
+\pkg{scripts/make\_tables.py} from the committed sweep outputs
+(\pkg{results/<regime>.parquet} and \pkg{results/<regime>\_gp.parquet}) and
+included here verbatim; the provenance comment at the head of each fragment
+names its inputs and its generation date. The manuscript prints abridged views
+of five of them (its Tables~3--7) and quotes headline figures from all ten in
+its prose. Nothing here is a recomputation: the abridged and the full versions
+come from one script run over one set of inputs, so every number the manuscript
+states can be located in the corresponding table below.
+
+Three reading conventions hold throughout, and are repeated in the individual
+table notes. First, error rows---cells in which an arm produced no valid
+row---enter no mean; every table reports $n$, the valid cells behind each mean,
+beside $n_{\mathrm{err}}$, the excluded ones, and the reasons are enumerated
+cell by cell in Section~S6. Second, the three conformal mechanisms (split
+conformal, EnbPI, the copula band) construct a single interval at 95\%: their
+50\% and 80\% columns are blank by design, their proper scores and PIT values
+are placeholders flagged secondary and never ranked against distributional
+arms, and their derived-quantity rows are reported as not applicable because
+those functionals require predictive sample paths. Third, CBD (M5) is fitted on
+ages 55--99 and scores 45 ages, so its rows never average with a full-age
+family: its 25--64 age-band entry is a 55--64 stub and its life-table rows
+carry no $e_0$. Every comparison drawn in the manuscript is made within a
+sub-grid that respects these three restrictions.
+
+One defect of the generated fragments is recorded here rather than repaired,
+because this supplement is published as supplied and each fragment is
+reproduced exactly as the table script writes it: the caption of the coverage
+table below (Table~\ref{tab:h2-coverage}) contains a malformed cross-reference
+where it sends the reader to the ledger of excluded rows. The intended
+destination is the infeasible-cell ledger of Section~S6, Tables~S11 and~S12.
+
+\subsection{Population inventory}
+
+Table~\ref{tab:populations} is the full population inventory, of which the
+manuscript's Table~3 prints the shift block only. It backs the data section's
+claims about scope: the twenty shift populations, nineteen of them final
+through 2024 and DNK through 2025; the maximal contiguous training block
+available at the 2019 origin for each, including the 1919--2019 block that the
+contiguity rule imposes on BEL; the zero-exposure training cells and the
+zero-death test cells ($D_{x,t} < \tfrac{1}{2}$) per sex on which the
+structural-zero weighting and the log-score rounding convention act; and, in
+the columns and rows the abridged view drops, the eleven placebo-eligible
+populations with their Addendum~1 strata (neutral register-based, belligerent
+total series, civilian-only) together with the five populations that enter the
+placebo regime alone (FRATNP, GBRTENW, GBR\_SCO, ITA, NLD). It is generated
+from the pinned HMD bulk files, not from any model output.
+
+\begin{table}[htbp]\centering
+\caption{Populations by regime: first and last year of single-age data in the
+pinned vintage, training years available at the shift origin, zero-exposure
+cells at ages $0$--$99$, and zero-death test cells ($D<\tfrac{1}{2}$) per sex
+in the shift window, with placebo eligibility and Addendum~1 stratum.
+Generated from the data files, not from any model output. The manuscript's
+Table~3 is the shift block of this table.}
+\label{tab:populations}
+\inputtable{tab-populations}
+\end{table}
+
+\subsection{H1: rankings by point accuracy and by proper scores}
+
+Table~\ref{tab:h1-rankings} backs \Hone. It ranks every distributional arm
+three times per regime---by mean $\RMSE$ on log rates, by mean $\CRPS$ and by
+mean Poisson log score---and reports the rank correlation between the
+orderings. It is the evidence behind the manuscript's statement that the RMSE
+and CRPS orderings agree at $\rho = 0.95$ while still carrying the registered
+top-three inversion, and that against the Poisson log score the point-accuracy
+ordering dissolves, $\rho = 0.12$ at the break and $-0.18$ in the quiet
+control. The conformal arms are absent by construction, their proper scores
+being placeholders, and CBD is ranked in a block of its own with its age
+support stated. \Hone\ is carried in this study as a harness-validity check
+rather than as a novel finding; this table is what makes the check auditable.
+
+\inputtable{tab-h1-rankings}
+
+\subsection{H2: interval coverage and interval score}
+
+Table~\ref{tab:h2-coverage} is the fifty-cell coverage table in all three
+regimes, including the thirty conformal rows that the manuscript's Table~4
+omits in favour of the arms carrying their own predictive law. It backs \Htwo\
+and the refutation of the one-sided form in which \Htwo\ was registered.
+Specifically it carries: the classical cores' native 95\% coverage in the quiet
+control (0.702 SVD Lee--Carter, 0.682 Poisson Lee--Carter, 0.731 APC/RH)
+against the break (0.692, 0.624, 0.654), which is the evidence that the failure
+predates the pandemic rather than being created by it; the split that runs
+through the middle of the neural group rather than between neural and
+classical, with the negative-binomial head, the multi-output Gaussian process
+at 0.905 and the sparse VAR near nominal against the LSTM at 0.647 ensembled
+and the ensembled neural Lee--Carter at 0.694; the conformal ranges quoted in
+the results (0.890--0.948 for split conformal and EnbPI and 0.951--0.985 for
+the copula arm in the control, 0.848--0.944 and 0.939--0.981 under the break);
+the 50\% and 80\% columns behind the discussion's finding that the failure is
+not a tail artefact; and the mean 95\% interval score $\IS_{95}$, which is what
+separates an arm that is calibrated from an arm that is merely vague.
+
+\inputtable{tab-h2-coverage}
+
+\subsection{H3: joint path coverage against marginal coverage}
+
+Table~\ref{tab:h3-joint} backs \Hthree. It sets mean marginal 95\% coverage,
+pooled over horizons, beside joint coverage of the whole path ($H=5$ in the
+shift and stable regimes, $H=9$ in the placebo) and reports their difference,
+for all fifty arms in each regime. It carries the 100-of-100 count, the mean
+gaps of 0.127 in the control and 0.168 across the break, the copula band's
+joint ranges (0.894--0.942 in the control, 0.805--0.927 at the break, and
+0.544--0.939 over the nine placebo horizons), and the placebo rows behind the
+counter-example the manuscript keeps in its main text---the sparse VAR's
+Poisson-bootstrap arm at 0.748 joint against 0.756 marginal, the one pair whose
+ordering the rounded columns do not by themselves establish. Two
+qualifications stated in the manuscript apply to every row here: the comparator
+is the nominal independence value $0.95^{H}$, which is a re-specification of
+the comparator as registered, and the model-implied joint comparator
+$C^{\mathrm{impl}}$ is not computable from the columns the runner emits, so
+these are the descriptive measurement of the marginal-to-joint gap rather than
+the registered test of \Hthree.
+
+\inputtable{tab-h3-joint}
+
+\subsection{H4: coverage by age band}
+
+Table~\ref{tab:h4-age} backs \Hfour\ and its refutation as a universal claim.
+It gives 95\% coverage within the three Mondrian age bands (0--24, 25--64,
+65--99) for all fifty arms in all three regimes. It carries the SVD
+Lee--Carter profile the manuscript quotes in both regimes (0.888, 0.760, 0.501
+in the control against 0.882, 0.725, 0.518 at the break), the LSTM ensemble's
+likewise unmoved gradient, the CBD stub pair, and the per-arm values behind the
+34-of-50 reversal count---26 of the 30 conformal arms, whose Mondrian strata
+are calibrated on these same bands and so flatten or invert the profile by
+construction, and the eight arms carrying a family's own uncertainty (both CBD
+arms, both CNN-LC arms, the GP, neural-LC dropout and both Poisson Lee--Carter
+arms), five of which reverse by five hundredths or less. It also carries the
+margins, 0.044 and below, by which the negative-binomial head and the sparse
+VAR preserve the registered direction. CBD's 25--64 column is a 55--64 stub,
+CBD being fitted on ages 55--99; that row is not comparable with the full-age
+families' and is not compared with them anywhere in the manuscript.
+
+\inputtable{tab-h4-age}
+
+\subsection{H5: life expectancy and annuity factors}
+
+Table~\ref{tab:h5-actuarial} backs \Hfive. It reports coverage of the nominal
+95\% interval and the mean error for $e_0$, $e_{65}$ and $\annuity$ at 2\% on
+the period table of the first test year, computed from each arm's own latent
+rate paths and compared with the same functional of the observed rates, for
+every family, mechanism and regime. It carries the figures the manuscript
+quotes---SVD Lee--Carter's native law covering 0.256 for $e_{65}$ and 0.253 for
+$\annuity$ against 0.702 on log rates, the LSTM deep ensemble at 0.157, and the
+14-of-20 and 12-of-20 comparative verdicts with their named exceptions---and
+the per-cell $n$ and $n_{\mathrm{err}}$ columns that supply the denominators
+qualifying them, including the multi-output GP's reduced scope of sixteen
+populations and its sixteen of twenty-two placebo units. Ninety of its rows are
+the conformal arms, reported as not applicable: these functionals require
+predictive sample paths, and conformal mechanisms yield interval bounds on
+$\log m_{x,t}$ only. CBD has no $e_0$.
+
+\inputtable{tab-h5-actuarial}
+
+\subsection{Probability integral transform}
+
+Table~\ref{tab:pit} backs the distributional-calibration reading in the
+results. It gives, per distributional arm and regime, the mean
+Kolmogorov--Smirnov distance of the randomised PIT from uniformity and the
+share of population--sex cells whose nominal $p$-value falls below 0.05. It
+carries the break-regime KS range the manuscript quotes, from 0.172 for the
+multi-output GP to 0.374 for Poisson Lee--Carter, and the rejected-share floors
+of 0.905 and 0.844. That $p$-value is descriptive only: PIT values within a
+cell are dependent across ages and horizons, and all formal inference in this
+study is population-clustered instead. Conformal rows are blank because their
+PIT is a placeholder. The shape of each departure---U for over-confidence, hump
+for under-confidence, slope for bias---is read from Figures~S10--S12 in
+Section~S4.
+
+\inputtable{tab-pit}
+
+\subsection{Murphy decomposition}
+
+Table~\ref{tab:murphy} backs the decomposition subsection of the results. It
+splits the Brier score of the 95\% interval-hit indicator into reliability,
+resolution and uncertainty, and adds the reliability of the PIT against the
+uniform reference. With one constant nominal level there is a single bin, so
+the resolution term is zero by construction and is emitted as 0.0000 in every
+row; the isotonic (CORP) estimator, which would supply a resolution component
+with independent content, is not emitted, and no hypothesis in this study rests
+on one. The table is what separates an arm that is calibrated from an arm that
+looks calibrated by being vague---the comparison of SVD Lee--Carter against
+Poisson Lee--Carter that coverage alone cannot decide. Both quantities are
+descriptive.
+
+\inputtable{tab-murphy}
+
+\subsection{Diebold--Mariano tests and model confidence sets}
+
+Table~\ref{tab:dm-mcs} carries the two registered forecast-comparison
+procedures in all three regimes, and is the evidence behind the study's
+conformal attribution finding: wrap what is broken, do not wrap what is not.
+Its lower block gives the pairwise Diebold--Mariano comparison of each family's
+native law against its split-conformal wrapping, with the mean loss
+differential, the wild-cluster-bootstrap $p$-value over populations and the
+effective number of clusters---the per-family differentials the manuscript
+prints as digits, the break-regime $p$-range of 0.004--0.018, the control
+$p$-values including APC/RH at 0.086 and CBD at 0.198, and the placebo range of
+0.071--0.689. Its upper block gives each 90\% model confidence set: the arms
+retained, the elimination $p$-values behind the five families in which the
+copula band is eliminated at the break, and the cells kept and dropped by the
+common-cell restriction, which is the intersection every inference statement in
+the manuscript is conditioned on. A contrast that cannot be formed is listed
+with its recorded reason; Contrasts~2 and~3 have no row here at all, which is
+why their statistics are reported in full in the manuscript instead.
+
+\inputtable{tab-dm-mcs}
+
+\subsection{Twin crises: 1914--1922 beside 2020--2024}
+
+Table~\ref{tab:twin-crises} backs the twin-crises analysis. It sets the placebo
+regime beside the shift regime, family by family and mechanism by mechanism,
+with marginal 95\% and joint path coverage in each, and adds the three
+pre-specified Addendum~1 strata as further columns---the exhibit that the
+manuscript's limitation about reporting placebo results by stratum points at.
+It carries the placebo family split that reproduces the pandemic's a century
+earlier, the joint collapse with its 45-of-46 and 37-of-46 counts, the sparse
+VAR's empty placebo cells, which are a finding rather than a gap, and the CBD
+cross-crisis contrast. The two joint columns span $H=9$ and $H=5$ and are
+therefore read within regime, never across it. The table is descriptive: no
+common-cell restriction and no transfer regression is applied to it.
+
+\begin{table}[htbp]\centering
+\caption{Placebo (train to 1913, test 1914--1922, eleven populations) and shift
+(train to 2019, test 2020--2024, twenty populations) side by side: marginal
+95\% and joint path coverage by family and mechanism, with the placebo strata
+of Addendum~1 as further columns. Joint coverage spans $H=9$ placebo and $H=5$
+shift horizons---not one scale. The sparse VAR's empty placebo cells are a
+finding rather than a gap.}
+\label{tab:twin-crises}
+\inputtable{tab-twin-crises}
+\end{table}

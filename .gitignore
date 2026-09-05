@@ -100,6 +100,8 @@ results/_*
 # deliberately once the sweeps are complete.
 paper/tables/tab-*.tex
 !paper/tables/tab-grid.tex
+# the abridged views for the venue-fitted manuscript (make_tables.py --variant main)
+paper/submission/tables/tab-*.tex
 paper/figures/*.pdf
 paper/figures/figures-manifest.json
 results/sensitivities.json
@@ -112,5 +114,14 @@ paper/*.blg
 paper/*.out
 paper/*.toc
 paper/*.fls
+# same build products for the venue-fitted manuscript and its supplement
+paper/submission/*.log
+paper/submission/*.aux
+paper/submission/*.bbl
+paper/submission/*.blg
+paper/submission/*.out
+paper/submission/*.toc
+paper/submission/*.fls
+paper/submission/*.fdb_latexmk
 paper/*.fdb_latexmk
 paper/*.synctex.gz

@@ -1,0 +1,225 @@
+\section{Actuarial impact}
+\label{sec:actuarial}
+
+\subsection{H5: propagation into life expectancy and annuity factors}
+
+\inputtable{tab-h5-actuarial-main}
+
+Table~\ref{tab:h5-actuarial-main} gives, by arm and regime, empirical
+coverage of the nominal 95\% interval and the mean error for $e_0$,
+$e_{65}$ and $\annuity$ at 2\%, on the period table of the first test
+year, computed from each arm's own latent rate paths and compared with the
+same functional of the observed rates; Table~S6 carries the full
+fifty-cell fragment and its notes. Three conventions bind the reading.
+Conformal cells have no such paths---their samples are uniform draws
+inside a band, a convention for interval metrics only---so their rows are
+not applicable and every count here is over the twenty distributional
+arms, not the fifty admissible cells. CBD is fit on ages 55--99: it
+contributes no $e_0$, and its $e_{65}$ and $\annuity$ are exact on its
+truncated table but rest on a fit that never saw the younger ages, so its
+rows are not on the same footing as the full-age families'. And no row
+carries its regime's full complement of (population, sex, origin)
+units---520 stable, 40 shift, 22 placebo---because error rows (Table~S11)
+are excluded from every mean: the fullest stable rows reach 442 of 520,
+the sparse VAR's native law is scored on 297 stable units and its
+bootstrap on 238, the multi-output GP on sixteen of the twenty stable
+populations, and the sparse VAR's native placebo cell produced nothing at
+all, 0 of 22. Addendum~3 (\S8) restricts \Hfive\ to the ex-post coverage
+of these derived intervals, against attenuation---that life-table
+integration averages a rate-surface failure away
+\citep{cairns2011mortality}---as the named competitor.
+
+\Hfive\ was registered as: \emph{interval miscalibration propagates to
+derived quantities---empirical coverage of 95\% intervals for $e_{65}$ and
+the annuity factor $\annuity$ at 2\% departs from nominal by more than the
+corresponding stable-regime departure}. Read strictly, as the universal
+ordering the registration states, it is not supported: the shift departure
+exceeds the stable departure for 14 of the 20 distributional arms on
+$e_{65}$ and 12 of 20 on $\annuity$---a majority, not the universal the
+clause asserts, and the same standard by which Section~\ref{sec:results}
+declines to call \Htwo's registered form supported at 27 of 50. What
+survives is the substantive claim the ordering stood proxy for, and it is
+this audit's most consequential actuarial finding: miscalibration of the
+rate surface reaches the reserve, it does so in every regime, and it is
+not a pandemic effect. The derived intervals are already broken in the
+stable control, the regime constructed so that nothing breaks in it.
+Covering realised $e_{65}$ and $\annuity$ against nominal 0.95, SVD
+Lee--Carter's native law reaches 0.256 and 0.253 on its 442 scored stable
+units, the LSTM ensemble 0.182 and 0.157, LSTM dropout 0.205 and 0.191,
+Poisson-LC 0.434 and 0.430, the neural-LC ensemble 0.468 and 0.459, CNN-LC
+dropout 0.559 and 0.548, APC/RH 0.654 and 0.643. Only two arms come within
+0.05 of nominal on $\annuity$ there---the sparse VAR's native law at 0.980
+on 297 units and CBD's bootstrap at 0.934 on its 55--99 support---and
+thirteen of the twenty sit below 0.700. An interval containing the
+realised value in a quarter of population--sex origins is not a usable
+reserving input, and it says as little in the quiet decades 1990--2014 as
+it does across 2020.
+
+The registered comparison orders two-sided departures
+$|\text{coverage}-0.95|$; there the result is partial. The six exceptions
+on $e_{65}$ are both SVD Lee--Carter arms, both LSTM arms, CNN-LC under
+dropout and Poisson-LC under the Poisson bootstrap; on $\annuity$ the same
+six plus CNN-LC's ensemble and Poisson-LC's native law. They are not
+intervals the break spared but mostly the arms whose stable departure was
+already largest, moved \emph{towards} nominal---SVD Lee--Carter's
+bootstrap from a departure of 0.645 to 0.400 on $\annuity$. The rule does
+not separate cleanly, and we do not claim that it does: Poisson-LC's
+native law and the neural-LC ensemble start further from nominal on
+$e_{65}$ (0.516 and 0.482) than CNN-LC under dropout (0.391) and still
+move away. The rate-scale sorting of \Htwo\ (Section~\ref{sec:results})
+cannot operate here, because nineteen of the twenty arms already
+under-cover $\annuity$ in the control and the one that does not, the
+sparse VAR under its native law, is the arm the break damages most, from a
+departure of 0.030 to one of 0.364. What operates instead is a floor: the
+eight arms that moved towards nominal span 0.157 to 0.558 in the control,
+and an interval already missing four cells in five has little room left to
+miss more.
+
+The attenuation alternative is answered the same way in both regimes. Set
+beside the marginal rate coverage of Table~S3, all eighteen full-age
+distributional arms cover realised $\annuity$ less often than a single log
+rate, in the control and the shift regime alike; CBD's two
+truncated-support arms are excluded from the count and run the other way.
+The two sides are not scored on identical horizons---marginal coverage
+pools $h=1\ldots5$, the functional uses the first test year alone---so an
+$h$-aggregated rate figure meets an $h=1$ functional; the 18-of-18
+direction does not turn on that, the annuity being scored at the horizon
+most favourable to it, but the sizes should be read with the mismatch in
+view. The gap runs from 0.008 (the sparse VAR, native law) to 0.481 (the
+LSTM ensemble) and averages 0.252 in the control and 0.289 under COVID.
+Integration does not average the failure away; it concentrates it, in
+quiet periods too. The instructive cells look calibrated on rates and are
+not on liabilities: CNN-LC under dropout covers 0.954 of single log rates
+in the control against 0.548 of realised annuity factors, the NB head's
+ensemble 0.988 against 0.814.
+
+The mechanism is \Hthree's, moved from the horizon axis to the age axis: a
+period functional integrates a whole scored age range, so a common-factor
+miss leaving many single-age intervals near but inside their bounds still
+displaces it, and one displaced functional is one uncovered cell. Priced
+from the same marginal baseline on the same eighteen arms, the age axis is
+the dearer: mean marginal-to-joint-path gaps of 0.153 in the control and
+0.208 in the shift regime (Tables~S3 and S4), against marginal-to-annuity
+gaps of 0.252 and 0.289 on those same arms. The 0.127 and 0.168 quoted for \Hthree\ in
+Section~\ref{sec:results} average over all fifty cells, thirty of them
+conformal and carrying no derived quantity, and are not the like-for-like
+comparator. The horizon gap is also the weaker quantity, most of it
+arithmetic: independence at nominal coverage over five horizons gives
+$1-0.95^5=0.176$, above either grid mean, and all fifty stable and fifty
+shift cells clear the independence benchmark set at their \emph{own}
+marginal rate, by as much as 0.34. The comparator is that benchmark, not
+each model's own implied path law: Addendum~3's re-specified comparator
+(\S8), a cell's model-implied joint coverage, is not computable from the
+columns the runner emitted, and we record it as a limitation rather than
+work around it. The annuity gap admits no arithmetic discount in any case:
+$\annuity$ is one event on one test year.
+
+Two families qualify the mechanism rather than contradict it. On the
+registered functionals only CBD has derived coverage above its own
+rate-scale coverage: in the control its native law covers 0.930 of
+realised $e_{65}$ against a marginal 0.901, and its bootstrap 0.950 and
+0.934 against a marginal 0.921, the native arm's 0.889 on $\annuity$ the
+one figure of the four falling just short. CBD is also the only family fit
+and integrated on ages 55--99 alone, and family and truncated support are
+not separable in this design. The sparse VAR is the one full-age arm
+calibrated when nothing breaks (0.983 and 0.980) and the arm the break
+damages most (0.621 and 0.586, on 29 admissible shift units); its two
+scales disagree about one model, rates moving \emph{towards} nominal from
+0.988 to 0.937 while the liability moves 0.980 to 0.586, so reporting one
+scale alone would call this family improved or destroyed at the analyst's
+choice. On $e_0$, which \Hfive\ does not register, two classical families
+also run the other way: Poisson-LC covers 0.744 and APC/RH 0.808 in the
+control, above their rate-level marginals of 0.682 and 0.731, while SVD
+Lee--Carter reaches 0.369 and the LSTM ensemble 0.267. We report that
+column descriptively and read no mechanism into it.
+
+\subsection{Reading a coverage shortfall in balance-sheet terms}
+
+For an annuity-due of one per annum at age 65, the interval on $\annuity$
+is an interval on the best-estimate liability of a unit annuitant. In
+Solvency~II terms, an internal model covering the realised value in
+materially fewer than 95\% of population--sex cells has a miscalibrated
+longevity distribution---too narrow for most of these arms, mislocated for
+the few that overstate---and Table~\ref{tab:h5-actuarial-main} puts every
+distributional arm in that position in the shift regime and all but two in
+the control; under COVID the best figure is 0.850 (CBD, on its truncated
+table) and no full-age arm exceeds 0.750.
+
+The direction of the central miss matters. In the control the mean error
+on $\annuity$ is negative for 19 of the 20 arms---the central factor below
+the realised one, understating the liability---the exception being the
+NB-head ensemble at $+0.02$ annuity units, the understatement reaching
+$-0.63$ for the LSTM ensemble and $-0.58$ for SVD Lee--Carter, whose
+median $e_{65}$ path sits a mean of 0.84 years below the realised value in
+the control and 0.57 years below it at the break. Across the pandemic the
+signs split, twelve positive against eight negative: both SVD Lee--Carter
+arms, both CNN-LC arms and both LSTM arms still sit below the realised
+$\annuity$ ($-0.24$ to $-0.45$) and CBD's two marginally below on its
+truncated table ($-0.03$ and $-0.04$), while APC/RH, neural-LC, the sparse
+VAR's native law and the NB-head ensemble sit above ($+0.24$ to $+0.39$)
+and the sparse VAR's bootstrap above by $+0.14$. This is not the
+single-signed pandemic effect a uniform mortality margin would absorb, and
+for the arms already understating it is no pandemic effect at all: the
+excess mortality of 2020 moved the realised annuity factor towards their
+too-low central estimates, masking a pre-existing bias rather than
+creating one.
+
+Where an arm's 97.5\% quantile of $\annuity$ falls below the realised
+value, the shortfall is the amount by which implied capital at that level
+is understated; we report it relative to the central $\annuity$, portable
+across populations and interest assumptions. These breach frequencies are
+what the study reports at the top of the distribution in place of the
+registered 99.5\% longevity quantile, which the runner did not emit (\S8).
+The understating arms breach at many times the nominal 2.5\%, and more
+often in the quiet control than under COVID. In the control the realised
+$\annuity$ exceeds the 97.5\% quantile in 0.804 of the LSTM ensemble's 434
+admissible cells, 0.779 of LSTM dropout's, 0.701 of SVD Lee--Carter's 442,
+0.529 of Poisson-LC's and 0.441 of CNN-LC dropout's, with mean shortfalls
+over the breached cells of 4.2\%, 4.0\%, 4.2\%, 2.0\% and 2.4\%; the same
+five breach in 0.605, 0.474, 0.425, 0.150 and 0.325 of shift cells, at
+3.4\%, 3.8\%, 4.3\%, 1.5\% and 2.5\%. Capital set at the model's 97.5\%
+quantile is therefore understated by two to four per cent of the
+best-estimate liability in a large minority of population--sex
+origins---and, in the control, for four of these five arms in an outright
+majority---against a nominal one in forty. The overstating arms fail on
+the other side: under COVID the NB-head ensemble and its dropout arm never
+breach above, but the realised value falls below their 2.5\% quantile in
+0.550 and 0.250 of cells (mean excess 2.0\% and 1.6\%) and below the
+neural-LC ensemble's in 0.625 (2.3\%); in the control those three are
+milder and two-sided, upper breaches in 0.081, 0.106 and 0.292 against
+lower breaches in 0.104, 0.090 and 0.249---reserves set too high rather
+than capital set too low. CBD is again the outlier in magnitude, breaching
+above in 0.050--0.075 of shift and 0.066--0.109 of stable cells with a
+mean shortfall at or below 1\%. Because the quantity is relative to the
+central $\annuity$, a worked example on a hypothetical portfolio would
+only rescale these figures, and we add none.
+
+\subsection{Twin crises in economic terms}
+
+The placebo rows supply the same functionals for 1914--1922; the
+comparison is descriptive, and with the control in place a shortfall the
+quiet decades already show cannot be credited to either break. For the
+full-age classical cores under their native laws realised $e_{65}$ falls
+inside the nominal band in 0.425--0.500 of population--sex cells under
+COVID and 0.455--0.636 across 1914--1922, $\annuity$ in 0.450--0.475 and
+0.455--0.636---against 0.256--0.654 and 0.253--0.643 in the control, on
+442 units against 40 and 22. The shortfall is economically material at
+both breaks and of the same order at each, and for two of the three cores
+no larger than the control already carries: SVD Lee--Carter's annuity
+coverage is \emph{lowest} in the quiet control at 0.253, highest at the
+placebo at 0.636, with COVID in between at 0.450, and Poisson-LC runs the
+same way at 0.430, 0.475 and 0.591. APC/RH is the exception, worse at both
+breaks than in the control, its $e_{65}$ and $\annuity$ falling from 0.654
+and 0.643 to 0.500 and 0.475 under COVID and to 0.455 at the placebo.
+CBD's native law covers 0.875 on $e_{65}$ under COVID and 1.000 on both
+functionals at the placebo, against 0.889 and 0.930 in the control, and
+its age-55 support lies above the excess mortality of 1918. The $e_0$
+column carries the timing caveat in numbers---0.909 for Lee--Carter at the
+placebo against 0.500 under the shift and 0.369 in the control---because
+the placebo's first test year, 1914, predates the influenza wave while
+2020 sits inside the COVID shock. Outside the sparse VAR's placebo
+bootstrap row, which covers 1.000 on both functionals on the nine of
+twenty-two units that survived, neither break leaves a full-age family's
+derived intervals anywhere near nominal---but neither does the control,
+and on the evidence of three regimes the pandemic is not distinctive in
+economic kind, nor, for the worst-behaved families, even in degree.

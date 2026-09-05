@@ -1,0 +1,102 @@
+% Shared preamble for the venue-fitted manuscript and its supplement.
+% Everything after \documentclass; each document supplies its own class line,
+% its own title block, and its own table/figure numbering.
+% Asset paths point at the parent paper/ tree so no generated exhibit is duplicated.
+% --- engine-conditional font setup -------------------------------------------
+% pdfTeX (latexmk -pdf, the intended route) gets T1/utf8/lmodern/microtype.
+% XeTeX/LuaTeX (the tectonic fallback in the Makefile) skip the pdfTeX-only
+% packages. Sources are kept ASCII-only so both routes render identically.
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{lmodern}
+  \usepackage{microtype}
+\fi
+
+% A file path in \texttt{} is one unbreakable box; a justified line carrying
+% one overhangs the margin (3-20 pt, measured on the XeTeX route, where the
+% pdfTeX-only microtype above is unavailable). Let TeX stretch the line
+% instead in its final pass -- engine-independent, unlike microtype.
+\setlength{\emergencystretch}{3em}
+
+\usepackage[a4paper,margin=2.5cm,marginparwidth=2.0cm,marginparsep=0.35cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{threeparttable}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage[authoryear,round]{natbib}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+
+\graphicspath{{../figures/}{figures/}}
+\setlist{nosep}
+\captionsetup{font=small,labelfont=bf,width=0.92\textwidth}
+
+% --- \todo: red inline marker + red margin note, numbered ----------------------
+% \todo{...}       body text only (uses \marginpar; illegal inside floats,
+%                  captions, footnotes, headings)
+% \todoinline{...} same marker without the margin note; safe anywhere
+\newcounter{todocount}
+\newcommand{\todoinline}[1]{%
+  \stepcounter{todocount}%
+  \textcolor{red}{\textbf{[TODO~\thetodocount: #1]}}}
+\newcommand{\todo}[1]{%
+  \todoinline{#1}%
+  \marginpar{\color{red}\scriptsize\raggedright\textbf{TODO~\thetodocount.} #1}}
+
+% --- \inputtable{name}: pull a generated fragment, or a placeholder --------------
+% Tables are written by scripts/make_tables.py (see tables/README.md). A
+% missing fragment renders as a placeholder so the draft always compiles.
+\newcommand{\inputtable}[1]{%
+  \IfFileExists{tables/#1.tex}%
+    {\input{tables/#1}}%
+    {\IfFileExists{../tables/#1.tex}%
+      {\input{../tables/#1}}%
+    {\todoinline{table \texttt{#1} is produced by \texttt{scripts/make\_tables.py} from \texttt{results/*.parquet}; not yet generated}}}}
+
+% --- \inputfigure{name}: \includegraphics of a generated figure, or a placeholder
+% Figures are written by the analysis stage as figures/<name>.pdf. A missing
+% file renders as a placeholder so the draft always compiles. Optional
+% argument = width (default \textwidth).
+\newcommand{\inputfigure}[2][\textwidth]{%
+  \IfFileExists{../figures/#2.pdf}%
+    {\includegraphics[width=#1,height=0.88\textheight,keepaspectratio]{../figures/#2.pdf}}%
+    {\todoinline{figure \texttt{#2.pdf} is produced by the analysis stage from \texttt{results/*.parquet}; not yet generated}}}
+
+% --- notation ------------------------------------------------------------------
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\ind}{\mathbb{1}}
+\newcommand{\CRPS}{\operatorname{CRPS}}
+\newcommand{\LS}{\operatorname{LS}}
+\newcommand{\IS}{\operatorname{IS}}
+\newcommand{\RMSE}{\operatorname{RMSE}}
+\newcommand{\MAE}{\operatorname{MAE}}
+\newcommand{\PIT}{\operatorname{PIT}}
+\newcommand{\annuity}{\ddot{a}_{65}}
+\newcommand{\Hone}{\textbf{H1}}
+\newcommand{\Htwo}{\textbf{H2}}
+\newcommand{\Hthree}{\textbf{H3}}
+\newcommand{\Hfour}{\textbf{H4}}
+\newcommand{\Hfive}{\textbf{H5}}
+\newcommand{\pkg}[1]{\texttt{#1}}
+
+\theoremstyle{definition}
+\newtheorem{hypothesis}{Hypothesis}
+
+\title{Do Mortality Prediction Intervals Survive a Pandemic?\\[0.4em]
+  \large A Pre-Registered Calibration Audit of Ten Forecasting Families and
+  Seven Uncertainty Mechanisms Across the COVID-19 Break}
+\author{%
+  Hamid Jahani\thanks{Corresponding author.
+    Email address: \texttt{hamid.jahani@modares.ac.ir} (Hamid Jahani).}\\[0.45em]
+  \normalsize Department of Data Science, Faculty of Interdisciplinary Science and Technology,\\
+  \normalsize Tarbiat Modares University, Tehran, Iran}
+\date{5 September 2026}
+
+

@@ -1,0 +1,189 @@
+\section{Data}
+\label{sec:data}
+
+\subsection{Source, vintage and likelihood}
+
+All data are from the Human Mortality Database \citep{hmd2026}, the
+15~June~2026 release (DOI 10.4054/HMD.Countries.20260615, Methods
+Protocol~v6 \citep{wilmoth2025methods}): the bulk \texttt{Deaths\_1x1},
+\texttt{Exposures\_1x1} and \texttt{Mx\_1x1} files and the period life
+tables, pinned byte-for-byte by that DOI, the download date (2026-08-25) and
+SHA-256 checksums in \texttt{data/MANIFEST.sha256}. The user agreement bars
+redistribution, but every table here reproduces from a matching fresh
+download. This is the first vintage with twenty populations at \emph{final}
+single-age annual data through 2024, which is what makes the shift regime
+(Section~\ref{sec:design}) possible at $h=5$; one (DNK) reaches 2025, unused.
+Only deaths and exposures are modelled; \texttt{Mx\_1x1} validates the parser
+and the life tables validation gate~3.
+
+Deaths are counts: $D_{x,t}\sim\mathrm{Poisson}(E_{x,t}m_{x,t})$ with offset
+$\log E_{x,t}$ \citep{brouhns2002poisson}; nothing here models rates as
+Gaussian on the raw scale. Two least-squares historical baselines survive
+(singular-value Lee--Carter on log rates, CBD on the logit of $q_{x,t}$), and
+the LSTM fits $\kappa_t$ by squared error on the SVD stage, as its reference
+paper does; losses are fixed in \texttt{docs/NEURAL-SPEC.md}, committed
+before the neural sweep (Section~\ref{sec:design-families}).
+
+\subsection{Cells, ages and structural zeros}
+
+A cell is a (population, sex, year, single age) Lexis square with deaths
+$D_{x,t}$ and central exposure $E_{x,t}$; sexes are modelled separately and
+the \emph{Total} column is never used. We model ages $0$--$99$: above them the
+published tables are partly smoothed model output (Kannisto above age~80),
+the open group $110{+}$ needs a closure assumption no family shares, and
+exposure vanishes---24{,}083 population--year--age rows carry $E_{x,t}=0$ for
+at least one sex (15{,}494 for both), almost all at age~90 or above in the
+small populations, where the offset is undefined.
+
+A zero-exposure cell inside $0$--$99$ is a \emph{structural} zero, not a
+missing value (population zero at both corners, $D_{x,t}=0$), so every family
+carries $W_{x,t}=\ind\{E_{x,t}>0\}$, \pkg{StMoMo}'s \texttt{wxt} convention;
+this leaves the maximum-likelihood estimate exactly unchanged, and
+Addendum~3~\S1 records it as the numerically correct evaluation of the
+registered objective, not a deviation. The shift training panel has 99 such
+cells (ISL 43, FIN 27, SWE 12, CHE 11, LUX 6) at ages 95--99, in seven
+population--sex series, all before 1970. In test windows an age without a
+finite observation at every horizon is masked, and life-table functionals use
+the maximal contiguous scored range from age~0 on both sides
+(Addendum~3~\S3); this binds only in the placebo regime, at ages 98--99.
+Zero-\emph{death} cells with positive exposure remain ordinary observations.
+
+\subsection{Fractional deaths and the rounding convention}
+\label{sec:data-rounding}
+
+HMD death counts are not integers---deaths are split into Lexis triangles and
+re-aggregated and unknown-age deaths redistributed, so a cell may record
+$3842.31$---and a Poisson log score is undefined at such a count. We score at
+$\tilde D_{x,t} = \lfloor D_{x,t} + \tfrac12 \rfloor$, nearest integer with
+halves \emph{up} (round-half-to-even was rejected because its direction would
+depend on the parity of the integer part), and report as a registered
+sensitivity the $\CRPS$ of the predictive count distribution against the
+unrounded $D_{x,t}$. Nine of the twenty shift populations carry non-integer
+counts, two of them (JPN, USA) in essentially every cell; the other eleven
+are exactly integer.
+
+Zero observed deaths give no finite log rate, so rate-scale
+quantities---observed and predictive alike---use the half-count correction
+\begin{equation}
+  y_{x,t} = \log\frac{\max(\tilde D_{x,t},\,\tfrac12)}{E_{x,t}},
+  \label{eq:halfcount}
+\end{equation}
+which puts both sides of a rate-scale score on one lattice (Addendum~2~\S2,
+Addendum~3~\S5); so do the conformal calibration residuals
+(Section~\ref{sec:design-mechanisms}). No cell is dropped for having no
+deaths; the test cells where the correction binds ($D_{x,t}<\tfrac12$) are
+counted per population and sex for the shift window in
+Table~\ref{tab:populations}, the full inventory being Table~S1. They sit in
+the smallest
+populations---ISL 117 female and 68 male of the 500 test cells per sex, LUX
+110 and 72, at most 40 (EST female) elsewhere---a material fraction of the
+2020--2024 window there, rare outside it. One registered exception
+(Addendum~3~\S5): the \emph{observed} life table for \Hfive's realised $e_0$,
+$e_{65}$ and $\annuity$ keeps raw fractional deaths, since $m_x=0$ where
+nobody died is the correct life-table statement and half a death would move a
+small population's observed $e_0$ past gate~3's tolerance.
+
+One detail bears on the placebo regime: HMD's linear rule for splitting
+$1\times1$ death squares into Lexis triangles carries a 1918--1919 influenza
+correction extrapolated from Sweden and France (Protocol~v6, Appendix~A). It
+changes the split, not the $1\times1$ counts we use, leaving a small
+model-based imprint on the 1918--1919 exposures.
+
+\subsection{Populations by regime}
+
+Codes are HMD's; the sets were fixed in the pre-registration from an audit of
+the files, not from results.
+
+\paragraph{Shift (primary), 20 populations.} Those whose final data reach
+2024: BEL, CHE, CHL, DNK, EST, FIN, HKG, HRV, ISL, JPN, KOR, LTU, LUX, LVA,
+NOR, PRT, SVK, SWE, TWN, USA. Each trains on its maximal contiguous block of
+complete years ending in 2019 (Addendum~3~\S2). The rule binds once:
+Belgium's 1914--1918 data are missing at every age---1{,}000 modelled cells
+($100$ ages $\times$ $2$ sexes $\times$ $5$ years), the only genuinely
+missing data in the shift training panel---so BEL trains on 1919--2019.
+Training lengths are very unequal, from seventeen years (KOR) and nineteen
+(HRV) to 269 (SWE), which governs which mechanisms are constructible
+(Section~\ref{sec:design-grid}).
+
+\paragraph{Stable (control).} The same twenty at expanding origins
+$T=1990,1992,\dots,2014$, an (origin, population, sex) triple admissible only
+at fifteen or more complete training years (Addendum~3~\S4). The panel is
+therefore unbalanced, and the effective cluster count per origin accompanies
+every stable-regime summary.
+
+\paragraph{Placebo break, 11 populations.} Continuous 1908--1922 coverage,
+starting no later than 1900: CHE, DNK, FIN, FRATNP, GBRTENW, GBR\_SCO, ISL,
+ITA, NLD, NOR, SWE. BEL is excluded for that same gap---555 rows of HMD's
+``.'' missing marker in the raw $1\times1$ file, flagged in HMD's own
+documentation---and FRACNP and GBRCENW as overlapping civilian variants of
+FRATNP and GBRTENW, FRACNP additionally carrying 1919 denominators HMD calls
+implausible, so it is not used even as a sensitivity. Addendum~1 (2026-08-26,
+still before any real-data fit) stratifies the eleven from HMD's country
+documentation: \emph{neutral, register-based} series whose only break in the
+window is the 1918 influenza pandemic (CHE, DNK, FIN, ISL, NLD, NOR, SWE);
+\emph{belligerent total-population} series with HMD-reconstructed military
+deaths at male ages of roughly 18--45 (FRATNP, GBRTENW, ITA); and one
+\emph{civilian-only} series excluding deaths abroad (GBR\_SCO). The neutral
+stratum is the clean 1918-versus-2020 analogue, and the pooled placebo result
+is always reported alongside the strata.
+
+\begin{table}[htbp]\centering
+\caption{Shift populations: first year of data, training years at the 2019
+origin, zero-exposure training cells and zero-death test cells
+($D<\tfrac12$) per sex. From the data files, not model output; full inventory
+in Table~S1.}
+\label{tab:populations}
+\inputtable{tab-populations}
+\end{table}
+
+\subsection{Data-quality caveats carried into the analysis}
+
+\emph{Exposures} are estimated from census or register populations and
+births under conventions differing by country and era;
+\citet{cairns2016phantoms} show cohort-size errors of several percent from
+uneven historical births. We take them as given; the error is common to every
+model in a cell.
+
+\emph{The placebo window.} Pre-1950 data are patchier and some war years
+reconstructed. The public HMD background file of each placebo population, the
+Methods Protocol and the release notes were read before any placebo result
+(\texttt{docs/DATA-PREREQS.md}); the login-only per-country ``Notes'' were
+not. No population carries an explicit 1914--1922 quality flag, and beyond
+the strata three sensitivities are pre-specified: drop GBR\_SCO, whose
+1912--1938 population is interpolated by a spline HMD itself calls
+unreliable; DNK with and without 1921--1922, South Jutland having been gained
+in 1921, inside the test window; and the neutral stratum alone as the
+cleanest pandemic-only comparison.
+
+\emph{Revisability of 2024.} HMD has no per-year provisional flag and
+re-issues whole series, so ``final through 2024'' is final only as of this
+release: USA 2020--2025 exposures blend preliminary 2020-census inputs, CHL
+exposures rest on the 2017 census pending revision, and TWN 2024 deaths are
+provisional, while register-based populations (the Nordic countries, CHE,
+EST, LVA, LTU) are effectively final. The pre-registered robustness run drops
+2024 and re-scores at $h\le4$; Addendum~1 adds dropping USA and CHL, a
+register-versus-census contrast, and a re-run on the next vintage.
+
+\emph{Differing observation windows.} Series start between the
+mid-eighteenth century and the 2000s, so the stable panel is unbalanced and
+the shortest shift panels cannot support every mechanism; inference is
+therefore clustered by population rather than pooled over cells, and every
+contrast is computed on the cells common to the arms it compares
+(Section~\ref{sec:design-grid}).
+
+\subsection{Life-table conventions}
+
+Life expectancy and annuity factors come from every predictive sample's $m_x$
+vector through one period-life-table routine: $q_x = m_x/(1+(1-a_x)m_x)$;
+$a_0 = 0.07+1.7\,m_0$ capped to $[0.01,0.35]$, a linear infant-separation
+rule after \citet{andreev2015average}; $a_x=\tfrac12$ elsewhere;
+constant-hazard closure $e_A = 1/m_A$. HMD's own table differs in its $a_x$
+and old-age treatment, so validation gate~3 requires our $e_0$ and $e_{65}$
+on HMD's published $m_x$ to reproduce HMD's within 0.15 years, the size of
+those simplifications. Annuity factors follow the standard definition
+\citep{dickson2020actuarial} on the period table treated as static
+(Section~\ref{sec:metrics-actuarial}). A family defined only on part of the
+age range---CBD, fitted on ages 55--99---yields a table truncated at its
+first age: $e_0$ is then undefined, and $e_{65}$ and $\annuity$ are computed
+on the truncated table, predictive and observed sides alike, with the age
+range recorded.
