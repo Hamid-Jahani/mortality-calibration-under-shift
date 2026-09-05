@@ -123,5 +123,7 @@ paper/submission/*.out
 paper/submission/*.toc
 paper/submission/*.fls
 paper/submission/*.fdb_latexmk
+# built by scripts/make_submission_zip.sh
+paper/submission/astin-latex-source.zip
 paper/*.fdb_latexmk
 paper/*.synctex.gz
