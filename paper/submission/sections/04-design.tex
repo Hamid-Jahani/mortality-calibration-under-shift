@@ -1,0 +1,333 @@
+\section{Study design}
+\label{sec:design}
+
+\subsection{Pre-registration and its addenda}
+\label{sec:design-prereg}
+
+The design was committed and hash-stamped on 2026-08-25, before any model was
+fit to real HMD data; its SHA-256 digest is
+\begin{center}
+\small\texttt{bbbe3860a5446d063e186e56555afa893b07c36cf15a990d07567471affe50be}
+\end{center}
+It fixes the regimes, populations, families, mechanisms and admissible grid,
+every metric and its convention, the inference procedure, the gates and the five
+hypotheses. It could not hide the outcome of 2020--2024 from us:
+pre-registration here protects against analytic flexibility, not against
+hypothesis surprise. Three addenda followed on 2026-08-26, each hash-stamped in
+its own commit and each still before any real-data fit, and none changes a
+population list, a split year, a horizon, a test-window observation or the
+metric list: they add the placebo strata and denominator sensitivities of
+Section~\ref{sec:data} (\texttt{5f2e3cb}), fix the scoring target
+(\texttt{577ce52}), and specify computation the registration covers but does not
+spell out---the admissibility floor, rejection of explosive VAR draws, the
+common-cell rule---while recording, before any result existed, the hypothesis
+statuses below (\texttt{01f154a}). Each clause is cited where it applies, and
+the addenda in full are Supplementary Section~S1; a fourth, registered during
+the production sweeps, is in Section~\ref{sec:design-deviations}.
+
+\subsection{Three regimes}
+\label{sec:design-regimes}
+
+\begin{table}[htbp]\centering
+\caption{The three pre-registered evaluation regimes.}
+\label{tab:regimes}
+\small
+\begin{tabular}{@{}lllcc@{}}
+\toprule
+Regime & Training years & Test years & $h$ & Populations \\
+\midrule
+Stable (control) & $\le T$, $T=1990,1992,\dots,2014$ & $T{+}1,\dots,T{+}5$ ($\le 2019$) & $1$--$5$ & 20 \\
+Shift (primary)  & $\le 2019$ & 2020--2024 & $1$--$5$ & 20 \\
+Placebo break    & $\le 1913$ & 1914--1922 & $1$--$9$ & 11 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The \emph{stable} regime measures calibration where nothing breaks: the
+reference level for \Htwo\ and \Hfive\ and, its half of \Htwo\ being settled
+already (Section~\ref{sec:related}), a replication arm. The \emph{shift} regime
+is the audit. The \emph{placebo} regime is a second event---the First World War
+and the 1918 influenza pandemic---read descriptively, a side-by-side of
+1914--1922 and 2020--2024 coverage answering ``is this just COVID?'' without a
+transfer regression. Windows are expanding-origin, never random, since mortality
+panels leak trivially under random splitting; training takes the maximal
+contiguous block of complete years ending at the origin, and a triple is
+admissible only with fifteen such years (Addendum~3~\S2, \S4), inadmissible
+triples being recorded and not scored.
+
+All twenty registered populations clear that floor in the shift regime. In the
+stable regime it is no marginal trim: HRV's series begins in 2001 and KOR's in
+2003, so even their best origin ($T=2014$) yields fourteen and twelve training
+years, and the stable control covers eighteen of the twenty. CHL (from 1992) is
+admissible at five of the thirteen origins and HKG (1986) at eight; 221 of the
+260 (origin, population) pairs---442 of the 520 triples---clear the floor, and
+the panel is unbalanced across origins, sixteen populations at origins
+1990--1998 and eighteen from 2006. Every stable-regime summary is therefore read
+beside its per-origin population count (Addendum~3~\S4), and every
+stable-versus-shift contrast is computed on the eighteen-population intersection
+(Addendum~3~\S11), never a twenty-population mean against an eighteen-population
+one.
+
+\subsection{Hypothesis status after the prior-art map}
+\label{sec:design-status}
+
+The five hypotheses of Section~\ref{sec:intro} are reproduced verbatim from the
+registration and tested as registered; Addendum~3~\S8 records, before any result
+existed, how the prior-art map changes their reading. \Hone\ is demoted from
+headline finding to \emph{harness-validity check}, the point-versus-proper-score
+inversion being published three times over (Section~\ref{sec:related}): ours is
+its magnitude, per population and unweighted by exposure, so that it cannot be
+the population-size artefact \citet{schnurch2022point} describe.
+\Htwo\ is restated \emph{two-sided}---the tested quantity is
+$|\text{coverage}-\text{nominal}|$, hypothesised to grow from the stable to the
+shift regime, its direction free to differ by cell---because the registered
+one-sided form, under-coverage ``for every model family'', is already
+contradicted in the stable regime by bootstrap-ensemble neural intervals.
+\Hthree's comparator is re-specified: realised joint path coverage is compared
+with each cell's \emph{own simulated-path-implied} joint coverage, computable
+from the same predictive paths, and not with the marginal rate at the same
+nominal level, because joint coverage is bounded above by the minimum marginal
+coverage and equals $0.95^5=0.774$ under independence, so the registered
+comparison was close to arithmetically guaranteed; the realised-minus-implied
+gap can be of either sign. \Hfour's registered direction (worse at 65--99 than
+at 25--64) is contradicted by \citet{dowd2010backtesting}; we pre-commit to
+reporting a reversal as an informative result, not to re-testing until
+confirmation, and note that the 0--24 band, infant mortality and the 90+ tail
+are unmeasured in prior work. \Hfive\ is restricted to the \emph{ex-post
+coverage} of derived-quantity intervals ($e_0$, $e_{65}$, $\annuity$), whose
+construction is prior art; the named alternative is
+\citet{cairns2011mortality}'s attenuation finding, so the test is of calibration
+error propagating, not of point applications dispersing.
+
+\subsection{Model families}
+\label{sec:design-families}
+
+Ten families span the classical, statistical-learning and neural lineages of
+Section~\ref{sec:related}, each fit per population and sex on deaths and
+exposures over ages $0$--$99$ (CBD: $55$--$99$) and years to the origin, under
+the cell weights $W=\ind\{E>0\}$ of Section~\ref{sec:data}:
+\textbf{Lee--Carter} by weighted SVD with a drift-uncertain random walk on
+$\kappa_t$ \citep{lee1992modeling}; \textbf{Poisson Lee--Carter}, the same
+structure under a Poisson likelihood with log-exposure offset
+\citep{brouhns2002poisson}; \textbf{CBD (M5)} \citep{cairns2006two}; \textbf{APC
+/ Renshaw--Haberman (M2-A)}, a cohort term under the constraints of
+\citet{cairns2009quantitative} \citep{renshaw2006cohort}; an age-banded
+\textbf{sparse VAR}(1) on improvements, simplifying \citet{li2017coherent}; the
+\textbf{multi-output GP} of \citet{huynh2021multi}, exact multitask with an
+$\mathrm{RBF}(\text{year})\otimes\mathrm{ICM}$ kernel, whose predictive is the
+joint posterior over the $h$ future years and whose Kronecker structure is the
+source of the forty-year floor below; \textbf{neural-LC}, the age-embedding
+network of \citet{richman2021neural}, whose extrapolation of the year feature is
+the audited fragility rather than a defect to engineer away; \textbf{shallow
+CNN-LC} \citep{perla2021time}; \textbf{LSTM-on-$\kappa_t$} \citep{nigri2019deep}
+in place of the random walk; and a \textbf{distributional NB head} on the
+neural-LC features, the only neural family with a model-native predictive
+distribution. Losses are the Poisson deviance for the three point networks, NB2
+for the head, Gaussian marginal likelihood for the GP, and each classical
+family's own criterion; architectures and hyperparameter grids in full are
+Supplementary Section~S2 and \texttt{docs/NEURAL-SPEC.md}, committed before the
+first real-data fit.
+
+Three conventions are registered, not descriptive. CBD is fitted only on ages
+55--99, where the logit is near-linear, and is undefined below: it is scored on
+45 ages, kept in its own row block with that support stated, never averaged into
+a ranking with families scored on 100 ages, and its ``25--64'' column is a
+55--64 stub not comparable with the full-age families. A VAR draw whose
+companion matrix has spectral radius $\ge1$ is rejected and redrawn, up to a
+hundred times per path, and rates are never clipped to rescue a divergent draw,
+since clipping would turn divergence into a bounded interval and flatter the
+family's coverage (Addendum~3~\S7). The NB head's rate samples are gamma draws,
+so the Poisson composition below reproduces the NB count law exactly, without
+double counting. Neural and GP hyperparameters are tuned on an inner \emph{time}
+split, the final five pre-cutoff years, by the family's own loss---never on a
+test year, a random subset or coverage.
+
+\subsection{Uncertainty mechanisms}
+\label{sec:design-mechanisms}
+
+Seven mechanisms turn a fitted family into predictive sample paths on the $m_x$
+scale: \textbf{model-native}, the predictive the reference paper supplies; the
+\textbf{semiparametric Poisson bootstrap}, $B=200$ refits to pseudo-deaths
+$D^{(b)}\sim\mathrm{Poisson}(E\hat m)$ pooled over their native samples
+\citep{brouhns2005bootstrapping}; a \textbf{deep ensemble} of $M=10$
+independently seeded trainings, paths drawn with equal weight from each member's
+predictive \citep{lakshminarayanan2017simple}; \textbf{Monte Carlo dropout},
+dropout kept active at prediction time \citep{gal2016dropout}; \textbf{split
+conformal}, absolute-residual intervals on the log-rate scale
+\citep{lei2018distribution} Mondrian-stratified by age band ($0$--$24$,
+$25$--$64$, $65$--$99$) and horizon \citep{vovk2005algorithmic}, with the last
+nine training years held out for calibration; \textbf{EnbPI}
+\citep{xu2021conformal}, adapted to annual multi-step forecasting with four
+documented deviations (Supplementary Section~S2), among them $K=10$ members at
+origins one year apart and horizon-matched residuals; and \textbf{copula /
+joint-path conformal}, a simultaneous band from a supremum-norm score on those
+same member residuals \citep{diquigiovanni2022conformal}, after
+\citet{sun2024copula} and \citet{messoudi2021copula}, the only mechanism
+calibrated to be joint over $h=1,\dots,H$. Stated in advance about the ensemble:
+such mixtures are narrow, and if they under-cover that is a finding about the
+mechanism, not a defect to widen away.
+
+Conformal arms carry four registered disciplines. Calibration residuals come
+only from years at or before the training cutoff and later than the base fit's
+own training years, so no mechanism sees a test year, and the calibration
+horizon is nine in every regime, at least the longest scored horizon
+(Addendum~3~\S9). A wrapper yields an interval, not a distribution: coverage,
+width, interval score and joint path coverage are read from its own bounds at
+its own construction level, 95\%, with no Poisson composition---the radius
+already contains observation noise---and no quantile-of-samples step
+(Addendum~2~\S3, Addendum~3~\S6). Coverage and interval scores at 50\% and 80\%
+are \emph{not applicable} to conformal cells and are reported as such. And
+because the harness preserves one sample interface by drawing uniformly inside
+each interval, CRPS, log score and PIT for those cells describe a placeholder
+density: they are flagged \texttt{secondary}, released per cell with the results
+files and described in Supplementary Section~S5, and never ranked against
+distributional mechanisms. Any contrast including a conformal arm is decided on
+the 95\% interval score (Section~\ref{sec:metrics}).
+
+\subsection{The crossed grid}
+\label{sec:design-grid}
+
+Family and mechanism are crossed as separate factors, which is what makes this a
+study rather than a bake-off: crossing separates bad coverage as a property of
+the architecture from bad coverage as a property of the mechanism bolted on. Not
+every pair is admissible---deterministic classical fits have no seed variance,
+the GP posterior already integrates parameter uncertainty, and networks have no
+closed-form native predictive but the NB head. Table~\ref{tab:grid} enumerates
+50 primary cells and four secondary (the GP under a deep ensemble, the three
+point-forecast networks under the Poisson bootstrap), the secondary reported in
+the supplement only. The conformal columns do \emph{not} reuse the native fit:
+each wrapper refits the base family, twice for split conformal and eleven times
+for EnbPI and the copula band.
+
+\begin{table}[htbp]\centering
+\caption{Admissible model-family $\times$ uncertainty-mechanism grid, transcribed
+from the pre-registration.}
+\label{tab:grid}
+\inputtable{tab-grid}
+\end{table}
+
+\paragraph{Design-floor cells.} A floor belongs to the family--mechanism pair, a
+wrapper's inner fits inheriting the base family's minimum: ten training years
+for every family, more than fifteen for the CNN and more than seventeen for the
+LSTM, with split conformal fitting its base on $T-9$ after nine held-out
+calibration years and EnbPI and the copula band fitting ten members one year
+apart, their earliest seeing $T-18$. The GP's floor is much the highest, forty
+years, a shorter panel leaving its time-kernel length-scale unidentified against
+the nugget; that floor---not the fifteen-year admissibility rule---removes CHL,
+HKG, HRV and KOR from every GP cell in shift and stable regimes alike, so the GP
+family is read on sixteen populations where the other nine are read on twenty.
+Among the shift panels only the four shortest lose cells---KOR (seventeen
+years), HRV (nineteen), CHL (twenty-eight), HKG (thirty-four). These are
+properties of the design, not failures of a fit, and are tabulated cell by cell,
+with the longer stable-regime list, in Supplementary Section~S6 (Tables~S11
+and~S12).
+
+\paragraph{Contrasts on common cells.} Because the grid is ragged, no claim here
+is a full-factorial main effect. Every comparison is a \emph{contrast within an
+admissible sub-grid}---conformal versus native and bootstrap versus native
+within the classical families, ensemble versus dropout within the neural
+families, joint-path versus split conformal across all---computed on the
+\emph{intersection} of cells in which each compared arm produced a valid row,
+with the intersection size printed beside it; uncensored per-arm tables are in
+the supplement, and no denominator silently omits an error row
+(Addendum~3~\S11). A quality gate classes every missing row before any number is
+read, as a \emph{machine} failure (blocking, re-run), a \emph{design-floor} cell
+as above, or a \emph{method} failure where the registered procedure refuses to
+forecast---the last a property of the family, shrinking its arms. Error rows
+enter no mean.
+
+\subsection{One interface, one scoring path}
+\label{sec:design-interface}
+
+Every cell implements the same two calls, $\texttt{fit}(D,E)$ and
+$\texttt{sample\_mx}(h,n)$, returning $n$ pathwise trajectories of
+$m_{x,T+1},\dots,m_{x,T+h}$. The scoring module makes
+every distributional cell \emph{Poisson-inclusive}: on each path it draws
+$D^{\ast(j)}_{x,h}\sim\mathrm{Poisson}(E_{x,T+h}\,m^{(j)}_{x,T+h})$ and forms
+the half-count log crude rate, so the object scored is the predictive law of the
+rate actually observed (Addendum~2~\S1). Scoring a latent-rate sample against an
+observed crude rate instead would count Poisson observation noise as
+miscalibration, worst at young ages and in small populations: before this was
+fixed, a correctly specified Poisson Lee--Carter covered a fraction of nominal
+at every level on synthetic truth. Every point forecast, interval, proper score,
+PIT value, joint path coverage and life-table functional comes from these
+samples through one evaluation module, so no model can be flattered by a bespoke
+metric implementation. One point functional serves every point metric: the
+pointwise median, of the log rate for RMSE and MAE and of the per-sample
+life-table functionals for $e_0$, $e_{65}$ and $\annuity$. No column uses the
+mean.
+
+\subsection{Seeds, validation gates and inference}
+\label{sec:design-gates}
+
+The global seed is 20260825; each cell derives its generator from a seed
+sequence over its key, and seeds, device, training window, cell counts and any
+exception string are recorded per row. Three gates had to pass before any
+real-data result could be read, and all three did (detail in Supplementary
+Section~S2; gates~1 and~2 were re-run after the weighted-fit rewrite of
+Addendum~3~\S1). On synthetic truth simulated from a known Poisson Lee--Carter
+process and pushed through the real-data code path, the correctly specified
+model attains nominal 95\% coverage within Monte Carlo tolerance with a
+near-uniform PIT and the harness flags an injected break as under-coverage; each
+neural and GP family passed its own gate on the same worlds. On Swedish males,
+1950--2000, ages $0$--$99$, our Poisson Lee--Carter and R \pkg{StMoMo} 0.4.1
+have identical Poisson log-likelihood and maximum relative differences of
+$3.1\times10^{-15}$ in $\alpha_x$, $2.4\times10^{-14}$ in $\beta_x$ and
+$1.5\times10^{-13}$ in $\kappa_t$; and our period life table reproduces HMD's
+published $e_0$ and $e_{65}$ within 0.15~years (Section~\ref{sec:data}). The synthetic
+gate also documents a limitation: two-stage SVD Lee--Carter is mildly
+\emph{over}-dispersed on Poisson data, its SVD $\kappa_t$ carrying observation
+noise into the random-walk innovation variance, so its intervals are slightly
+wide and its PIT centre-heavy---a property of the method, not the harness,
+carried into the reading of every SVD-LC row. Inference treats the shift regime
+as one event: twenty populations experienced one common shock, so the effective
+number of independent observations of ``what a pandemic does to an interval'' is
+nearer one than twenty. Population is the cluster, every test resamples clusters
+rather than cells and imposes the null before resampling, and the placebo is a
+second event rather than more draws from the same one
+(Section~\ref{sec:metrics}).
+
+\subsection{Deviations from the pre-registration}
+\label{sec:design-deviations}
+
+\begin{itemize}
+\item Ordering: \citet{dowd2010backtesting} and \citet{schnurch2022point} were
+  read on 2026-08-26, after the registration was frozen and before any real-data
+  fit; the consequences are registered in Addendum~3~\S8 and stated in
+  Section~\ref{sec:design-status}. Nothing in the frozen design depends on
+  either paper.
+\item Addenda~1--3 (2026-08-26) are listed for completeness, not as deviations:
+  no population, split, horizon, observation or metric changed.
+\item CNN learning-rate grid lowered before the first real-data run, the
+  registered grid having diverged at every point on synthetic data; neural
+  gate~G-N1 recalibrated to finite $\mathrm{RMSE}(\log m)<1$ over $h=1\ldots5$
+  from a within-twice-the-Poisson-Lee--Carter-error form, the cell-feature
+  networks' extrapolation plateau being the audited fragility rather than an
+  implementation defect. Both dated in \texttt{docs/NEURAL-SPEC.md}.
+\item Seed derivation. Registered: member seed $=$ global seed $+$ member index.
+  Implemented: member $j$'s seed is the $j$-th child of the cell's
+  \texttt{SeedSequence}, whose entropy is the global seed plus stable hashes of
+  the cell key, so any cell re-runs in isolation and reproduces its row. Seeds
+  stay distinct, deterministic and recorded per row, as the registration wanted,
+  without the collisions an additive offset produces between neighbouring cells;
+  no result depends on the integers, but the code does not do literally what the
+  registered sentence says.
+\item Training window of the multi-output GP (Addendum~4, 2026-08-29, registered
+  during the production sweeps, before any GP cell on a panel longer than sixty
+  years had produced a result). Registered: the whole trailing block of complete
+  years. Implemented: the trailing sixty, under every mechanism. Cause: kernel
+  memory scales with $(\text{years}\times\text{ages})^2$---a 269-year panel is
+  26{,}900 points and a 5.8~GB kernel per fit, and EnbPI and copula conformal
+  refit the family ten times per cell---so the second-pass sweep stalled after
+  nineteen hours with one worker at 10.7~GB, the machine swapping and fourteen
+  of twenty populations untouched. Sixty is the longest panel the arm had
+  completed uncapped, so no computed cell changes, and it exceeds twice the
+  27-year window of the source paper \citep{huynh2021multi}. Disclosure: before
+  any cap was contemplated, a single diagnostic on one population had shown a
+  trailing forty-year window scoring better than the full panel; the cap chosen
+  is sixty, not forty, and was not selected by score.
+\item The ledger is open while the stable-control and placebo analyses run: any
+  further deviation is appended with its date and reason, so that at submission
+  the absence of further entries is a positive claim that none arose, not a
+  default.
+\end{itemize}

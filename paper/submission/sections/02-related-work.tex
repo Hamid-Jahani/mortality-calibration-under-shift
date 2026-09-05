@@ -1,0 +1,183 @@
+\section{Related work}
+\label{sec:related}
+
+The literature was mapped against the five hypotheses \emph{before} any real-data
+fit: \texttt{docs/PRIOR-ART.md} (SHA-256 \texttt{3f36fb62\ldots}) was hash-stamped
+on 2026-08-26 and the hypothesis-status clarifications it forced were registered
+that day as Addendum~3. The verdicts below are dated evidence of what was known when
+the design was frozen, not a reading of results.
+
+\subsection{Classical models and the Cairns--Blake--Dowd programme}
+
+The classical arms of this audit---Lee--Carter and its Poisson form with the
+exposure as offset, a semiparametric bootstrap over the parameters, a sparse vector
+autoregression on improvements, the two-factor CBD model and the cohort
+extension---come from a programme
+\citep{lee1992modeling,girosi2007understanding,brouhns2002poisson,brouhns2005bootstrapping,li2005coherent,li2017coherent,cairns2006two,renshaw2006cohort}
+that established that mortality models are to be judged as density forecasters, not
+point forecasters, but judged them in-sample or ex ante, on one or two populations,
+before neural models existed and before any break in the modern data
+\citep{cairns2009quantitative,cairns2011mortality,dowd2010evaluating,booth2008mortality}.
+\pkg{StMoMo} \citep{villegas2018stmomo} implements the family in one
+generalised-linear framework and is our numerical oracle.
+
+\citet{dowd2010backtesting} is the exception and this audit's direct ancestor: it
+backtests six models (M1, M2B, M3B, M5, M6, M7, parameter-certain and
+parameter-uncertain) by locating realised mortality inside intervals forecast from
+earlier origins, one population and one age range at a time. Three findings frame
+ours. Of the two ages plotted, ``the age 65 forecasts have a notable upward bias
+with the realized values often close to or below the lower bounds, whereas the age
+84 forecast show only a very slight upward bias''---better behaviour at the higher
+age, the ex-ante alternative to \Hfour. A footnote grants that ``the positions of
+the individual observations within the prediction intervals are not independent''
+across horizons, then measures marginal positions anyway; \Hthree's joint path
+coverage is what it points at and does not compute. Life expectancy, survival rates
+and annuity prices are named as quantities on which ``in principle, backtests could
+be conducted'', the paper confining itself to the mortality rate; \Hfive\ is that
+extension.
+
+\subsection{Neural extensions of Lee--Carter}
+
+\citet{richman2021neural} generalise Lee--Carter to all HMD populations through
+country and sex embeddings, evaluated by mean squared error, as do the recurrent,
+convolutional and joint-population architectures of
+\citet{hainaut2018neural,nigri2019deep,petnehazi2019mortality,perla2021time,scognamiglio2022calibrating}.
+Intervals already exist in this lineage---from a bootstrap ensemble of LSTMs
+\citep{marino2023neural} and from a one-stage variational autoencoder without MCMC
+\citep{miyata2022extending}---so we claim no addition of uncertainty to neural
+Lee--Carter.
+
+\citet{schnurch2022point} is the closest prior work. On 54 HMD populations at ages
+60--89, trained to 2006 and tested on 2007--2016, their nominal 95\%
+prediction-interval coverage probabilities (PICP) are 74.0 and 74.3 per cent for
+Lee--Carter fit on ten and on twenty years, 77.2 for an autoregressive-cohort model,
+and 86.0, 97.0 and 98.0 for recurrent, feed-forward and convolutional networks,
+whose intervals are the widest. Those intervals come from variation across
+independently seeded trainings of one network, and the pass rule is one-sided
+(``minimize MPIW under the constraint that PICP is at or above'' nominal), so
+over-coverage passes. The mechanism is held fixed by design---they rule out methods
+requiring structural change, such as inserting dropout layers for Monte Carlo
+dropout, lest forecasting performance suffer---so the 74-versus-98 per cent gap is
+confounded between architecture and mechanism, which is exactly what the crossed
+design of Section~\ref{sec:design} separates; and their classical arms see ten or
+twenty training years against all years of all 54 populations for the networks, so
+part of the classical under-coverage is a training-window artefact our
+expanding-origin rule removes. Their Table~2 also shows \Hone's
+point-versus-proper-score inversion (mean squared error ranks the networks first,
+Poisson deviance ranks Lee--Carter first), which they attribute to exposure
+weighting rather than to distributional sharpness.
+
+Point accuracy throughout, coverage without a sharpness penalty where computed at
+all, proper scores rarely: that evaluation profile (Section~\ref{sec:intro}) already
+settles part of \Htwo. Without a break, classical intervals under-cover and
+bootstrap-ensemble neural intervals over-cover
+\citep{schnurch2022point,marino2023neural}, so the registered ``under-cover in the
+shift regime for every model family'' clause was falsified in the stable regime
+before our first fit. \Htwo\ was accordingly restated two-sided---the quantity
+tested is $|\text{coverage}-\text{nominal}|$, hypothesised to grow from the stable
+to the shift regime, direction free by family and mechanism---and the stable regime
+is a replication arm (Addendum~3~\S8; Section~\ref{sec:design}).
+
+\subsection{Bayesian, Gaussian-process and COVID-era work}
+
+Gaussian-process mortality surfaces \citep{ludkovski2018gaussian} extend to
+multi-output GPs over many HMD populations, evaluated by CRPS
+\citep{huynh2021multi}; a multi-output GP is one of our ten families. By
+leave-future-out validation \citet{barigou2023bayesian} find that ``the `optimal'
+model depends on the country and the scoring rule studied'', and
+\citet{goes2025bayesian} report a top-one inversion between CRPS and the point and
+log-score rankings on an England and Wales war-shock window. These two, with
+\citet{schnurch2022point}, are why \Hone\ is prior art and is carried as a
+harness-validity check rather than a finding; what remains ours is its magnitude per
+population and unweighted by exposure (Section~\ref{sec:results}; full rankings in
+Table~S2).
+
+The pandemic literature is about \emph{estimation with} the pandemic years---by
+accelerated-death, vanishing-jump, catastrophe-risk, regime-switching, Li--Lee and
+GAM-plus-machine-learning routes
+\citep{cairns2020impact,robben2022assessing,goes2025bayesian,robben2024catastrophe,vanberkum2025estimating,nalmpatian2023advanced,robben2025granular}---not
+\emph{evaluation across} them. \citet{barigou2023bayesian} simulate a pandemic
+perturbation because real post-shock data did not yet exist, and call adapting their
+validation to ``a change of regime'' ``beyond the scope'' of their paper;
+\citet{goes2025bayesian} found an out-of-sample test ``impractical'' because the
+pandemic ``predominantly impacts the most recent years of data'', and confined their
+COVID analysis to ``evaluating the in-sample fit''. None of these papers evaluates
+prediction intervals fit before 2020 against what happened in 2020--2024; with
+twenty populations now final through 2024 (Section~\ref{sec:data}; Table~S1), the
+constraint that stopped them is gone. That is the gap this audit fills; repairing
+the failures it documents, for which those papers are the tools, is not our
+contribution.
+
+\subsection{Scores, conformal prediction and inference}
+
+A scoring rule is proper if the expected score is optimised by the true distribution
+and strictly proper if uniquely so; the logarithmic score, CRPS and the interval
+(Winkler) score are the instances we use
+\citep{gneiting2007strictly,winkler1972decision}, under the paradigm of
+\citet{gneiting2007probabilistic}---maximise sharpness subject to
+calibration---with the probability integral transform as the diagnostic of
+probabilistic calibration \citep{dawid1984present}, randomised for counts
+\citep{czado2009predictive} because deaths are counts and predictive samples tie,
+and decomposed after \citet{murphy1973new}.
+
+Conformal prediction \citep{vovk2005algorithmic,lei2018distribution} gives
+finite-sample marginal coverage under exchangeability of the calibration and test
+residuals, cheaply for any black-box regressor; what happens when exchangeability
+fails is the question here. \citet{barber2023conformal} bound the coverage gap of
+weighted sets by a total-variation distance between the calibration and test
+distributions---a bound that a structural break is designed to make
+large---while \citet{xu2021conformal} propose ensemble batch prediction intervals
+(EnbPI) for dynamic time series without exchangeability, with shift-adaptive and
+change-point variants after them
+\citep{tibshirani2019conformal,gibbs2021adaptive,gibbs2024conformal,sun2025conformal,romano2019conformalized,angelopoulos2023gentle}.
+Joint path coverage is solved prior art in machine learning: Bonferroni allocation
+across horizons \citep{stankeviciute2021conformal}, a copula of the per-horizon
+scores \citep{sun2024copula,messoudi2021copula}, or a scaled supremum-norm score
+\citep{diquigiovanni2022conformal}.
+
+Conformal prediction reached mortality forecasting only in a 2025--2026 line
+predating this study
+\citep{shang2025intervals,shang2026conformal,shang2026subnational}: split and
+sequential conformal intervals for the age distribution of deaths, for age-specific
+rates and for subnational rates. All three use one functional forecasting family and
+evaluate coverage in ordinary years; none audits conformal coverage across a
+designated break, places conformal beside other uncertainty mechanisms, or measures
+joint path coverage. Beyond them the prior-art map's web-scale search found no
+application of conformal prediction to mortality forecasting, and in the 52-paper
+corpus ``conformal'', ``Monte Carlo dropout'' and ``deep ensemble'' have no hit in
+any mortality text. Three conformal mechanisms enter our grid as \emph{audited
+arms}, on the same footing as the native and ensemble mechanisms; the joint-path arm
+uses the construction of \citet{stankeviciute2021conformal} and
+\citet{diquigiovanni2022conformal}, and we claim the first \emph{measurement} of the
+marginal-to-joint coverage gap in mortality forecasting, not the method. We make no
+claim that any conformal arm fixes anything, and we deliberately do not invoke the
+finite-sample guarantee under a break, for exactly the reason
+\citet{barber2023conformal} give.
+
+Deep ensembles \citep{lakshminarayanan2017simple} and Monte Carlo dropout
+\citep{gal2016dropout} capture variability the training data can reveal; neither is
+designed to anticipate a regime the training data never contained. Predictive
+accuracy is compared by Diebold--Mariano tests and the model confidence set
+\citep{diebold1995comparing,hansen2011model,shang2018model}, clustered by population
+with the wild cluster bootstrap
+\citep{cameron2008bootstrap,webb2023reworking,mackinnon2017wild} because our shift
+regime is one common shock in twenty correlated populations
+(Section~\ref{sec:metrics}); rolling origins follow \citet{tashman2000out},
+pre-registration \citet{nosek2018preregistration}.
+
+\subsection{What is and is not prior art}
+
+Written down before any result existed, the map's verdict is: \Hone\ prior art
+\citep{barigou2023bayesian,goes2025bayesian,schnurch2022point}; \Htwo\ prior art in
+the stable regime, where it contradicts the registered universality, and untested in
+the shift regime; \Hthree\ novel in mortality as a measurement, not as a method;
+\Hfour's registered direction contradicted by \citet{dowd2010backtesting};
+\Hfive's construction prior art, its ex-post coverage audit not found. What remains
+is the crossed family-by-mechanism design, the conformal arms inside it and across
+the break, the marginal-to-joint gap, the derived-quantity coverage audit, and the
+out-of-sample pandemic test the field declined for lack of data. Two items were
+unread when this was written, named so that their absence is visible:
+\citet{schnurch2022point}'s online supplement (Section~C.3, implied annuity present
+values), the one live threat to \Hfive's residual novelty if it audits
+annuity-interval coverage rather than presenting point values; and the full text of
+\citet{stankeviciute2021conformal}, cited from its description in later work.

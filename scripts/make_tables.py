@@ -114,6 +114,39 @@ TABLE_NAMES = (
     "tab-twin-crises", "tab-infeasible", "tab-infeasible-full",
 )
 
+# --- the abridged variant for the venue-fitted manuscript ------------------
+# docs/SPLIT-SPEC.md rule 4: the five hypothesis tables cost 3 typeset pages
+# each, the main manuscript has room for ~5 pages of exhibits in total, and an
+# abridged exhibit must be GENERATED, never hand-trimmed. These names are
+# deliberately NOT in TABLE_NAMES and are never written by the default run:
+# paper/main.tex must keep building from paper/tables/ byte for byte.
+
+#: Order in which paper/submission/supp/S3-full-tables.tex inputs the
+#: unabridged fragments, hence their S-numbers. Declared once; every "the full
+#: grid is Table~Sn" pointer in an abridged fragment is generated from it, so a
+#: reordering of the supplement moves the pointers with it.
+SUPPLEMENT_TABLE_ORDER: tuple[str, ...] = TABLE_NAMES
+SUPPLEMENT_REF: dict[str, str] = {
+    name: f"Table~S{i + 1}" for i, name in enumerate(SUPPLEMENT_TABLE_ORDER)}
+
+MAIN_VARIANT_SUFFIX = "-main"
+#: Full table -> its abridged counterpart (the five hypothesis tables only;
+#: tab-grid, tab-populations and tab-twin-crises are one page already).
+MAIN_VARIANT_SOURCES: tuple[str, ...] = (
+    "tab-h1-rankings", "tab-h2-coverage", "tab-h3-joint", "tab-h4-age",
+    "tab-h5-actuarial",
+)
+MAIN_TABLE_NAMES: tuple[str, ...] = tuple(
+    f"{n}{MAIN_VARIANT_SUFFIX}" for n in MAIN_VARIANT_SOURCES)
+#: Regimes the abridged variant prints as column blocks. The placebo moves to
+#: the supplement; its main-text exhibit is tab-twin-crises, which is one page
+#: and is not abridged.
+MAIN_REGIMES: tuple[str, ...] = ("stable", "shift")
+#: --variant values: "full" reproduces today's paper/tables byte for byte.
+VARIANTS: tuple[str, ...] = ("full", "main")
+DEFAULT_OUT = {"full": ROOT / "paper" / "tables",
+               "main": ROOT / "paper" / "submission" / "tables"}
+
 #: Default HMD bulk files (data/MANIFEST.sha256 pins the vintage). Absent on a
 #: machine without the Dataset/ tree -> tab-populations prints pending cells.
 DEFAULT_HMD_DEATHS = ROOT / "Dataset" / "deaths" / "Deaths_1x1" / "Deaths_1x1.txt"
@@ -367,6 +400,40 @@ class TableWriter:
                  "\\begin{tablenotes}\\scriptsize"]
         parts += [f"\\item {n}" for n in notes]
         parts += ["\\end{tablenotes}", "\\end{threeparttable}", ""]
+        path = self.out_dir / f"{name}.tex"
+        path.write_text("\n".join(parts), encoding="utf-8")
+        self.written.append(path)
+        return path
+
+    def write_float(self, name: str, colspec: str, header_rows: list[str],
+                    body_rows: list[str], notes: list[str], caption: str,
+                    label: str, size: str = "\\scriptsize",
+                    tabcolsep: str = "2.5pt", placement: str = "tbp") -> Path:
+        """A COMPLETE ``table`` float carrying its own caption and label around
+        the same ``threeparttable`` body ``write`` emits.
+
+        Used by the abridged variant only: an abridged exhibit must state in
+        its caption that it is abridged and name the supplementary table
+        carrying the full grid, and a caption typed into the manuscript instead
+        could drift away from the fragment it labels. Input at top level
+        (``\\inputtable{...}``), never inside a float.
+        """
+        parts = [self.header(),
+                 f"\\begin{{table}}[{placement}]",
+                 "\\centering",
+                 f"\\caption{{{caption}}}\\label{{{label}}}",
+                 f"\\begin{{threeparttable}}{size}\\renewcommand{{\\arraystretch}}{{0.90}}"
+                 f"\\setlength{{\\tabcolsep}}{{{tabcolsep}}}",
+                 f"\\begin{{tabular}}{{@{{}}{colspec}@{{}}}}",
+                 "\\toprule",
+                 *header_rows,
+                 "\\midrule",
+                 *(body_rows or [f"\\multicolumn{{{_ncols(colspec)}}}{{l}}{{{PENDING}: no rows}} \\\\"]),
+                 "\\bottomrule",
+                 "\\end{tabular}",
+                 "\\begin{tablenotes}\\scriptsize"]
+        parts += [f"\\item {n}" for n in notes]
+        parts += ["\\end{tablenotes}", "\\end{threeparttable}", "\\end{table}", ""]
         path = self.out_dir / f"{name}.tex"
         path.write_text("\n".join(parts), encoding="utf-8")
         self.written.append(path)
@@ -850,7 +917,7 @@ def tab_h2(df: pd.DataFrame, w: TableWriter):
     notes += [DESCRIPTIVE_NOTE, CONFORMAL_NOTE, CBD_NOTE, gp_note(df),
               "$\\IS_{95}$: mean Winkler / interval score of the 95\\% interval on log rates (negatively oriented)."]
     w.write_longtable("tab-h2-coverage", colspec, head, body, notes,
-                      caption=("Empirical coverage of nominal 50/80/95\% central intervals and mean 95\% interval score, by family, mechanism and regime, with the number of cells behind each mean. Conformal mechanisms are scored at their construction level only, so their 50\% and 80\% columns are blank by design (Addendum~2, \S3). Error rows are excluded from every mean and counted in Table~\ref{tab:infeasible}."),
+                      caption=("Empirical coverage of nominal 50/80/95\% central intervals and mean 95\% interval score, by family, mechanism and regime, with the number of cells behind each mean. Conformal mechanisms are scored at their construction level only, so their 50\% and 80\% columns are blank by design (Addendum~2, \S3). Error rows are excluded from every mean and counted in Table~\\ref{tab:infeasible}."),
                       label="tab:h2-coverage")
 
 
@@ -1371,24 +1438,712 @@ def tab_infeasible_full(df: pd.DataFrame, tab: pd.DataFrame, w: TableWriter):
 
 
 # ---------------------------------------------------------------------------
+# the abridged "main manuscript" variant (docs/SPLIT-SPEC.md rule 4)
+# ---------------------------------------------------------------------------
+# Written ONLY under ``--variant main`` into paper/submission/tables/, never by
+# the default run: paper/main.tex keeps building from the unabridged fragments
+# in paper/tables/, byte for byte. Same parquet inputs, same TableWriter, same
+# provenance header and snapshot stamp; what changes is how much of the grid is
+# printed. The doctrine, stated once here and repeated in
+# paper/tables/README.md: the twenty own-law arms in full, the thirty conformal
+# arms as a per-mechanism envelope, stable + shift only, no per-cell counts, and
+# every abridgement named in the caption and in a note that points at the
+# supplementary table carrying the full grid.
+
+#: An arm scored on fewer than this share of the best-covered arm's rows in a
+#: regime is flagged: the abridged variant drops the per-cell $n$ columns, and a
+#: thin arm's mean must not read as if it rested on the full complement.
+MAIN_THIN_SHARE = 0.75
+
+
+def fsign(x, nd: int = 3) -> str:
+    """Signed fixed-point number: the derived columns of the abridged variant
+    are two-sided quantities, so the sign is the verdict."""
+    try:
+        if x is None or pd.isna(x):
+            return "--"
+    except (TypeError, ValueError):
+        return "--"
+    return f"{float(x):+.{nd}f}"
+
+
+def main_variant_name(full_name: str) -> str:
+    return f"{full_name}{MAIN_VARIANT_SUFFIX}"
+
+
+def supplement_ref(full_name: str) -> str:
+    """S-number of the unabridged counterpart, from SUPPLEMENT_TABLE_ORDER."""
+    return SUPPLEMENT_REF[full_name]
+
+
+def abridged_note(full_name: str, dropped: str) -> str:
+    """The mandatory note: what this view drops, and where the full grid is."""
+    return ("\\emph{Abridged view}, generated by \\texttt{scripts/make\\_tables.py "
+            "--variant main} from the same parquet inputs as the full table. "
+            f"Dropped here: {dropped} The unabridged family $\\times$ mechanism "
+            "$\\times$ regime table, with every dropped column and the per-cell "
+            f"counts, is {supplement_ref(full_name)} of the online supplement.")
+
+
+def abridged_caption(full_name: str, what: str, dropped: str) -> str:
+    """Caption text carried INSIDE the fragment (TableWriter.write_float), so an
+    abridged exhibit can never be typeset without saying that it is abridged and
+    naming the supplementary table behind it."""
+    return (f"{what} \\emph{{Abridged view}}: {dropped} The unabridged family "
+            f"$\\times$ mechanism $\\times$ regime table is {supplement_ref(full_name)} "
+            "of the online supplement.")
+
+
+ENVELOPE_NOTE = (
+    "Envelope rows are a summary, not a cell: each is the mean over the full-age "
+    "families carrying that wrapper (count in brackets), so no single row of the "
+    "supplementary table matches it. Both endpoints of every envelope are named "
+    "below and do resolve to a row there.")
+
+MAIN_CONFORMAL_NOTE = (
+    "Conformal mechanisms (split, EnbPI, copula) construct one interval at 95\\%; "
+    "their 50\\%/80\\% levels are not applicable by design and their CRPS / log "
+    "score / PIT are placeholders never tabulated as proper scores "
+    "(addendum 2 \\S3).")
+
+
+def main_stats(df: pd.DataFrame, cols: list[str], regimes,
+               per_block_stats=None, rows_filter=None) -> dict[str, pd.DataFrame | None]:
+    """{regime: per-arm stats frame or None} -- exactly the frames block_table
+    builds internally, for the regimes the abridged variant prints."""
+    out: dict[str, pd.DataFrame | None] = {}
+    for r in regimes:
+        f = regime_frame(df, r)
+        if rows_filter is not None:
+            f = rows_filter(f)
+        out[r] = None if f.empty else (per_block_stats or cell_stats)(
+            valid_rows(f), f[f["error"].notna()], cols)
+    return out
+
+
+def envelope_stats(stats_r: pd.DataFrame | None, arms: list[tuple[str, str]],
+                   cols: list[str], label) -> dict | None:
+    """Mean of every column over `arms`, plus the [min, max] of the FIRST column
+    with the arms attaining them; ``label(model, mechanism)`` names an endpoint
+    so it stays traceable to one row of the supplementary table."""
+    if stats_r is None:
+        return None
+    rows = [(label(m, u), _lookup(stats_r, m, u)) for m, u in arms]
+    rows = [(k, r) for k, r in rows if r is not None]
+    if not rows:
+        return None
+    rec: dict = {"k": len(rows)}
+    if all("n" in r for _, r in rows):
+        rec["n"] = int(sum(int(r["n"]) for _, r in rows))
+    for c in cols:
+        vals = [float(r[c]) for _, r in rows if pd.notna(r[c])]
+        rec[c] = float(np.mean(vals)) if vals else np.nan
+    head = [(k, float(r[cols[0]])) for k, r in rows if pd.notna(r[cols[0]])]
+    if head:
+        rec["argmin"], rec["min"] = min(head, key=lambda t: t[1])
+        rec["argmax"], rec["max"] = max(head, key=lambda t: t[1])
+    return rec
+
+
+def thin_arms(stats: dict[str, pd.DataFrame | None], regimes,
+              share: float = MAIN_THIN_SHARE) -> dict[tuple[str, str], list[str]]:
+    """{(model, mechanism): ["regime n/best", ...]} for arms scored on fewer than
+    `share` of the rows of that regime's best-covered arm. The abridged variant
+    prints no $n$ column, so a thin mean carries a flag instead."""
+    flagged: dict[tuple[str, str], list[str]] = {}
+    for r in regimes:
+        s = stats.get(r)
+        if s is None or s.empty or "n" not in s:
+            continue
+        best = int(s["n"].max())
+        if best <= 0:
+            continue
+        for _, x in s.iterrows():
+            if int(x["n"]) < share * best:
+                flagged.setdefault((x["model"], x["mechanism"]), []).append(
+                    f"{r} {int(x['n'])}/{best}")
+    return flagged
+
+
+def abridged_block(stats: dict[str, pd.DataFrame | None], gp_here: dict[str, bool],
+                   regimes: list[str], cols: list[str], col_heads: list[str], fmt,
+                   conformal: bool = True, extra_heads=(), extra=None,
+                   flagged: dict | None = None):
+    """The abridged body: own-law arms one row each, restricted-age families in
+    their own sub-block, conformal wrappers collapsed to one envelope row per
+    mechanism (plus one for each restricted-age family, so a 45-age support is
+    never averaged into a full-age envelope). Returns
+    (colspec, header_rows, body_rows, report).
+
+    `extra(get)` builds the trailing derived columns from ``get(regime,
+    column)`` -- the arm's (or envelope's) value, or None. That is how the
+    abridged variant carries a quantity the full table does not: the H2
+    two-sided change, the H3 independence benchmark, the H4 age gradient.
+    """
+    cells = sort_cells((m, u) for s in stats.values() if s is not None
+                       for m, u in zip(s["model"], s["mechanism"]))
+    if not any(m == GP_FAMILY for m, _ in cells):
+        cells = sort_cells([*cells, (GP_FAMILY, "")])
+    own = [c for c in cells if not is_conformal(c[1])]
+    own_full = [c for c in own if c[0] not in RESTRICTED_AGE_FAMILIES]
+    own_rest = [c for c in own if c[0] in RESTRICTED_AGE_FAMILIES]
+    conf = [c for c in cells if is_conformal(c[1])]
+    conf_mechs = [u for u in MECH_ORDER if is_conformal(u) and any(x == u for _, x in conf)]
+    conf_full_fams = [f for f in FAMILY_ORDER if f not in RESTRICTED_AGE_FAMILIES
+                      and any(m == f for m, _ in conf)]
+
+    colspec, head1, head2 = "ll", ["Family", "Mech."], ["", ""]
+    for r in regimes:
+        if stats[r] is None:
+            colspec += "c"
+            head1.append(f"\\multicolumn{{1}}{{c}}{{{r}}}")
+            head2.append(PENDING)
+        else:
+            colspec += "r" * len(cols)
+            head1.append(f"\\multicolumn{{{len(cols)}}}{{c}}{{{r}}}")
+            head2 += list(col_heads)
+    for h in extra_heads:
+        colspec += "r"
+        head1.append("")
+        head2.append(h)
+    header_rows = [" & ".join(head1) + " \\\\", " & ".join(head2) + " \\\\"]
+    ncols = _ncols(colspec)
+    report: dict = {"envelopes": [], "flagged": {}}
+
+    def line(label_fam: str, label_mech: str, per_regime: dict, m: str, u: str) -> str:
+        out = [label_fam, label_mech]
+        for r in regimes:
+            if stats[r] is None:
+                out.append("--")
+                continue
+            src = per_regime.get(r)
+            if src is None and m == GP_FAMILY and not gp_here.get(r, False):
+                out.append(gp_pending_cell(len(cols)))
+                continue
+            if src is None:
+                out += ["--"] * len(cols)
+                continue
+            out += [fmt(src, m, u, c) for c in cols]
+        if extra is not None:
+            def get(r: str, c: str):
+                src = per_regime.get(r)
+                return None if src is None else src[c]
+            out += list(extra(get))
+        return " & ".join(out) + " \\\\"
+
+    def arm_rows(arms: list[tuple[str, str]], stat_regimes) -> list[str]:
+        rows, last_fam = [], None
+        for m, u in arms:
+            per_regime = {r: (_lookup(stats[r], m, u) if (stats[r] is not None and u) else None)
+                          for r in stat_regimes}
+            tag = ""
+            if flagged and (m, u) in flagged:
+                tag = "$^{\\dagger}$"
+                report["flagged"][(m, u)] = flagged[(m, u)]
+            rows.append(line(fam(m) if m != last_fam else "",
+                             (mech(u) if u else "all arms") + tag, per_regime, m, u))
+            last_fam = m
+        return rows
+
+    stat_regimes = sorted(stats)
+    body: list[str] = []
+    body += span_row("\\textbf{Arms carrying the family's own uncertainty} -- "
+                     "full-age families (ages 0--99)", ncols)
+    body += arm_rows(own_full, stat_regimes)
+    for famname, support in RESTRICTED_AGE_FAMILIES.items():
+        arms = [c for c in own_rest if c[0] == famname]
+        if not arms:
+            continue
+        body += span_row(f"\\emph{{{fam(famname)}, {support}: own uncertainty, not "
+                         f"comparable with the block above}}", ncols)
+        body += arm_rows(arms, stat_regimes)
+    if conformal and conf_mechs:
+        body += span_row("\\emph{Conformal wrappers: envelope over the "
+                         f"{len(conf_full_fams)} full-age families (mean; range and its "
+                         "endpoints in the note)}", ncols)
+        for u in conf_mechs:
+            arms = [(f, u) for f in conf_full_fams]
+            per_regime = {}
+            for r in stat_regimes:
+                rec = envelope_stats(stats[r], arms, cols, lambda m, _u: m)
+                per_regime[r] = rec
+                if rec is not None and "min" in rec:
+                    report["envelopes"].append((mech(u), r, rec["k"], rec["min"],
+                                                rec["argmin"], rec["max"], rec["argmax"]))
+            k = max((rec["k"] for rec in per_regime.values() if rec), default=0)
+            body.append(line("envelope", f"{mech(u)} ({k})", per_regime, "", u))
+        for famname, support in RESTRICTED_AGE_FAMILIES.items():
+            arms = [(famname, u) for u in conf_mechs if (famname, u) in conf]
+            if not arms:
+                continue
+            per_regime = {}
+            for r in stat_regimes:
+                rec = envelope_stats(stats[r], arms, cols, lambda _m, u: mech(u))
+                per_regime[r] = rec
+                if rec is not None and "min" in rec:
+                    report["envelopes"].append((f"{fam(famname)} conformal", r, rec["k"],
+                                                rec["min"], rec["argmin"], rec["max"],
+                                                rec["argmax"]))
+            k = max((rec["k"] for rec in per_regime.values() if rec), default=0)
+            body.append(line(fam(famname), f"conformal ({k})", per_regime, famname, ""))
+    return colspec, header_rows, body, report
+
+
+def envelope_ranges_note(report: dict, quantity: str) -> str:
+    """Both endpoints of every envelope, named, so each resolves to a row of the
+    supplementary table."""
+    if not report["envelopes"]:
+        return ENVELOPE_NOTE
+    parts = [f"{m}, {r}: {f3(lo)} ({tex(alo)}) to {f3(hi)} ({tex(ahi)})"
+             for m, r, _k, lo, alo, hi, ahi in report["envelopes"]]
+    return (ENVELOPE_NOTE + f" Range of {quantity} within each envelope: "
+            + "; ".join(parts) + ".")
+
+
+def flagged_note(report: dict) -> str | None:
+    if not report["flagged"]:
+        return None
+    parts = [f"{fam(m)} / {mech(u)} ({'; '.join(v)})" for (m, u), v
+             in sorted(report["flagged"].items(), key=lambda kv: _order_key(*kv[0]))]
+    return ("$\\dagger$ Thin arm: scored on fewer than "
+            f"{int(MAIN_THIN_SHARE * 100)}\\% of the rows of the regime's best-covered "
+            "arm (rows scored / best in that regime): " + "; ".join(parts)
+            + ". The per-cell $n$ columns of the unabridged table carry this for every "
+            "arm.")
+
+
+def _pairwise_counts(stats: dict[str, pd.DataFrame | None], col: str, a: str, b: str,
+                     predicate) -> tuple[int, int]:
+    """(#arms satisfying ``predicate(value_a, value_b)``, #arms compared) over the
+    arms present in BOTH regimes with a finite value in each. The counts the
+    results text quotes -- 27 of 50, 34 of 50, 14 of 20 -- are exactly these."""
+    sa, sb = stats.get(a), stats.get(b)
+    if sa is None or sb is None:
+        return 0, 0
+    hit = tot = 0
+    for _, x in sa.iterrows():
+        y = _lookup(sb, x["model"], x["mechanism"])
+        if y is None or pd.isna(x[col]) or pd.isna(y[col]):
+            continue
+        tot += 1
+        hit += int(bool(predicate(float(x[col]), float(y[col]))))
+    return hit, tot
+
+
+def tab_h1_main(df: pd.DataFrame, w: TableWriter):
+    """H1 is a registered SHIFT-regime claim, so only the shift block is
+    tabulated; the stable and placebo rank correlations -- their whole role in
+    the argument -- are computed and reported in the notes."""
+    ncols = 8
+    body, notes = [], []
+    rho_by_regime: dict[str, str] = {}
+    for r in EXPECTED_REGIMES:
+        sub = regime_frame(df, r)
+        if sub.empty:
+            if r == "shift":
+                body.append(pending_row(r, ncols))
+            continue
+        ok = distributional(valid_rows(sub))
+        all_arms = sort_cells((m, u) for m, u in zip(ok["model"], ok["mechanism"]))
+        main_arms = [a for a in all_arms if a[0] not in RESTRICTED_AGE_FAMILIES]
+        res, rep = _rank_block(sub[~sub["scores_secondary"]], main_arms)
+        if res is not None:
+            st, rho = res
+            rho_by_regime[r] = (
+                f"{r}: $\\rho$(RMSE, CRPS) = {f3(rho['crps_logmx'], 2)}, "
+                f"$\\rho$(RMSE, log score) = {f3(rho['poisson_log_score'], 2)} over "
+                f"{len(st)} full-age arms on {rep['n_kept']} of {rep['n_units_total']} units")
+        if r != "shift":
+            continue
+        body += span_row("\\textbf{shift regime} -- full-age families (0--99), "
+                         "distributional mechanisms", ncols)
+        if not gp_present(sub):
+            body.append(f"\\multicolumn{{{ncols}}}{{l}}{{{fam(GP_FAMILY)} -- {GP_PENDING}; "
+                        "ranks below exclude it}} \\\\")
+        if res is None:
+            body.append(pending_row(r, ncols, "no common cell across the distributional arms"))
+        else:
+            st, rho = res
+            for _, x in st.iterrows():
+                body.append(" & ".join([
+                    fam(x["model"]), mech(x["mechanism"]),
+                    f3(x["rmse_logmx"]), fint(x["rank_rmse_logmx"]),
+                    f3(x["crps_logmx"]), fint(x["rank_crps_logmx"]),
+                    f3(x["poisson_log_score"], 2), fint(x["rank_poisson_log_score"])]) + " \\\\")
+            notes.append(
+                "shift, main block: Spearman $\\rho$(rank RMSE, rank CRPS) = "
+                f"{f3(rho['crps_logmx'], 2)}, $\\rho$(rank RMSE, rank log score) = "
+                f"{f3(rho['poisson_log_score'], 2)}; common-cell restriction (addendum 3 "
+                f"\\S11): {rep['n_kept']} of {rep['n_units_total']} units kept, "
+                f"{rep['n_dropped']} dropped"
+                + (f"; arms with failures: {', '.join(f'{m}/{u}' for m, u in rep['arms_with_failures'])}"
+                   if rep["arms_with_failures"] else "")
+                + (f"; arms with no valid cell: {', '.join(f'{m}/{u}' for m, u in rep['arms_absent'])}"
+                   if rep["arms_absent"] else "") + ".")
+        for famname, support in RESTRICTED_AGE_FAMILIES.items():
+            arms = [a for a in all_arms if a[0] == famname]
+            if not arms:
+                continue
+            body += span_row(f"\\emph{{{fam(famname)}, {support}, separate ranking (not "
+                             "comparable with the block above)}}", ncols)
+            res_r, rep_r = _rank_block(sub[~sub["scores_secondary"]], arms)
+            if res_r is None:
+                body.append(pending_row(r, ncols, f"no common cell for {famname}"))
+                continue
+            st_r, _ = res_r
+            for _, x in st_r.iterrows():
+                body.append(" & ".join([
+                    fam(x["model"]), mech(x["mechanism"]),
+                    f3(x["rmse_logmx"]), fint(x["rank_rmse_logmx"]),
+                    f3(x["crps_logmx"]), fint(x["rank_crps_logmx"]),
+                    f3(x["poisson_log_score"], 2), fint(x["rank_poisson_log_score"])]) + " \\\\")
+            notes.append(f"shift, {famname} block: {rep_r['n_kept']} of "
+                         f"{rep_r['n_units_total']} units kept ({rep_r['n_dropped']} "
+                         "dropped); rank correlations are not reported for a block of "
+                         f"{len(st_r)} arms.")
+    others = [rho_by_regime[r] for r in EXPECTED_REGIMES if r != "shift" and r in rho_by_regime]
+    notes.append("Regimes not tabulated here, rank correlations only -- "
+                 + ("; ".join(others) if others else PENDING) + ".")
+    notes.append(regime_note(df, "shift"))
+    notes += [
+        "Ranks: 1 = best; RMSE on log rates, CRPS on log rates and the Poisson log "
+        "score (negative log predictive density of rounded deaths) are all negatively "
+        "oriented. Means are per row (population, sex, origin), unweighted by exposure "
+        "(addendum 3 \\S8).",
+        "Conformal rows are excluded: their CRPS / log score are placeholders "
+        "(addendum 2 \\S3). " + CBD_NOTE,
+        gp_note(df),
+        abridged_note("tab-h1-rankings",
+                      "the per-arm scores and ranks of the stable control and of the "
+                      "placebo regime; their rank correlations are in the note above."),
+    ]
+    w.write_float(
+        main_variant_name("tab-h1-rankings"), "llrrrrrr",
+        ["Family & Mech. & RMSE & rk & CRPS & rk & log score & rk \\\\"],
+        body, notes,
+        caption=abridged_caption(
+            "tab-h1-rankings",
+            "Distributional arms in the shift regime: rank of each family--mechanism arm "
+            "by mean RMSE on log rates, by mean CRPS on log rates and by mean Poisson "
+            "log score. CBD (ages 55--99) is ranked in its own block; the three "
+            "conformal mechanisms are absent because their proper scores are "
+            "placeholders.",
+            "the stable and placebo regime blocks, whose rank correlations are given in "
+            "the note instead."),
+        label="tab:h1-rankings-main")
+
+
+def tab_h2_main(df: pd.DataFrame, w: TableWriter):
+    cols = ["coverage_95", "winkler_95"]
+    regimes = list(MAIN_REGIMES)
+    stats = main_stats(df, cols, regimes)
+    gp_here = {r: gp_present(regime_frame(df, r)) for r in regimes}
+
+    def extra(get):
+        a, b = get("stable", "coverage_95"), get("shift", "coverage_95")
+        if a is None or b is None or pd.isna(a) or pd.isna(b):
+            return ["--"]
+        return [fsign(abs(float(b) - 0.95) - abs(float(a) - 0.95))]
+
+    colspec, head, body, rep = abridged_block(
+        stats, gp_here, regimes, cols, ["cov$_{95}$", "$\\IS_{95}$"], fmt_levels,
+        extra_heads=["$\\Delta|c-0.95|$"], extra=extra,
+        flagged=thin_arms(stats, regimes))
+    grew, tot = _pairwise_counts(stats, "coverage_95", "stable", "shift",
+                                 lambda a, b: abs(b - 0.95) > abs(a - 0.95))
+    fell, _ = _pairwise_counts(stats, "coverage_95", "stable", "shift", lambda a, b: b < a)
+    above, _ = _pairwise_counts(stats, "coverage_95", "stable", "shift", lambda a, _b: a > 0.95)
+    notes = [regime_note(df, r) for r in regimes]
+    notes += [
+        "$\\Delta|c-0.95|$ is the registered two-sided quantity (addendum 3 \\S8), "
+        "$|c_{\\mathrm{shift}}-0.95| - |c_{\\mathrm{stable}}-0.95|$: positive when the "
+        f"break moves the arm further from nominal. It grows in {grew} of the {tot} "
+        f"admissible cells; raw coverage falls in {fell} of {tot}, of which {above} "
+        "began ABOVE nominal in the control, where a fall is a move towards nominal "
+        "rather than a degradation.",
+        envelope_ranges_note(rep, "cov$_{95}$"),
+        MAIN_CONFORMAL_NOTE, CBD_NOTE, gp_note(df),
+        "$\\IS_{95}$: mean Winkler / interval score of the 95\\% interval on log rates "
+        "(negatively oriented). Descriptive table: no common-cell restriction is "
+        "applied (addendum 3 \\S11 applies to contrasts); error rows enter no mean.",
+        abridged_note("tab-h2-coverage",
+                      "the placebo regime (Table~S10 of the supplement carries the "
+                      "1914--22 replication), the nominal 50\\% and 80\\% levels, the "
+                      "per-cell $n$ and $n_{\\mathrm{err}}$, and the thirty conformal "
+                      "arms individually."),
+    ]
+    fl = flagged_note(rep)
+    if fl:
+        notes.append(fl)
+    w.write_float(
+        main_variant_name("tab-h2-coverage"), colspec, head, body, notes,
+        caption=abridged_caption(
+            "tab-h2-coverage",
+            "Empirical coverage of nominal 95\\% central intervals and mean 95\\% "
+            "interval score, by family and mechanism, in the stable control and across "
+            "the COVID break, with the registered two-sided change between them.",
+            "the placebo regime, the 50\\% and 80\\% levels, the per-cell counts, and "
+            "the thirty conformal arms, which appear as one envelope row per wrapper."),
+        label="tab:h2-coverage-main")
+
+
+def tab_h3_main(df: pd.DataFrame, w: TableWriter):
+    cols = ["coverage_95", "joint_path_coverage_95", "gap", "bench", "vs_bench"]
+    regimes = list(MAIN_REGIMES)
+
+    def stats_with_bench(ok, err, cols_):
+        # Independence benchmark at the arm's OWN marginal rate: c^H, with c the
+        # cell-mean coverage and H the regime's horizon count (the h column
+        # carries H: 5 in stable and shift, 9 in the placebo). This is the
+        # definition behind the counts Section 6 quotes.
+        st = cell_stats(ok, err, ["coverage_95", "joint_path_coverage_95"])
+        horizon = int(ok["h"].max()) if len(ok) and ok["h"].notna().any() else np.nan
+        st["gap"] = st["joint_path_coverage_95"] - st["coverage_95"]
+        st["bench"] = st["coverage_95"] ** horizon
+        st["vs_bench"] = st["joint_path_coverage_95"] - st["bench"]
+        return st
+
+    stats = main_stats(df, cols, regimes, per_block_stats=stats_with_bench)
+    gp_here = {r: gp_present(regime_frame(df, r)) for r in regimes}
+    colspec, head, body, rep = abridged_block(
+        stats, gp_here, regimes, cols,
+        ["marg.", "joint", "gap", "$c^{H}$", "$-c^{H}$"],
+        lambda row, m, u, c: fsign(row[c]) if c in ("gap", "vs_bench") else f3(row[c]),
+        flagged=thin_arms(stats, regimes))
+    lines = []
+    for r in regimes:
+        s = stats.get(r)
+        if s is None or s.empty:
+            lines.append(f"{r}: {PENDING}")
+            continue
+        horizon = int(regime_frame(df, r)["h"].max())
+        d = s["vs_bench"].dropna()
+        nominal = float(0.95 ** horizon)
+        below = int((s["joint_path_coverage_95"] < nominal).sum())
+        lines.append(
+            f"{r}: joint coverage beats the benchmark in {int((d > 0).sum())} of "
+            f"{len(d)} cells, by {fsign(d.min())} to {fsign(d.max())}; mean gap "
+            f"{f3(s['gap'].mean())}; {below} of {len(s)} cells hold the path less often "
+            f"than $0.95^{{{horizon}}} = {f3(nominal)}$")
+    notes = [regime_note(df, r) for r in regimes]
+    notes += [
+        "Marginal = mean per-cell 95\\% coverage over horizons and scored ages; joint = "
+        "share of scored ages whose whole $h=1\\ldots H$ trajectory lies inside the "
+        "95\\% band; gap = joint $-$ marginal, near-tautological and reported as "
+        "descriptive. $c^{H}$ = independence at the arm's own marginal rate $c$ over "
+        "the regime's $H$ horizons, and $-c^{H}$ = joint $- c^{H}$, the informative "
+        "comparison. " + "; ".join(lines) + ".",
+        "The comparator re-specified in addendum 3 \\S8, a cell's model-implied joint "
+        "coverage, was not emitted by the runner; that is stated as a limitation, not "
+        "worked around.",
+        envelope_ranges_note(rep, "marginal cov$_{95}$"),
+        "Conformal rows use the wrapper's own interval bounds (addendum 3 \\S6); the "
+        "copula arm is the only mechanism that constructs a joint band. Descriptive "
+        "table: no common-cell restriction is applied; error rows enter no mean.",
+        CBD_NOTE, gp_note(df),
+        abridged_note("tab-h3-joint",
+                      "the placebo regime, where $H=9$ rather than 5 and where the "
+                      "single arm that fails its own independence benchmark sits, the "
+                      "per-cell counts, and the thirty conformal arms individually."),
+    ]
+    fl = flagged_note(rep)
+    if fl:
+        notes.append(fl)
+    w.write_float(
+        main_variant_name("tab-h3-joint"), colspec, head, body, notes,
+        caption=abridged_caption(
+            "tab-h3-joint",
+            "Marginal coverage of nominal 95\\% intervals against joint coverage of the "
+            "whole $h=1\\ldots H$ path, their difference, and each arm's independence "
+            "benchmark $c^{H}$ at its own marginal rate, by family and mechanism, in "
+            "the stable control and across the COVID break.",
+            "the placebo regime ($H=9$), the per-cell counts, and the thirty conformal "
+            "arms, which appear as one envelope row per wrapper."),
+        label="tab:h3-joint-main")
+
+
+def tab_h4_main(df: pd.DataFrame, w: TableWriter):
+    """H4 is a registered SHIFT-regime claim, so the bands are printed for the
+    shift regime only; the stable control survives as one gradient column, which
+    is what carries the finding that the gradient predates the break."""
+    cols = ["coverage_95_band0_24", "coverage_95_band25_64", "coverage_95_band65_99"]
+    stats = main_stats(df, cols, ["stable", "shift"])
+    gp_here = {r: gp_present(regime_frame(df, r)) for r in ("stable", "shift")}
+
+    def gradient(get, regime):
+        a, b = get(regime, "coverage_95_band25_64"), get(regime, "coverage_95_band65_99")
+        if a is None or b is None or pd.isna(a) or pd.isna(b):
+            return "--"
+        return fsign(float(b) - float(a))
+
+    colspec, head, body, rep = abridged_block(
+        stats, gp_here, ["shift"], cols, ["0--24", "25--64", "65--99"],
+        lambda row, m, u, c: f3(row[c]),
+        extra_heads=["$\\Delta_{\\mathrm{shift}}$", "$\\Delta_{\\mathrm{stable}}$"],
+        extra=lambda get: [gradient(get, "shift"), gradient(get, "stable")],
+        flagged=thin_arms(stats, ["shift"]))
+    reversal = []
+    for r in ("shift", "stable"):
+        s = stats.get(r)
+        if s is None or s.empty:
+            reversal.append(f"{r}: {PENDING}")
+            continue
+        d = (s["coverage_95_band65_99"] - s["coverage_95_band25_64"]).dropna()
+        own = s[~s["mechanism"].isin(CONFORMAL_MECHANISMS)]
+        d_own = (own["coverage_95_band65_99"] - own["coverage_95_band25_64"]).dropna()
+        per_mech = []
+        for u in MECH_ORDER:
+            if not is_conformal(u):
+                continue
+            sub = s[s["mechanism"] == u]
+            if sub.empty:
+                continue
+            du = (sub["coverage_95_band65_99"] - sub["coverage_95_band25_64"]).dropna()
+            per_mech.append(f"{mech(u)} {int((du > 0).sum())} of {len(du)}")
+        reversal.append(
+            f"{r}: coverage at 65--99 exceeds coverage at 25--64 in {int((d > 0).sum())} "
+            f"of {len(d)} cells, {int((d_own > 0).sum())} of {len(d_own)} of them among "
+            "the arms carrying a family's own uncertainty"
+            + (f"; by wrapper: {', '.join(per_mech)}" if per_mech else ""))
+    notes = [regime_note(df, "shift"), regime_note(df, "stable")]
+    notes += [
+        "Empirical coverage of the nominal 95\\% interval by age band (runner "
+        "AGE\\_BANDS; the last band is open above). $\\Delta = \\mathrm{cov}(65-99) - "
+        "\\mathrm{cov}(25-64)$ is the registered gradient, printed for the shift regime "
+        "and for the stable control; negative is the registered direction. "
+        + "; ".join(reversal) + ".",
+        "Registered direction (worse at 65--99 than at 25--64) is contradicted by Dowd "
+        "et al.; a reversal is reported as informative (addendum 3 \\S8). Conformal "
+        "wrappers calibrate these bands separately (Mondrian strata) and so flatten or "
+        "invert the profile by construction.",
+        envelope_ranges_note(rep, "cov$_{95}$ at 0--24"),
+        "CBD has no scored ages below 55, so its 0--24 band is empty and its 25--64 "
+        "band covers 55--64 only. Descriptive table: no common-cell restriction is "
+        "applied; error rows enter no mean.",
+        gp_note(df),
+        abridged_note("tab-h4-age",
+                      "the stable and placebo band triples -- the stable control "
+                      "survives as the $\\Delta_{\\mathrm{stable}}$ column -- the "
+                      "per-cell counts, and the thirty conformal arms individually."),
+    ]
+    fl = flagged_note(rep)
+    if fl:
+        notes.append(fl)
+    w.write_float(
+        main_variant_name("tab-h4-age"), colspec, head, body, notes,
+        caption=abridged_caption(
+            "tab-h4-age",
+            "Empirical coverage of nominal 95\\% intervals within three age bands in the "
+            "shift regime, with the registered old-age gradient $\\Delta = "
+            "\\mathrm{cov}(65-99) - \\mathrm{cov}(25-64)$ shown both for the break and "
+            "for the stable control. CBD is fitted on ages 55--99, so it contributes no "
+            "0--24 value and its 25--64 column is a 55--64 stub.",
+            "the stable and placebo band triples, the per-cell counts, and the thirty "
+            "conformal arms, which appear as one envelope row per wrapper."),
+        label="tab:h4-age-main")
+
+
+def tab_h5_main(df: pd.DataFrame, w: TableWriter):
+    """Every conformal cell of the full table is the literal string n/a by
+    construction, so the abridged view drops those rows outright and says so;
+    $e_0$ goes to the supplement because the registered H5 clause names
+    $e_{65}$ and the annuity factor only."""
+    cols = ["e65_cov", "e65_err", "ann65_cov", "ann65_err"]
+    regimes = list(MAIN_REGIMES)
+    stats = main_stats(df, cols, regimes, per_block_stats=_h5_stats)
+    gp_here = {r: gp_present(regime_frame(df, r)) for r in regimes}
+    colspec, head, body, rep = abridged_block(
+        stats, gp_here, regimes, cols,
+        ["$e_{65}$ cov", "err", "$\\annuity$ cov", "err"], _fmt_h5,
+        conformal=False, flagged=thin_arms(stats, regimes))
+    counts = []
+    for q, label in (("e65_cov", "$e_{65}$"), ("ann65_cov", "$\\annuity$")):
+        worse, tot = _pairwise_counts(stats, q, "stable", "shift",
+                                      lambda a, b: abs(b - 0.95) > abs(a - 0.95))
+        under, _ = _pairwise_counts(stats, q, "stable", "shift", lambda a, _b: a < 0.95)
+        counts.append(f"{label}: the shift departure from nominal exceeds the stable "
+                      f"departure for {worse} of the {tot} distributional arms, and "
+                      f"{under} of {tot} under-cover in the stable control")
+    notes = [regime_note(df, r) for r in regimes]
+    notes += [
+        "cov = share of rows whose realised $e_{65}$ or $\\annuity$ (2\\%) lies inside "
+        "the model's [2.5\\%, 97.5\\%] sample quantiles; err = mean (point $-$ "
+        "observed), years for $e_{65}$ and annuity units for $\\annuity$. Derived "
+        "quantities are integrated from the LATENT predictive paths on the maximal "
+        "contiguous scored age block from age 0 (addendum 3 \\S3). " + "; ".join(counts)
+        + ".",
+        H5_CONFORMAL_NOTE + " All thirty conformal arms are therefore omitted from this "
+        "view: every one of their cells in the unabridged table is n/a, so no number is "
+        "lost by dropping them.",
+        "CBD's table starts at age 55: its $e_{65}$ and $\\annuity$ come from a 55--99 "
+        "table and $e_0$ is undefined. Rows whose bounds are missing are excluded from "
+        "that quantity's share only. Descriptive table: no common-cell restriction is "
+        "applied; error rows enter no mean.",
+        gp_note(df),
+        abridged_note("tab-h5-actuarial",
+                      "the placebo regime, the $e_0$ pair (the registered clause names "
+                      "$e_{65}$ and the annuity factor only), the per-cell counts, and "
+                      "the thirty conformal rows, which are n/a throughout."),
+    ]
+    fl = flagged_note(rep)
+    if fl:
+        notes.append(fl)
+    w.write_float(
+        main_variant_name("tab-h5-actuarial"), colspec, head, body, notes,
+        caption=abridged_caption(
+            "tab-h5-actuarial",
+            "Empirical coverage of the nominal 95\\% interval---the share of "
+            "population--sex cells in which the realised value lies between the 2.5\\% "
+            "and 97.5\\% sample quantiles---and the mean error, for $e_{65}$ and for "
+            "$\\annuity$ at 2\\%, by family and mechanism, in the stable control and "
+            "across the COVID break.",
+            "the placebo regime, the $e_0$ pair, the per-cell counts, and the thirty "
+            "conformal arms, whose derived-quantity cells are n/a by construction."),
+        label="tab:h5-actuarial-main")
+
+
+def build_main_variant(df: pd.DataFrame, w: TableWriter) -> list[Path]:
+    """The five abridged fragments of the venue-fitted manuscript."""
+    tab_h1_main(df, w)
+    tab_h2_main(df, w)
+    tab_h3_main(df, w)
+    tab_h4_main(df, w)
+    tab_h5_main(df, w)
+    return w.written
+
+
+# ---------------------------------------------------------------------------
 # driver
 # ---------------------------------------------------------------------------
 
 def build_all(df: pd.DataFrame, analyses: dict[str, dict], sens: dict | None,
               out_dir: str | Path, sources: list[str] | None = None,
               snapshot: bool = True, hmd_deaths: str | Path | None = None,
-              hmd_exposures: str | Path | None = None) -> list[Path]:
+              hmd_exposures: str | Path | None = None,
+              variant: str = "full") -> list[Path]:
     """Generate every table into out_dir; returns the written paths.
 
     Raises SystemExit before writing anything if a machine-failure row is
     present (the QA gate's rule: re-run, never analyse around).
     ``hmd_deaths`` / ``hmd_exposures`` feed tab-populations only (generated
     from the data files); None or a missing file prints pending cells.
+
+    ``variant="full"`` (the default) writes exactly TABLE_NAMES, the fragments
+    paper/main.tex builds from. ``variant="main"`` writes exactly
+    MAIN_TABLE_NAMES instead -- the abridged one-page views of the five
+    hypothesis tables for the venue-fitted manuscript -- from the same inputs,
+    through the same TableWriter, under the same machine-failure abort and the
+    same snapshot stamp.
     """
+    if variant not in VARIANTS:
+        raise SystemExit(f"unknown table variant {variant!r}; expected one of "
+                         f"{', '.join(VARIANTS)}")
     df = prepare_rows(df)
     if (df["error_class"] == "machine").any():
         tab_infeasible(df, TableWriter(Path(out_dir), [], snapshot))  # raises
     w = TableWriter(Path(out_dir), sources or [], snapshot)
+    if variant == "main":
+        return build_main_variant(df, w)
     tab_populations(w, hmd_deaths, hmd_exposures)
     tab_h1(df, w)
     tab_h2(df, w)
@@ -1420,10 +2175,19 @@ def main(argv=None) -> int:
     p.add_argument("--hmd-exposures", default=str(DEFAULT_HMD_EXPOSURES),
                    help="HMD bulk Exposures_1x1 file (zero-exposure training cells); "
                         "default Dataset/exposures/Exposures_1x1/Exposures_1x1.txt")
-    p.add_argument("--out", default=str(ROOT / "paper" / "tables"))
+    p.add_argument("--variant", choices=list(VARIANTS), default="full",
+                   help="'full' (default) writes the unabridged fragments paper/main.tex "
+                        "builds from; 'main' writes the abridged one-page views of the "
+                        "five hypothesis tables for paper/submission/manuscript.tex "
+                        "(same parquet inputs, same provenance header, same snapshot "
+                        "stamp; docs/SPLIT-SPEC.md rule 4)")
+    p.add_argument("--out", default=None,
+                   help="output directory; default paper/tables for --variant full and "
+                        "paper/submission/tables for --variant main")
     p.add_argument("--final", action="store_true",
                    help="suppress the NOT FINAL stamp (refused if any input is a snapshot)")
     args = p.parse_args(argv)
+    out_dir = args.out if args.out is not None else str(DEFAULT_OUT[args.variant])
 
     sens = load_sensitivities(args.sensitivities)
     snapshot = (any(is_snapshot_path(x) for x in args.parquet + args.analysis)
@@ -1436,19 +2200,26 @@ def main(argv=None) -> int:
     if args.sensitivities and sens is not None:
         sources.append(Path(args.sensitivities).name)
     hmd_ok = Path(args.hmd_deaths).exists() and Path(args.hmd_exposures).exists()
-    written = build_all(df, analyses, sens, args.out, sources=sources,
+    written = build_all(df, analyses, sens, out_dir, sources=sources,
                         snapshot=snapshot or not args.final, hmd_deaths=args.hmd_deaths,
-                        hmd_exposures=args.hmd_exposures)
+                        hmd_exposures=args.hmd_exposures, variant=args.variant)
     for path in written:
         print(f"[make_tables] wrote {path}")
     gp_regs = [r for r in present_regimes(df) if gp_present(regime_frame(df, r))]
+    print(f"[make_tables] variant: {args.variant} "
+          + ("(unabridged; the fragments paper/main.tex builds from)" if args.variant == "full"
+             else f"(abridged views for the venue-fitted manuscript, regimes "
+                  f"{', '.join(MAIN_REGIMES)}; docs/SPLIT-SPEC.md rule 4)")
+          + f" -> {out_dir}")
     print(f"[make_tables] regimes present: {present_regimes(df) or 'none'}; "
           f"GP rows in: {gp_regs or 'none (pending second-pass parquet)'}; "
           f"analyses: {sorted(analyses) or 'none'}; sensitivities: "
           f"{'yes' if sens else 'absent (placeholder)'}; "
-          f"tab-populations: {'from the data files' if hmd_ok else 'pending (HMD bulk files not found)'}; "
-          f"stamp: {'SNAPSHOT - NOT FINAL' if (snapshot or not args.final) else 'final'} "
-          "(tab-populations carries no stamp: data-file derived)")
+          + (f"tab-populations: {'from the data files' if hmd_ok else 'pending (HMD bulk files not found)'}; "
+             if args.variant == "full" else "")
+          + f"stamp: {'SNAPSHOT - NOT FINAL' if (snapshot or not args.final) else 'final'}"
+          + (" (tab-populations carries no stamp: data-file derived)"
+             if args.variant == "full" else ""))
     return 0
 
 

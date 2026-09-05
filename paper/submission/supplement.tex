@@ -1,0 +1,42 @@
+% =============================================================================
+% ONLINE SUPPLEMENT to "Do Mortality Prediction Intervals Survive a Pandemic?"
+%
+% Published as supplied: the venue does not typeset or copyedit supplementary
+% material. Every exhibit here is the unabridged generated fragment from
+% paper/tables/ and paper/figures/ -- the same files the main manuscript's
+% abridged views are generated from.
+%
+% Build:  latexmk -pdf -interaction=nonstopmode -halt-on-error supplement.tex
+% =============================================================================
+\documentclass[11pt,a4paper]{article}
+\input{preamble}
+
+% S-numbering for every float and section, so the main text can cite Table S3,
+% Figure S7, Section S1 without collision.
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thesection}{S\arabic{section}}
+
+\title{Supplementary material for\\[0.3em]
+  \large Do Mortality Prediction Intervals Survive a Pandemic?
+  A Pre-Registered Calibration Audit of Ten Forecasting Families and
+  Seven Uncertainty Mechanisms Across the COVID-19 Break}
+\author{Hamid Jahani}
+\date{5 September 2026}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\clearpage
+
+\input{supp/S1-preregistration}
+\input{supp/S2-methods}
+\input{supp/S3-full-tables}
+\input{supp/S4-figures}
+\input{supp/S5-robustness}
+\input{supp/S6-infeasible}
+
+\bibliographystyle{plainnat}
+\bibliography{../references}
+
+\end{document}

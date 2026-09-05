@@ -1,0 +1,256 @@
+\section{Introduction}
+\label{sec:intro}
+
+\subsection{Longevity risk is priced off the interval}
+
+A life annuity is a bet on a distribution. An annuity book's best-estimate
+reserve is a functional of the central mortality projection, but its risk
+margin, its longevity capital and the price at which a longevity swap or
+bulk annuity transfer clears are functionals of the projection's
+\emph{spread}: under the Solvency~II standard formula a permanent 20\% fall
+in rates \citep{eiopa2015delegated}, under an internal model the 99.5\%
+one-year quantile of the change in own funds, taken from a stochastic
+model's own predictive distribution. What the balance sheet carries is thus
+a tail of a forecast distribution, and its adequacy rests on one property: a
+nominal 95\% interval must contain the realised outcome about 95\% of the
+time. Too narrow under-reserves, too wide over-prices the hedge, and neither
+error is visible in a point-accuracy comparison. Classical mortality models
+and their neural extensions both emit intervals
+\citep{lee1992modeling,marino2023neural,miyata2022extending,schnurch2022point};
+whether those intervals are \emph{calibrated} is a separate question from
+whether they exist, and it decides what they are worth to an actuary.
+
+\subsection{The break that makes the question answerable}
+
+From the mid-1950s until 2019 the mortality surfaces of the high-income
+populations in the Human Mortality Database (HMD) improved smoothly enough
+that almost any trend extrapolation looked calibrated in sample. The years
+2020--2024 broke that surface: life expectancy at birth fell from 2019 to
+2020 in 27 of the 29 countries analysed by \citet{aburto2022quantifying},
+and the recovery was uneven by country and by age. Any interval built from
+data ending in 2019 was, for the first time in the modern record, put to a
+genuine out-of-sample test by reality, and that test has not been scored:
+the closest study, \citet{barigou2023bayesian}, evaluates by
+leave-future-out validation, log score and CRPS, but its pandemic analysis
+is a simulation, because in 2021 real post-shock data did not exist. It
+exists now. The HMD vintage of 15~June~2026 (Methods Protocol v6) is the
+first with final single-age data through 2024 for the twenty populations
+audited here.
+
+\subsection{What the literature measures}
+
+We searched the full text of the mortality-forecasting library assembled for
+this study (about twenty modelling papers; term counts and quotations are in
+the project repository); Section~\ref{sec:related} gives the detail. Point
+accuracy is the default and often the only metric:
+\citet{richman2021neural}, the multi-population neural Lee--Carter that
+later work builds on, reports mean squared error and no interval, coverage
+or proper score, as do
+\citep{scognamiglio2022calibrating,nigri2019deep,petnehazi2019mortality,perla2021time};
+elsewhere intervals are drawn but never checked against realisations
+\citep{miyata2022extending}. Where coverage is checked it is reported without a sharpness penalty,
+under pass rules in which over-coverage is fulfilment
+\citep{schnurch2022point} or a coverage probability of $1$ is the best
+outcome \citep{marino2023neural}, so that wider and better are
+indistinguishable; the latter also reports, without follow-up, that
+classical ARIMA intervals cover ``around 50\%'' of realisations and, for
+Spanish males, ``stable around 33\%'', over a window containing no
+break---nominal 95\% Lee--Carter intervals covering a third to a half of
+outcomes; and \citet{miao2025gradient} declare the closest of marginal
+coverages 90\%, 94\% and 96\% ``the most properly calibrated'', again with
+no proper score and no width penalty.
+\citet{dowd2010backtesting}, the direct ancestor of this audit,
+do backtest densities ex post, but on one population, on models with
+native intervals, and without a break. Absent, so far as we can find:
+PIT or rank histograms, measured joint (path) coverage, formal
+forecast-comparison testing but for \citet{shang2018model}, and, in the
+2025--2026 conformal mortality line
+\citep{shang2025intervals,shang2026conformal,shang2026subnational}, any
+crossing of a designated break. The principle violated is old and precise:
+maximise the sharpness of the predictive distributions subject to
+calibration \citep{gneiting2007probabilistic}; coverage without width is not
+calibration, width without coverage is not sharpness, and neither is a
+proper score \citep{gneiting2007strictly}. We score every forecast by both.
+
+\subsection{This study}
+
+The question is whether the prediction intervals of stochastic,
+machine-learning and neural mortality models attain nominal coverage when
+the evaluation window crosses the COVID-19 break, whether the answer depends
+on the model family, on the uncertainty mechanism or on both, and whether it
+differs from what the same intervals do when nothing breaks. We treat
+\emph{model family} and \emph{uncertainty mechanism} as separate crossed
+factors---ten families, seven mechanisms, fifty admissible cells---in three
+regimes: a \emph{stable} control (expanding origins 1990--2014, every test
+year before 2020), the \emph{shift} regime (train to 2019, test 2020--2024),
+and a \emph{placebo} break (train to 1913, test 1914--1922) asking whether
+what we find is specific to COVID-19. The population count differs by regime
+and by family---twenty across the break and sixteen for the Gaussian
+process, eighteen and sixteen in the stable control, eleven in the
+placebo---so it is stated wherever a mean is taken.
+
+Five hypotheses were fixed and hash-stamped before any model touched real
+data. They are reproduced verbatim from the pre-registration.
+
+\begin{hypothesis}[H1]
+Model rankings by RMSE and by CRPS disagree (rank correlation $<1$; at least
+one top-3 inversion) in the shift regime.
+\end{hypothesis}
+\begin{hypothesis}[H2]
+Nominal 95\% intervals under-cover in the shift regime for every model
+family; the shortfall exceeds the stable-regime shortfall.
+\end{hypothesis}
+\begin{hypothesis}[H3]
+Joint path coverage over $h = 1,\dots,5$ is materially below marginal
+coverage at the same nominal level for every family (reported gap; test:
+paired difference $>0$).
+\end{hypothesis}
+\begin{hypothesis}[H4]
+Coverage failure is non-uniform in age: shift-regime coverage at ages 65--99
+is lower than at ages 25--64 for every family.
+\end{hypothesis}
+\begin{hypothesis}[H5]
+Interval miscalibration propagates to derived quantities: empirical coverage
+of 95\% intervals for $e_{65}$ and annuity factor $\annuity$ (2\%) departs
+from nominal by more than the corresponding stable-regime departure.
+\end{hypothesis}
+
+No directional claim is registered about neural-versus-classical ordering;
+the crossed design estimates it. The coverage split runs through the middle
+of the neural group rather than between neural and classical, and is open
+already in the stable control, before any break (Contribution~2;
+Section~\ref{sec:results}; Table~S3).
+
+\subsection{Contributions}
+
+This paper proposes no new mortality model. Its contributions, with all
+three regimes complete, are:
+\begin{enumerate}
+\item \emph{The audit, and the finding the control forces.} The first
+  evaluation of probabilistic mortality forecasts---classical, neural and
+  conformal---against realised 2020--2024 mortality across twenty HMD
+  populations, sixteen of them for the multi-output Gaussian process, whose
+  forty-year training floor removes four and whose window registered
+  Addendum~4 caps at sixty years (Table~S11), every interval built strictly
+  from pre-2020 data, beside a stable control of thirteen expanding origins
+  over 1990--2014 in which no test year is later than 2019. Most of the
+  miscalibration predates the pandemic: the native 95\% intervals of the
+  classical cores already cover 0.702 (Lee--Carter), 0.682 (Poisson
+  Lee--Carter) and 0.731 (Renshaw--Haberman) of realised outcomes in the
+  control, against 0.692, 0.624 and 0.654 across the break (Table~S3). The
+  break widens a failure that was there beforehand rather than creating one,
+  and the shift regime alone would have misattributed all of it to COVID-19.
+  CBD is where the break contributes most, and only the control shows it:
+  0.901 in the quiet decades against 0.799 across 2020--2024, so about
+  two-thirds of its shift-regime departure from nominal is break-induced and
+  about a third is not. \Hone\ holds, with the
+  registered top-three inversion present, the RMSE and CRPS orderings
+  correlating at $\rho = 0.95$ and RMSE with the Poisson log score at
+  $\rho = 0.12$ (Table~S2).
+\item \emph{The crossed design.} Family and mechanism as separate factors,
+  so that a coverage failure can be attributed to the architecture, the
+  mechanism or their interaction; claims are contrasts within admissible
+  sub-grids, never main effects over a ragged grid. The failure is not a
+  neural-versus-classical split: across the break the negative-binomial
+  distributional head (0.933) and the CNN under dropout (0.962) hold
+  marginal coverage near nominal and the Gaussian process stays within five
+  points at 0.905, while the LSTM (0.647 ensembled, no better in the control
+  at 0.638) and the ensembled neural Lee--Carter (0.694) sit with the
+  classical cores far below nominal in both regimes (Table~S3). Nor is the
+  mechanism contrast a pandemic effect: on the 95\% interval score $\IS$ the
+  split conformal wrapper beats the native interval for the same four
+  classical families in the control as across the break and with the same
+  sign, at different effect sizes (Poisson Lee--Carter $+1.038$ to
+  $+1.895$), significantly for all four across the break ($p$ from 0.004 to
+  0.018) but in the control only for Lee--Carter and Poisson Lee--Carter
+  ($p = 0.006$ and $p = 0.032$, against $p = 0.086$ for Renshaw--Haberman
+  and $p = 0.198$ for CBD). The native interval beats its wrapper,
+  significantly in both regimes, for the three families whose native law was
+  already right: the negative-binomial head ($-0.873$ control, $-1.024$
+  shift), the Gaussian process ($-0.772$, $-0.413$) and the sparse VAR
+  ($-0.236$, $-0.318$), all at $p \le 0.0002$ in the control
+  (Diebold--Mariano with a wild cluster bootstrap over populations;
+  Table~S9). Conformal wrapping repairs families whose native law was wrong
+  and damages families whose native law was right, in quiet periods as much
+  as in the pandemic. The 1914--1922 placebo, on eleven populations, does
+  not reproduce that ordering intact: it reverses the contrast for the four
+  classical families, though none of the four reversals is significant ($p$
+  from 0.071 to 0.689), while the native advantage of the negative-binomial
+  head ($-0.461$, $p = 0.008$) and of the Gaussian process ($-0.172$,
+  indistinguishable from zero) persists.
+\item \emph{Registered directions that fail, reported as such.} Two
+  registered directions are contradicted outright; a third, \Hfive's
+  comparative clause, returns a split verdict. \Htwo\ registered one-sided
+  under-coverage across the break for \emph{every} family, worsening on the
+  control. The registered two-sided departure $\lvert c - 0.95 \rvert$ grows
+  from stable to shift in 27 of the 50 primary cells and raw coverage falls
+  in 34 of 50, but a fall is degradation only for an arm that began below
+  nominal, one marginal exception aside, and most arms that began above
+  nominal move \emph{towards} it (sparse VAR native 0.988 to 0.937). What
+  the pandemic mostly does is sort families by the side of nominal they
+  started on---a tendency and not a law, describing 33 of the 50 cells. Five
+  over-covering arms widen their departure instead: four copula-conformal
+  bands, of which the Poisson Lee--Carter's crosses nominal on the way down
+  (0.960 to 0.939, its registered departure growing from 0.010 to 0.011, the
+  marginal exception above), and the CNN under dropout, above nominal in
+  both regimes (0.954 to 0.962). Twelve under-covering arms move back
+  towards nominal, eight of them conformal wrappers recalibrated on pre-2020
+  residuals (EnbPI on Lee--Carter, 0.890 to 0.915), the rest led by LSTM
+  arms too far below nominal to fall further. \Hfour\ fails in its universal
+  form and settles a disagreement with the prior: where
+  \citet{dowd2010backtesting} found age~84 better behaved than age~65, the
+  native Lee--Carter interval here covers 0.888, 0.760 and 0.501 across ages
+  0--24, 25--64 and 65--99, in the stable control and before any break
+  (Table~S5). Old-age concentration is real for the Lee--Carter line and the
+  LSTM arms but not universal: the CBD arms cover worse below age 65 than
+  above it (native, shift: 0.626 against 0.849). CBD is fitted on ages
+  55--99, so that 0.626 is a 55--64 stub rather than the registered 25--64
+  band and is not comparable with the full-age families.
+\item \emph{Resolution of the failure by horizon and in money.} Joint path
+  coverage over $h = 1,\dots,5$ lies below marginal coverage in all 100 of
+  the 100 (regime, cell) pairs scored, with mean gaps of 0.127 stable and
+  0.168 across the break (Table~S4). That count is largely arithmetic, since
+  independent horizons alone would put joint coverage at $0.95^{5} = 0.774$,
+  a gap of 0.176 wider than either mean; the registered marginal-versus-joint
+  comparison therefore cannot on its own evidence miscalibration, and we do
+  not read it as the study's strongest result. Against the informative
+  benchmark---each arm's joint coverage under independence \emph{at its own
+  marginal rate}---the grid measures what the literature has only asserted:
+  joint coverage exceeds that value in 50 of 50 stable cells, 50 of 50 shift
+  cells and 45 of 46 placebo cells, by as much as 0.34. Horizons are
+  strongly positively dependent---a dependence \citet{dowd2010backtesting}
+  name but never measure---and quantifying it is \Hthree's contribution
+  here. The registered re-specified comparator, each cell's
+  model-implied joint coverage (Addendum~3, \S8), is not computable from the
+  columns the production runner emitted, so \Hthree\ carries no registered
+  verdict in this paper and we say so where the verdict would go; what
+  survives is that joint coverage falls below the nominal independence value
+  0.774 in 21 of the 50 stable cells and 30 of 50 across the break. The
+  copula conformal band, the only mechanism calibrated for the path, narrows
+  the marginal-to-joint gap furthest on average without closing it
+  (0.805--0.927 joint coverage across the break), and is not narrowest
+  everywhere: on the negative-binomial head the dropout arm's gap across the
+  break, 0.075, beats the copula band's 0.085. \Hfive\ is the result an
+  actuary should read first. Derived quantities are far worse calibrated
+  than the rates beneath them in every arm whose derived coverage is
+  computable but three---the two CBD arms, fit and integrated on ages 55--99
+  alone, and the sparse VAR's native law, level in the control until the
+  break separates the two scales (Section~\ref{sec:actuarial})---and this
+  too is a quiet-period property: in the stable control the native
+  Lee--Carter 95\% interval covers 0.253 of realised annuity factors
+  $\annuity$ and 0.256 of realised $e_{65}$, and the LSTM ensemble 0.157 of
+  annuity factors, so a nominal 95\% interval on an annuity price, from
+  models in routine use, contains the realised value about a quarter of the
+  time in a period with no pandemic in it. The registered clause was
+  comparative---a larger departure from nominal across the break than in the
+  control---and in that strict form it holds for 14 of the 20 distributional
+  arms on $e_{65}$ and 12 of 20 on $\annuity$, the exceptions being arms
+  already so far below nominal in the control that the break could only move
+  them towards it (Table~S6).
+\item \emph{The protocol.} A pre-registered, synthetic-truth-validated,
+  oracle-parity-checked harness in which every model emits predictive
+  samples through one interface and is scored through one code path, with
+  cluster-bootstrap inference respecting the fact that a pandemic is one
+  shock, not twenty. It is reusable for any future break, and the stable
+  control is the part other studies most often omit.
+\end{enumerate}

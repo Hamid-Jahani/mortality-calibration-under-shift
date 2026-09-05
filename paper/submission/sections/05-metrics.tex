@@ -1,0 +1,229 @@
+\section{Metrics}
+\label{sec:metrics}
+
+\subsection{Notation, targets and denominators}
+\label{sec:metrics-target}
+
+Fix a population, a sex and an origin $T$. For age $x$ and horizon $h$,
+$D_{x,T+h}$ is the observed death count and $E_{x,T+h}$ the known exposure.
+Two targets are scored: the half-up rounded count $\tilde
+D_{x,h}=\lfloor D_{x,T+h}+\tfrac12\rfloor$ (Section~\ref{sec:data-rounding})
+and, on the rate scale, $y_{x,h}=\log\{\max(\tilde
+D_{x,h},\tfrac12)/E_{x,T+h}\}$. A distributional cell supplies $n$ sample
+paths of \emph{latent} rates $m^{(j)}_{x,T+h}$ jointly over $(x,h)$;
+rate-scale scores use the Poisson-inclusive samples
+\begin{equation}
+  z^{(j)}_{x,h} = \log\frac{\max(D^{\ast(j)}_{x,h},\tfrac12)}{E_{x,T+h}},
+  \qquad D^{\ast(j)}_{x,h}\sim\mathrm{Poisson}\big(E_{x,T+h}\,m^{(j)}_{x,T+h}\big),
+  \label{eq:poisson-inclusive}
+\end{equation}
+the predictive law of the observed rate, which puts both sides of a score on
+one lattice (Addenda~2~\S1 and~3~\S5). Their empirical distribution is $\hat
+F_{x,h}$. Conformal cells instead supply a 95\% interval
+$[l_{x,h},u_{x,h}]$, scored from it directly.
+
+Scores are negatively oriented, and averaged over the ages a cell is defined
+on---100 for every family but CBD, 45 for CBD---never over a mixture of
+defined and undefined cells, and never across arms with different age
+supports. The denominator is $n=40$ population--sex units under the shift
+($20\times2$), 22 in the placebo ($11\times2$) and up to 442 across the
+thirteen stable origins; errored cells are excluded and counted as
+$n_{\mathrm{err}}$, both printed in every supplementary table. Averaging runs
+within population--sex, then across populations with equal weight, so that a
+ranking inversion is not the exposure-weighting artefact of
+Section~\ref{sec:related}.
+
+\subsection{Point accuracy and CRPS}
+
+Point accuracy is $\RMSE$ of $\hat y_{x,h}-y_{x,h}$ with $\hat
+y_{x,h}=\hat F^{-1}_{x,h}(\tfrac12)$, plus the error $\hat e_0-e_0$ in period
+life expectancy at birth: the metrics the literature reports, whose ranking
+\Hone\ contrasts with a proper score. The CRPS,
+\begin{equation}
+  \CRPS(F,y) = \E_F|Z-y| - \tfrac12\,\E_F|Z-Z'|,\qquad Z,Z'\sim F
+  \text{ independent}
+\end{equation}
+\citep{gneiting2007strictly}, is strictly proper, reduces to MAE for a point
+forecast, and is estimated by the sorted-sample plug-in (Supplementary
+Section~S2): on the rate scale from~\eqref{eq:poisson-inclusive}, and on the
+count scale against the \emph{unrounded} $D_{x,T+h}$ as a registered
+sensitivity that needs no rounding convention.
+
+\subsection{Poisson log score and the rounding convention}
+\label{sec:metrics-logscore}
+
+Each path implies a Poisson mean $\lambda^{(j)}_{x,h} =
+E_{x,T+h}\,m^{(j)}_{x,T+h}$, so the predictive count law is the equal-weight
+mixture over paths and
+\begin{equation}
+  \LS = -\log\Big(\frac1n\sum_{j=1}^{n}\mathrm{Poisson}\big(\tilde D_{x,h};\lambda^{(j)}_{x,h}\big)\Big),
+  \qquad \tilde D = \big\lfloor D+\tfrac12\big\rfloor,
+\end{equation}
+by log-sum-exp. HMD deaths are fractional (Section~\ref{sec:data}), so the
+score is defined at the half-up rounded count, with the count-scale CRPS as
+its sensitivity; both conventions were fixed before estimation. For the NB
+head the gamma mixture is exactly negative-binomial, so that family is scored
+on its own law.
+
+\subsection{Interval score and coverage}
+\label{sec:metrics-interval}
+
+For the central $(1-\alpha)$ interval the interval (Winkler) score is
+\begin{equation}
+  \IS_\alpha(l,u;y) = (u-l) + \frac{2}{\alpha}(l-y)\,\ind\{y<l\}
+  + \frac{2}{\alpha}(y-u)\,\ind\{y>u\}
+  \label{eq:winkler}
+\end{equation}
+\citep{winkler1972decision,gneiting2007strictly}, always reported with the
+pair (empirical coverage, mean width), never coverage alone. For
+distributional cells $[l,u]$ are Poisson-inclusive sample quantiles at
+$\alpha\in\{0.5,0.2,0.05\}$; a conformal cell contributes its own band at its
+construction level $\alpha=0.05$, read from the bounds with no sampling step
+and no Poisson composition (Addendum~3~\S6), so its 50\% and 80\% rows are
+not applicable and are shown as such. At 95\% the score is defined
+identically for both kinds of cell, so it decides every comparison involving
+a conformal arm.
+
+\subsection{Marginal, joint and model-implied path coverage}
+\label{sec:metrics-coverage}
+
+\emph{Marginal} coverage is the pointwise hit rate
+$\overline{\ind\{l_{x,h}\le y_{x,h}\le u_{x,h}\}}$, by horizon and pooled
+over $h$. \emph{Joint path} coverage,
+\begin{equation}
+  C^{\mathrm{joint}}_{1-\alpha} = \overline{\prod_{h=1}^{H}\ind\{\,l_{x,h}\le y_{x,h}\le u_{x,h}\,\}},
+  \qquad H=5 \text{ (shift, stable)},\ H=9 \text{ (placebo)},
+\end{equation}
+counts a trajectory as covered only if every horizon is inside its band.
+Being bounded above by the minimum marginal coverage, it made the registered
+joint-versus-marginal comparison near-tautological
+(Section~\ref{sec:design-status}); the re-specified comparator is each cell's
+\emph{model-implied} joint coverage, the fraction of its own sample paths
+staying inside its own pointwise bands at every horizon,
+\begin{equation}
+  C^{\mathrm{impl}}_{1-\alpha} = \overline{\frac1n\sum_{j=1}^{n}\prod_{h=1}^{H}
+  \ind\{\,l_{x,h}\le z^{(j)}_{x,h}\le u_{x,h}\,\}}.
+\end{equation}
+The gap $C^{\mathrm{impl}}-C^{\mathrm{joint}}$ is the registered quantity of
+\Hthree\ and can be of either sign; the descriptive gap
+$C^{\mathrm{marg}}-C^{\mathrm{joint}}$, which no mortality paper has
+measured, is reported alongside. Copula conformal alone targets the joint
+level, reading $C^{\mathrm{joint}}$ from its simultaneous band with no
+implied value. The runner emits realised joint coverage but not
+$C^{\mathrm{impl}}$, so the registered test of Addendum~3~\S8 awaits a
+recomputation from each cell's reproducible sample paths (seeds are recorded
+per row): until then the joint results of Section~\ref{sec:results} and
+Table~S4 are the descriptive measurement, not the registered test of
+\Hthree.
+
+\subsection{PIT, calibration by age and the Murphy decomposition}
+
+A forecaster is calibrated if $F(Y)$ is uniform
+\citep{gneiting2007probabilistic,dawid1984present}; lattice ties are handled
+by the randomised PIT of \citet{czado2009predictive} (Supplementary
+Section~S2). Its ten-bin histogram, its Kolmogorov--Smirnov distance from
+uniformity and its shape---U
+(over-confident), hump (under-confident), slope (biased)---are reported per
+cell in Table~S7 and Figures~S10--S12; under the break the mean KS distance
+runs from 0.172 (multi-output GP) to 0.374 (Poisson Lee--Carter). The nominal
+$p$-value is \emph{descriptive only}, PIT values within a population being
+dependent across ages and horizons (Addendum~2~\S4), though the share of
+cells with $p<0.05$ never falls below 0.905 in the stable regime or 0.844
+under the break; the formal test is a cluster bootstrap of the pooled
+histogram. Conformal PIT values are placeholders (Supplementary Section~S5).
+
+Coverage and PIT are also computed within the age bands $0$--$24$,
+$25$--$64$ and $65$--$99$---the partition the conformal wrappers are
+Mondrian-stratified on---and as single-age curves. \Hfour\ compares
+$65$--$99$ with $25$--$64$ under the shift; a reversal of the registered
+direction is reported as such (Section~\ref{sec:design-status}). CBD is
+fitted on ages 55--99, so its $0$--$24$ band is empty and its $25$--$64$
+column is a 55--64 stub, not comparable with the full-age families.
+
+The registered Murphy split of a proper score into calibration and
+resolution, $\overline{S}=\mathrm{UNC}-\mathrm{RES}+\mathrm{MCB}$
+\citep{murphy1973new,pohle2020murphy}, is not delivered: against one constant
+nominal level the Brier resolution term is 0.0000 in every emitted row, and
+the reliability term is the mean over units of $(0.95-\text{hit rate})^2$,
+which exceeds the squared pooled coverage gap by the across-cell variance of
+coverage (SVD Lee--Carter native, stable regime: 0.0921 against
+$(0.95-0.702)^2=0.0615$). The divergence form
+\citep{broecker2009reliability} on the PIT scale against the uniform
+reference does see what a single level's coverage gap cannot---its
+miscalibration term never falls below 0.0229, where Brier reliability reaches
+0.0005---but there reliability and resolution coincide numerically, so no
+resolution component with independent content is emitted
+\citep{hersbach2000decomposition,dimitriadis2021stable}. Both are descriptive
+(Table~S8); no hypothesis rests on them.
+
+\subsection{Actuarial functionals}
+\label{sec:metrics-actuarial}
+
+Each path's rate vector becomes a period life table by the conventions of
+Section~\ref{sec:data}, giving samples of
+\begin{equation}
+  e^{(j)}_x = \frac{T^{(j)}_x}{l^{(j)}_x},\qquad
+  \annuity^{(j)} = \sum_{t\ge0} v^{t}\,{}_t p^{(j)}_{65},\quad v=\frac{1}{1.02},
+\end{equation}
+with ${}_t p_{65}$ from the sample's own table treated as static: the
+annuity-due factor at 2\% on the period table of the first test year $T+1$
+\citep{dickson2020actuarial}---2020 under the shift, 1914 in the placebo,
+$T+1$ at each stable origin. Predictive tables use the latent paths
+$m^{(j)}_{\cdot,T+1}$, not the Poisson-inclusive draws, and realised values
+the observed rates through the same routine and observed-table convention
+(Section~\ref{sec:data-rounding}), so any life-table approximation cancels;
+both use the maximal contiguous scored age range from age~0. For CBD
+$e_0$ is undefined and $e_{65}$ and $\annuity$ use the 55--99 table. For each
+we report the median error and the coverage and width of the central 95\%
+interval, by regime; \Hfive\ compares the shift and stable departures from
+nominal coverage, the registered quantity being ex-post coverage and the
+named alternative attenuation---miscalibration damped by the life table's
+integration (Section~\ref{sec:design-status}). We had
+intended to report the 99.5\% upper quantile of $\annuity$ as the longevity
+tail an internal model would carry, but the sweeps emitted only the 2.5\% and
+97.5\% quantiles of the derived quantities, so no such tail is reported
+anywhere in this paper (Section~\ref{sec:discussion}); at the extremes we
+report instead how often the realised value falls outside a cell's own
+central interval, separately above and below (Section~\ref{sec:actuarial}).
+
+\subsection{Forecast-comparison inference}
+\label{sec:metrics-inference}
+
+Population is the cluster---one common shock runs through the shift
+regime---and every test resamples populations: $G=20$ in the shift and stable
+regimes, $G=11$ in the placebo, fewer where the admissibility floor or the
+common-cell rule removes one, with the effective $G$ and the intersection
+size printed beside every statistic in Table~S9. Even so, shift-regime
+$p$-values are statements about differences between forecasters \emph{given
+this event}, not about future pandemics; the placebo is the second event that
+makes a cross-event comparison possible.
+
+Per-unit losses are per-horizon means over ages within a
+population--sex--origin: rate-scale CRPS among distributional arms, the 95\%
+interval score wherever a conformal arm enters, its CRPS being a placeholder
+the analysis code refuses to rank. Contrasts use only the (origin,
+population, sex) cells in which each compared arm produced a valid row
+(Addendum~3~\S11), and a non-finite loss halts the computation rather than
+being imputed: on the runner's real pattern of missing cells, imputation was
+measured to invert a model confidence set silently, eliminating the good
+models with certainty. CBD never shares a loss matrix with the full-age arms.
+
+Loss differentials $d_i=L_{A,i}-L_{B,i}$ are compared by Diebold--Mariano
+statistics $t=\bar d/\widehat{\mathrm{se}}$ \citep{diebold1995comparing},
+negative $\bar d$ favouring $A$, with the cluster-robust variance
+\begin{equation}
+  \widehat{\mathrm{Var}}(\bar d) = \frac{G}{G-1}\,\frac{1}{N^2}\sum_{g=1}^{G}
+  \Big(\sum_{i\in g}(d_i-\bar d)\Big)^2
+\end{equation}
+and a wild cluster bootstrap with six-point weights
+\citep{cameron2008bootstrap,webb2023reworking,mackinnon2017wild}, $B=4999$;
+model confidence sets \citep{hansen2011model} at 90\% resample populations as
+blocks (2{,}000 replications).
+\Hone\ is a validity check on the Spearman correlation of RMSE and CRPS
+rankings and the count of top-3 inversions (Section~\ref{sec:design-status});
+\Htwo--\Hfive\ are paired contrasts tested with that bootstrap:
+$|\text{coverage}-0.95|$ shift minus stable per family and mechanism;
+model-implied minus realised joint coverage; coverage at ages 65--99 minus
+25--64; and shift minus stable departure from nominal for $e_{65}$ and
+$\annuity$. The native-versus-split-conformal contrast within each family is
+a Diebold--Mariano test on the interval score.

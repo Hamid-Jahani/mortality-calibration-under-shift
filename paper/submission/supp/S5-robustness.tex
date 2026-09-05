@@ -1,0 +1,170 @@
+% =============================================================================
+% SUPPLEMENT S5 -- Robustness: conformal secondary scores and the
+% pre-registered sensitivity slices.
+%
+% Carries Appendix A of the full study (paper/main.tex) into the supplement.
+% Numbering (S-sections, S-tables, S-figures) is set by supplement.tex; this
+% file deliberately introduces no table or figure float, because the
+% manuscript cites the infeasible-cell ledger of Section S6 as Tables S11 and
+% S12 and that numbering depends on every float printed before it.
+% =============================================================================
+
+\section{Robustness: conformal secondary scores and the pre-registered
+  sensitivity slices}
+\label{supp:robustness}
+
+This section carries the two robustness items the manuscript defers to the
+supplement. Section~\ref{supp:robustness-conformal} states the scoring
+convention that makes CRPS, the log score and PIT \emph{placeholders} for
+every conformal arm: it is the convention behind the manuscript's rule in
+Section~4 that those values are flagged \texttt{secondary}, read only against
+other conformal cells and never ranked against distributional mechanisms;
+behind the sentence in Section~5 that conformal PIT values are placeholders;
+and behind the limitation in Section~8 that comparing a conformal cell's CRPS
+with a native cell's compares a convention with a forecast.
+Section~\ref{supp:robustness-slices} documents the pre-registered secondary
+runs -- the sensitivity slices announced in Sections~3 and~8 of the manuscript
+and registered in Addendum~1 -- says exactly what the released file carries for
+each of them, and Section~\ref{supp:robustness-limits} states plainly the two
+things those slices cannot do. Neither item changes a headline number: the
+conformal convention governs which scores may be compared with which, and the
+slices re-score the same fits on pre-specified subsets of rows.
+
+\subsection{Proper scores for conformal cells}
+\label{supp:robustness-conformal}
+
+Conformal wrappers emit intervals, not distributions. The harness preserves a
+single sampling interface across all seven uncertainty mechanisms by drawing
+uniformly inside each interval, so CRPS, the log score and the PIT computed
+from those draws describe a placeholder density rather than the wrapper's own
+predictive law. They are carried per cell in the released results files under a
+\texttt{secondary} flag, are read only against other conformal cells, and are
+never ranked against distributional mechanisms (manuscript Section~4). They are
+deliberately not printed beside the distributional scores of the manuscript's
+Section~6 or of Section~S3 here: a reader who compares a conformal cell's CRPS
+with a native cell's CRPS is comparing a convention with a forecast, and a
+shared table invites exactly that. The same convention governs the derived
+quantities, whose $e_0$, $e_{65}$ and annuity quantiles for a conformal cell
+come from the filler draws and are therefore reported as not applicable
+throughout (Addendum~2, \S3); those are the \texttt{n/a} rows of the full
+actuarial table in Section~S3.
+
+What the convention does \emph{not} touch is any conformal number that enters a
+reported contrast. Coverage, interval width, the interval score and joint path
+coverage for a conformal cell are read from the wrapper's own bounds at its own
+construction level of 95\%, with no Poisson composition -- the radius already
+contains observation noise -- and no quantile-of-samples step (Addendum~2~\S3,
+Addendum~3~\S6). Coverage and interval scores at the 50\% and 80\% levels are
+not applicable to conformal cells and are reported as such, and any contrast
+involving a conformal arm is decided on the 95\% interval score. The placeholder
+scores exist only so that one code path can score all fifty cells; they are
+released for completeness and for anyone wishing to re-derive them, not to be
+ranked.
+
+\subsection{The pre-registered sensitivity slices}
+\label{supp:robustness-slices}
+
+The pre-registered secondary runs re-score the headline coverage contrasts on
+pre-specified subsets of the same fits rather than refitting anything. No model
+is estimated a second time, no seed changes and no split moves; a slice selects
+rows of the released per-cell results and recomputes the same means over them.
+Each slice is computed by \texttt{scripts/sensitivities.py} into
+\texttt{results/sensitivities.json}, released with the code.
+
+\paragraph{Shift-regime slices.} The baseline \texttt{full\_panel} retains all
+twenty shift populations (40 population--sex units, 2{,}000 cell rows, 210 of
+them error rows). Against that baseline:
+\begin{itemize}
+\item \texttt{drop\_2024} -- the provisional-revision sensitivity. The panel is
+  unchanged; the test window is restricted to 2020--2023 and coverage is the
+  mean of the retained per-horizon columns, $h=1,\dots,4$.
+\item \texttt{drop\_USA\_CHL} -- the two populations whose exposures HMD
+  documents as census-based and subject to later revision are removed, leaving
+  eighteen populations (36 units, 1{,}800 rows, 180 error rows;
+  Addendum~1~\S B.1).
+\item \texttt{register\_based} -- CHE, DNK, FIN, ISL, NOR and SWE: six
+  populations (12 units, 600 rows, 8 error rows).
+\item \texttt{census\_based} -- the remaining fourteen populations (28 units,
+  1{,}400 rows, 202 error rows).
+\end{itemize}
+The register-versus-census split as computed follows
+\texttt{docs/DATA-PREREQS.md}~\S B.2 item~9, which places EST, LVA and LTU in
+the census-based set because their 2021--2024 exposures rest on post-censal
+inputs. Addendum~1~\S B's prose lists those three as register-based in passing,
+and Section~3 of the manuscript repeats that description. The released file uses
+the \texttt{DATA-PREREQS} definition and records the discrepancy in its own
+\texttt{note} field rather than resolving it silently; it is restated here for
+the same reason. A reader who prefers the other definition can recompute both
+slices from the released per-cell rows.
+
+\paragraph{Placebo-regime slices.} The baseline \texttt{full\_panel} retains all
+eleven placebo populations (22 units, 1{,}100 rows, 136 error rows). Against
+that baseline:
+\begin{itemize}
+\item \texttt{drop\_GBR\_SCO} -- GBR\_SCO, whose 1912--1938 population is
+  interpolated by a spline HMD itself calls unreliable, is removed, leaving ten
+  populations (20 units, 1{,}000 rows, 128 error rows).
+\item \texttt{neutral\_only} -- the neutral stratum CHE, DNK, FIN, ISL, NLD,
+  NOR and SWE, the cleanest pandemic-only comparison: seven populations
+  (14 units, 700 rows, 90 error rows).
+\item \texttt{dnk\_full\_window} and \texttt{dnk\_drop\_1921\_1922} -- Denmark
+  alone (2 units, 100 rows, 8 error rows), scored first over the full
+  1914--1922 window and then over 1914--1920 only, Denmark having gained South
+  Jutland in 1921, inside the test window.
+\end{itemize}
+The three pre-specified placebo strata of Addendum~1~\S A are neutral (CHE,
+DNK, FIN, ISL, NLD, NOR, SWE), belligerent-total (FRATNP, GBRTENW, ITA) and
+civilian-only (GBR\_SCO). Only the neutral stratum is a slice of its own here;
+the stratum-level coverage that the manuscript's Section~6 reads is in the
+twin-crises table of Section~S3, and the pooled placebo result is always
+reported alongside the strata.
+
+\paragraph{What the file carries.} For every family--mechanism arm in every
+slice -- all fifty primary cells, whether or not the arm survives the slice --
+the file records mean 95\% coverage over the rows the slice retains, joint path
+coverage wherever the slice keeps the whole path, the number of scored cells,
+the number of error rows behind that mean, the number of ages scored, and flags
+for whether the arm is conformal and whether it is a secondary grid cell. Each
+slice also carries a metadata block giving the retained populations, the row and
+cell counts quoted above, and the error rows decomposed into the quality gate's
+classes (machine, design-floor, method and residual), so that no mean in the
+file has a denominator a reader cannot reconstruct. Means are unweighted over
+valid rows, one row per (population, sex, origin) cell and arm, and arms are
+never pooled. The same file carries two further blocks the manuscript relies on:
+the per-origin effective cluster counts behind the clustered inference of
+Section~5 -- at the 2019 shift origin, for instance, twenty populations
+contribute at least one valid row but only seven contribute a valid row to every
+one of the fifty primary arms -- and the common-cell loss panels on which the
+Diebold--Mariano and model-confidence-set contrasts of Section~6 are computed.
+
+\subsection{Two limits, stated plainly}
+\label{supp:robustness-limits}
+
+\paragraph{A slice that drops a horizon cannot report joint path coverage.} The
+runner emits one indicator for the whole forecast path rather than the
+per-horizon indicators a shortened path would need, so joint path coverage is
+not recoverable for the two horizon-restricted slices,
+\texttt{shift/drop\_2024} and \texttt{placebo/dnk\_drop\_1921\_1922}. Their
+\texttt{joint\_path\_coverage\_95} entries are null rather than imputed. What
+the file does record for them is
+\texttt{joint\_path\_coverage\_95\_lower\_bound}, the full-path value: a path
+that covers at every horizon $1,\dots,H$ also covers at every horizon of a
+subset of them, so the full-path rate is a valid lower bound for the shortened
+path and is labelled as such rather than reported as the quantity itself. No
+joint-coverage claim anywhere in the manuscript rests on a horizon-restricted
+slice.
+
+\paragraph{The registered age-cap sensitivity is not among the slices.} The
+pre-registration names a run with ages capped at 90 rather than 99, to test
+whether the old-age reading of \Hfour\ is an artefact of noisy old-age cells in
+small populations. That run is not among the slices in
+\texttt{results/sensitivities.json}: recomputing it needs per-age scores, which
+the released per-cell rows do not carry, so it would require a re-score rather
+than a re-selection of rows. What this paper reports about the old-age stratum
+instead is the age-band decomposition of the manuscript's Section~6, which
+scores $0$--$24$, $25$--$64$ and $65$--$99$ separately -- the same partition the
+conformal wrappers are Mondrian-stratified on -- with the full per-cell profile
+in Table~\ref{tab:h4-age} of Section~S3 and the single-age coverage curves in
+the coverage-by-age figures of Section~S4. The age-cap run itself remains
+outstanding, and is recorded here as outstanding rather than treated as
+discharged by the age-band decomposition.

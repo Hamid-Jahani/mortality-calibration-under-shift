@@ -1,0 +1,199 @@
+% =============================================================================
+% S4 -- Figures (Figures S1-S12)
+%
+% The twelve figures of paper/figures/, pulled by \inputfigure so that no
+% graphic is duplicated in source. Order is fixed and is what the manuscript
+% cites as S1...S12: four diagnostics x three regimes, each diagnostic in the
+% order stable, shift, placebo.
+%   S1-S3   reliability          S4-S6   coverage by single age
+%   S7-S9   joint vs marginal    S10-S12 PIT histograms
+% fig-reliability-shift appears twice in the submission: as Figure 1 of the
+% manuscript and as Figure S2 here.
+% Each float is followed by \clearpage so the printed order is the cited order.
+% =============================================================================
+
+\clearpage
+\section{Figures}
+\label{sec:supp-figures}
+
+This section carries the study's twelve figures: four diagnostics, each shown
+for all three regimes in the order stable control, shift (train to 2019, test
+2020--2024) and placebo (train to 1913, test 1914--1922). The manuscript prints
+one of them, the shift-regime reliability diagram, as its Figure~1; it appears
+again here as Figure~\ref{fig:reliability-shift} so that this section is
+readable on its own and so that the three regimes of that diagnostic can be
+compared side by side. The remaining eleven are cited from the manuscript at
+the points where its prose reads them.
+
+All twelve are produced by \pkg{scripts/make\_figures.py} from the same
+committed sweep outputs as the tables of Section~S3; the stage refits and
+rescores nothing, and the provenance stamp on each figure names its inputs.
+Four conventions are shared by every panel and are not repeated in the
+individual captions. Every figure is panelled by family, so CBD (M5), which is
+fitted on ages 55--99, never averages with a full-age family; its age support
+is printed in its panel title. Within a family panel the mechanisms are
+compared on the intersection of the (origin, population, sex) cells in which
+every mechanism present produced a valid row, and that intersection size is
+printed in the panel title. Error rows enter no mean, and the footer of each
+figure states how many were excluded. Conformal arms are drawn in a distinct
+style throughout---dashed line, open marker, dashed bar edge---because they
+construct a single interval at 95\%, so they are read at that level only and
+never appear in the PIT figures at all.
+
+\begin{figure}[htbp]\centering
+\inputfigure{fig-reliability-stable}
+\caption{Reliability diagram, stable control regime: empirical coverage against
+nominal level (50, 80 and 95\%) per mechanism, one panel per family, with the
+diagonal as perfect calibration. Conformal arms contribute a single point at
+95\%, their construction level, in a distinct style. This is the control
+counterpart of Figure~1 of the manuscript, and the picture behind the finding
+that the coverage split runs through the middle of the neural group and is
+already open before any break.}
+\label{fig:reliability-stable}
+\end{figure}
+\clearpage
+
+\begin{figure}[htbp]\centering
+\inputfigure{fig-reliability-shift}
+\caption{Reliability diagram, shift regime (train to 2019, test 2020--2024,
+twenty populations): empirical coverage against nominal level (50, 80 and
+95\%) per mechanism, one panel per family, with the diagonal as perfect
+calibration. Conformal arms contribute a single point at 95\%, their
+construction level, in a distinct style. This figure is also Figure~1 of the
+manuscript; it is repeated here beside its stable and placebo counterparts.}
+\label{fig:reliability-shift}
+\end{figure}
+\clearpage
+
+\begin{figure}[htbp]\centering
+\inputfigure{fig-reliability-placebo}
+\caption{Reliability diagram, placebo regime (train to 1913, test 1914--1922,
+eleven populations): empirical coverage against nominal level (50, 80 and
+95\%) per mechanism, one panel per family, with the diagonal as perfect
+calibration. Conformal arms contribute a single point at 95\%, their
+construction level, in a distinct style. Read beside
+Figure~\ref{fig:reliability-shift}, it is the picture behind the twin-crises
+finding that the pandemic's family split reproduces a century earlier.}
+\label{fig:reliability-placebo}
+\end{figure}
+\clearpage
+
+\begin{figure}[htbp]\centering
+\inputfigure{fig-coverage-by-age-stable}
+\caption{Empirical 95\% interval coverage by single age, stable control regime:
+each line is the mean over cells of the per-age hit rate with horizons pooled,
+one panel per family and mechanisms as lines; the horizontal reference is the
+nominal 0.95. Solid lines are distributional arms, dashed lines conformal arms
+read from their interval bounds. Ages a family does not score are absent---CBD
+is fitted on ages 55--99, so its panel is a 55--99 curve and is not comparable
+with the full-age families'. This is the ungrouped view of \Hfour, and shows
+the old-age concentration of the index-extrapolating families in a period with
+no structural break.}
+\label{fig:coverage-by-age-stable}
+\end{figure}
+\clearpage
+
+\begin{figure}[htbp]\centering
+\inputfigure{fig-coverage-by-age-shift}
+\caption{Empirical 95\% interval coverage by single age, shift regime: each
+line is the mean over cells of the per-age hit rate with horizons pooled, one
+panel per family and mechanisms as lines; the horizontal reference is the
+nominal 0.95. Solid lines are distributional arms, dashed lines conformal arms.
+Ages a family does not score are absent (CBD: 55--99). It is the ungrouped
+counterpart of the three-band summary in Table~\ref{tab:h4-age}, and shows that
+the age profile of the failure is family-specific rather than universal, so
+\Hfour\ as registered is not supported for every family.}
+\label{fig:coverage-by-age-shift}
+\end{figure}
+\clearpage
+
+\begin{figure}[htbp]\centering
+\inputfigure{fig-coverage-by-age-placebo}
+\caption{Empirical 95\% interval coverage by single age, placebo regime: each
+line is the mean over cells of the per-age hit rate with horizons pooled, one
+panel per family and mechanisms as lines; the horizontal reference is the
+nominal 0.95. Solid lines are distributional arms, dashed lines conformal arms.
+Ages a family does not score are absent (CBD: 55--99). The 1914--1922 window
+loads at younger ages than 2020--2024, so the age profile here is read against
+Figure~\ref{fig:coverage-by-age-shift} rather than merged with it.}
+\label{fig:coverage-by-age-placebo}
+\end{figure}
+\clearpage
+
+\begin{figure}[htbp]\centering
+\inputfigure{fig-joint-vs-marginal-stable}
+\caption{Marginal 95\% coverage against joint path coverage over
+$h=1,\dots,H$, stable control regime, as paired bars per mechanism with one
+panel per family, on the common cells of each panel (intersection size in the
+panel title). Conformal arms are drawn in a distinct style and read from their
+interval bounds; the nominal level is marked. The gap between the paired bars
+is the quantity \Hthree\ is about---the coverage a mortality paper reports
+beside the coverage a liability depends on---and it is open in the control as
+well as at the break.}
+\label{fig:joint-vs-marginal-stable}
+\end{figure}
+\clearpage
+
+\begin{figure}[htbp]\centering
+\inputfigure{fig-joint-vs-marginal-shift}
+\caption{Marginal 95\% coverage against joint path coverage over
+$h=1,\dots,H$, shift regime, as paired bars per mechanism with one panel per
+family, on the common cells of each panel (intersection size in the panel
+title). Conformal arms are drawn in a distinct style and read from their
+interval bounds; the nominal level is marked. Joint coverage lies below
+marginal in every arm shown, and the copula band---the one mechanism
+constructed over the path---is the only mechanism whose joint bar stays near
+nominal.}
+\label{fig:joint-vs-marginal-shift}
+\end{figure}
+\clearpage
+
+\begin{figure}[htbp]\centering
+\inputfigure{fig-joint-vs-marginal-placebo}
+\caption{Marginal 95\% coverage against joint path coverage over
+$h=1,\dots,H$, placebo regime, as paired bars per mechanism with one panel per
+family, on the common cells of each panel (intersection size in the panel
+title). Conformal arms are drawn in a distinct style and read from their
+interval bounds; the nominal level is marked. The placebo path spans $H=9$
+horizons against the shift regime's $H=5$, so the joint bars here are on a
+different scale from Figure~\ref{fig:joint-vs-marginal-shift} and the two are
+read within regime.}
+\label{fig:joint-vs-marginal-placebo}
+\end{figure}
+\clearpage
+
+\begin{figure}[htbp]\centering
+\inputfigure{fig-pit-hist-stable}
+\caption{Ten-bin randomised PIT histograms, stable control regime, averaged
+across population--sex cells in a family $\times$ distributional-mechanism
+grid; the horizontal line is the uniform reference. Conformal arms are absent
+because their PIT is a placeholder. A U shape reads as over-confidence, a hump
+as under-confidence, a slope as bias. These are the shapes behind the KS
+distances of Table~\ref{tab:pit}.}
+\label{fig:pit-hist-stable}
+\end{figure}
+\clearpage
+
+\begin{figure}[htbp]\centering
+\inputfigure{fig-pit-hist-shift}
+\caption{Ten-bin randomised PIT histograms, shift regime, averaged across
+population--sex cells in a family $\times$ distributional-mechanism grid; the
+horizontal line is the uniform reference. Conformal arms are absent because
+their PIT is a placeholder. A U shape reads as over-confidence, a hump as
+under-confidence, a slope as bias. Read beside
+Figure~\ref{fig:pit-hist-stable}, it shows that the departures deepen at the
+break without changing shape.}
+\label{fig:pit-hist-shift}
+\end{figure}
+\clearpage
+
+\begin{figure}[htbp]\centering
+\inputfigure{fig-pit-hist-placebo}
+\caption{Ten-bin randomised PIT histograms, placebo regime, averaged across
+population--sex cells in a family $\times$ distributional-mechanism grid; the
+horizontal line is the uniform reference. Conformal arms are absent because
+their PIT is a placeholder. A U shape reads as over-confidence, a hump as
+under-confidence, a slope as bias.}
+\label{fig:pit-hist-placebo}
+\end{figure}
+\clearpage
