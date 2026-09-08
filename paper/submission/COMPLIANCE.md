@@ -21,7 +21,23 @@ Rules verified 2026-09-05 against
 | template | CUP's LaTeX template on Overleaf is recommended but not required | using article 11pt; swapping is preamble-only |
 | AI use | CUP AI Contributions to Research Content Policy applies | yes -- "Use of AI tools" in `backmatter.tex` |
 
+## Submitted
+
+**2026-09-08** to Annals of Actuarial Science via ScholarOne. Uploaded: `manuscript.pdf`
+(37 pp), `supplement.pdf` (87 pp), `latex-source.zip` (58 files, builds clean with 0
+undefined references). Portal metadata: 5 keywords (longevity risk, calibration, prediction
+intervals, Lee-Carter, conformal prediction), 1 figure, 6 tables, no funding, initial-
+submission data availability, AI tools declared as used. Three preferred reviewers named.
+
+The repository went public at submission
+(<https://github.com/Hamid-Jahani/mortality-calibration-under-shift>) to satisfy the
+Actuarial Software confirmation, which requires the code to be in a repository named by the
+Data Availability Statement. The DAS was rewritten from "released on acceptance" to name
+that URL; local working notes and compute-infrastructure identifiers were removed from the
+tree and from all history first.
+
 ## Open decisions
+
 
 1. ~~**47 pages against a 35-page cap.**~~ Settled 2026-09-08: prose cut from 23,286 to
    15,391 words and the manuscript from 47 to 37 pp. Main text ends on p. 31; the required
