@@ -130,12 +130,12 @@ paper/*.synctex.gz
 
 # Local working notes and private material — deliberately untracked (2026-09-08).
 # Present on the author's machine, never published.
-the local notes
-the project notes
-the project notes
-docs/DATA-PREREQS.md
-docs/GRID.md
-the dataset-survey notes
+.memory
+CLAUDE.md
+AGENTS.md
+docs/SERVER.md
+docs/IDEA.md
+Datasets and Paper Pathways for Research.docx
 
 # Playwright MCP scratch output
 .playwright-mcp/
