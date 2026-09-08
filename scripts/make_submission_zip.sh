@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Build the LaTeX source archive ASTIN Bulletin asks for alongside the PDFs.
+# Build the LaTeX source archive the publisher asks for alongside the PDFs.
+# Cambridge journals take it under the "LaTeX Source Files" designation.
 #
 #   bash scripts/make_submission_zip.sh [OUT]
 #
@@ -11,7 +12,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-OUT="${1:-$ROOT/paper/submission/astin-latex-source.zip}"
+OUT="${1:-$ROOT/paper/submission/latex-source.zip}"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 SRC="$WORK/src"
