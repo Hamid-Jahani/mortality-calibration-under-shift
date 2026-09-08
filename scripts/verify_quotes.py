@@ -13,7 +13,7 @@ import sys
 import unicodedata
 from pathlib import Path
 
-ROOT = Path(r"<REPO>")
+ROOT = Path(__file__).resolve().parent.parent
 TXT = ROOT / "literature" / "txt"
 
 

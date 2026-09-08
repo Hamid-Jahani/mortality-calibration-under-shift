@@ -1,6 +1,6 @@
 # Papers I could NOT download
 
-Every paper cited in `the dataset-survey notes` that is not in `pdf/` or `pdf-other-datasets/`, with the exact reason and the fastest route to get it.
+Every paper cited in the project's dataset-survey notes that is not in `pdf/` or `pdf-other-datasets/`, with the exact reason and the fastest route to get it.
 
 **Blocking mechanism legend** — `SSRN-403`: SSRN serves the abstract page but returns 403 to any scripted PDF fetch. `PAYWALL`: publisher subscription, no legal open copy located. `NO-OA`: no open-access or author-hosted copy found after search.
 

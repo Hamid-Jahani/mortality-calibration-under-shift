@@ -1,7 +1,7 @@
 """Forecast-comparison inference with population-level clustering.
 
 The shift regime has effective sample size closer to ONE common shock than to
-20 populations x 100 ages x 5 years (docs/GRID.md, critic gate). Every test
+20 populations x 100 ages x 5 years (design gate). Every test
 here therefore treats the POPULATION as the cluster and resamples clusters,
 never cells. Two procedures, both pre-registered (PREREGISTRATION.md,
 "Metrics: Inference"):

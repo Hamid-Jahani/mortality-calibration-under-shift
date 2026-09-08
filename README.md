@@ -8,8 +8,6 @@ break. The contribution is the audit and the reusable evaluation protocol — no
 a new architecture. Model family and uncertainty mechanism are **crossed
 factors** (50 admissible cells, `docs/GRID.md`), so coverage failure can be
 attributed to the architecture or to the uncertainty machinery bolted onto it.
-Title and design selected by a structured design comparison —
-see `docs/GRID.md` for the full record.
 
 **Status:** complete. All three pre-registered regimes are swept, QA-gated
 (zero machine-failure rows) and analysed; the paper draft is written from
@@ -87,7 +85,7 @@ and numerical oracle).
 ```
 Dataset/       HMD files — untracked, see data/MANIFEST.sha256
 data/          manifest and data documentation
-docs/          GRID.md (admissible cells)
+docs/          GRID.md (admissible cells) · SPLIT-SPEC.md · PIPELINE.md
 literature/    curated notes (INDEX, TRIAGE, GAP-ANALYSIS, GET-THESE); PDFs untracked
 src/mortcal/   data/ (HMD parser) · models/ (LC, PLC, CBD, RH, sVAR)
                uq/ (bootstrap, conformal) · eval/ (scores) · lifetable · splits

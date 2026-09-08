@@ -839,7 +839,7 @@ def run_regime(
                             "n_samples": n_samples,
                             "seed_entropy": str(list(ss.entropy)),
                             # provenance: dropout-trained families are a
-                            # different realization per device (see the local notes);
+                            # different realization per device;
                             # never mix devices within one regime
                             "device": os.environ.get("MORTCAL_DEVICE", "cpu"),
                             "error": None,

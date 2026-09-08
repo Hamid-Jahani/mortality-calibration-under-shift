@@ -5,7 +5,7 @@ Uncertainty Mechanisms Across the COVID-19 Break"
 Hamid Jahani, Tarbiat Modares University. ORCID 0000-0002-2302-7674.
 
 BUILD
-  latexmk -pdf manuscript.tex     -> manuscript.pdf   (47 pp)
+  latexmk -pdf manuscript.tex     -> manuscript.pdf   (37 pp)
   latexmk -pdf supplement.tex     -> supplement.pdf   (87 pp)
 
 Both compile with pdfTeX and BibTeX on a standard TeX Live installation

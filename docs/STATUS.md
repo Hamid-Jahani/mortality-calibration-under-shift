@@ -129,9 +129,9 @@ sweep is ever GPU-bound, fix the driver first, not the code.
 
 ## Don'ts
 
-- Do NOT resume workflow `the dead sweep run` (dead; resume clobbers manual
-  fixes). The decision workflow `the design review` is complete — its
-  evidence lives in its journal if a claim needs re-checking.
+- Do NOT resume the dead sweep run (resume clobbers the manual RH/conformal
+  fixes). The design review that chose the family axis is complete; its
+  evidence is archived locally if a claim needs re-checking.
 - Do NOT commit `results/parity/D_*.csv` / `E_*.csv` (raw HMD, gitignored).
 - Real-data runs stay behind `allow_real=True`.
 - Do NOT clip SVAR rates/λ to rescue divergent draws (addendum 3 §7 —
@@ -174,7 +174,7 @@ sweep is ever GPU-bound, fix the driver first, not the code.
   process per population, BLAS/torch pinned to one thread) +
   `scripts/launch_sweeps.sh` two-pass (GP separately at jobs=2 for memory).
 - **Environment**: repo `.venv` undeletable (zombie uv processes); working env
-  is `<HOME>/venvs/mortcal` (see `the local notes`).
+  is `<HOME>/venvs/mortcal`.
 - Stable regime: no server answer yet → runs locally after shift+placebo, full
   design, multi-day; no origin-subset addendum unless that becomes impossible.
 - **GPU A/B measured** (`results/timings_cached.json` vs `timings_gpu.json`, solo,
@@ -190,7 +190,7 @@ sweep is ever GPU-bound, fix the driver first, not the code.
 
 ## 2026-08-27 19:42 — REAL-DATA SWEEPS RUNNING on the compute node
 
-`<NODE_B>` (<NODE_B_IP> via bastion `<BASTION>`; docs/DATA-PREREQS.md, the local notes):
+the staging node (reached through a bastion):
 `launch_sweeps.sh shift placebo`, JOBS=10, GP_JOBS=7, CPU torch, thread
 pinning in the launch env (first attempt ran at load 52; restarted at load
 11 with 25 parts reused). Suite on the node: 171 passed, 1 skipped. Data:

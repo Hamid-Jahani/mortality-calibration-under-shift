@@ -32,7 +32,12 @@ cp "$ROOT/paper/references.bib" "$SRC/"
 
 # assets are local in the archive, not one directory up
 sed -i 's|{\.\./figures/}{figures/}|{figures/}|; s|\.\./figures/#2\.pdf|figures/#2.pdf|g' "$SRC/preamble.tex"
-sed -i 's|\bibliography{\.\./references}|\bibliography{references}|' "$SRC/manuscript.tex" "$SRC/supplement.tex"
+# NB: no \b in these patterns -- GNU sed reads it as a word boundary, not as a
+# literal backslash, which is why an earlier version of this rewrite silently
+# matched nothing and shipped an archive with no bibliography.
+sed -i 's|{\.\./references}|{references}|' "$SRC/manuscript.tex" "$SRC/supplement.tex"
+grep -q '{\.\./references}' "$SRC/manuscript.tex" "$SRC/supplement.tex" && {
+  echo "FAILED: ../references survived the path rewrite" >&2; exit 1; }
 
 # a source archive that does not compile is worse than none
 cd "$SRC"
@@ -40,12 +45,25 @@ for doc in manuscript supplement; do
   latexmk -pdf -interaction=nonstopmode -halt-on-error "$doc.tex" >/dev/null 2>&1 || {
     echo "FAILED: $doc.tex does not build from the assembled copy" >&2; exit 1; }
   pages=$(grep -o "Output written on $doc.pdf ([0-9]* pages" "$doc.log" | grep -o '[0-9]*' | tail -1)
-  undef=$(grep -c undefined "$doc.log" || true)
+  undef=$(grep -c 'undefined' "$doc.log" || true)
+  ref=$(pdfinfo "$ROOT/paper/submission/$doc.pdf" 2>/dev/null | awk '/^Pages:/{print $2}')
   echo "[zip] $doc.pdf: $pages pages, $undef undefined references"
+  # The archive must reproduce the PDF the editor is reading, not merely compile.
+  # Undefined citations here mean the bibliography or a path rewrite is broken.
+  [ "${undef:-0}" -eq 0 ] || {
+    echo "FAILED: $doc.tex builds with $undef undefined references in the archive copy" >&2
+    grep -i 'undefined' "$doc.log" | head -5 >&2; exit 1; }
+  [ -z "$ref" ] || [ "$pages" = "$ref" ] || {
+    echo "FAILED: archive $doc.pdf is $pages pp but paper/submission/$doc.pdf is $ref pp" >&2
+    exit 1; }
 done
 
+# Keep the .bbl: submission systems that typeset LaTeX often do not run BibTeX,
+# and a .bbl-less archive then renders with every citation as a question mark.
+cp manuscript.bbl supplement.bbl "$WORK/" 2>/dev/null || true
 latexmk -C >/dev/null 2>&1 || true
 rm -f ./*.pdf ./*.aux ./*.log ./*.bbl ./*.blg ./*.out ./*.toc ./*.fls ./*.fdb_latexmk sections/*.aux supp/*.aux
+cp "$WORK/manuscript.bbl" "$WORK/supplement.bbl" ./ 2>/dev/null || true
 rm -f "$OUT"
 zip -q -r -9 "$OUT" . -x '.*'
 echo "[zip] wrote $OUT ($(du -h "$OUT" | cut -f1), $(unzip -l "$OUT" | tail -1 | awk '{print $2}') files)"

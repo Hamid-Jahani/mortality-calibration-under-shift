@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Two-pass real-data sweeps for the pre-registered regimes (see the local notes,
+# Two-pass real-data sweeps for the pre-registered regimes (see
 # "LAUNCH PLAN"). Pass 1: everything except GP, one process per population,
 # single-threaded numerics. Pass 2: GP alone at low parallelism (1.6 GB/cell).
 # Resumable: existing results/<regime>.parts/<POP>.parquet are skipped.
@@ -19,7 +19,7 @@ export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 NUMEXPR_NUM_TH
 cd "$(dirname "$0")/.."
 # MORTCAL_PY overrides the interpreter (the venv may live outside the repo:
 # UV_PROJECT_ENVIRONMENT=<HOME>/venvs/mortcal after the 2026-08-27
-# zombie-uv incident left .venv undeletable until a reboot — see the local notes).
+# zombie-uv incident left .venv undeletable until a reboot).
 PY="${MORTCAL_PY:-.venv/Scripts/python.exe}"
 JOBS="${JOBS:-12}"
 GP_JOBS="${GP_JOBS:-2}"

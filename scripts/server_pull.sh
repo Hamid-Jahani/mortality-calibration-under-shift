@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Pull sweep results back from the compute node through the two-hop route
 # (laptop -> bastion `<BASTION>` -> <NODE_B_IP>), the mirror of the upload in
-# docs/DATA-PREREQS.md. Streams a tar of results/*.parquet, the parts directories
+# the compute-node notes. Streams a tar of results/*.parquet, the parts directories
 # and the logs into the local results/. Existing local files are overwritten
 # by the node's copy (the node is the source of truth while a sweep runs).
 #
