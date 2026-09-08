@@ -1,30 +1,32 @@
 # Venue compliance note
 
-Target: **ASTIN Bulletin -- The Journal of the IAA** (Cambridge University Press), research
-article, initial submission. Chosen 2026-09-05. Rules below verified the same day against
-[preparing your materials](https://www.cambridge.org/core/journals/astin-bulletin-journal-of-the-iaa/information/author-instructions/preparing-your-materials).
+Target: **Annals of Actuarial Science** (Cambridge University Press), research article,
+initial submission. Chosen 2026-09-08 after ASTIN Bulletin declined manuscript
+ASTIN-2026-0172 on 8 September 2026 -- desk decision, not peer review: "we present a nice
+and interesting case study, however, for our publications we mainly require new
+methodological developments. We therefore recommend that you send your paper to a more
+applied journal that publishes case studies." AAS is that journal, and the framing this
+project locked on 2026-08-24 (reliability audit, no new architecture) is what AAS publishes.
 
-| item | rule (quoted) | done |
+Rules verified 2026-09-05 against
+[preparing your materials](https://www.cambridge.org/core/journals/annals-of-actuarial-science/information/author-instructions/preparing-your-materials).
+
+| item | rule | status |
 |---|---|---|
-| length | "Authors intending to submit papers exceeding 30 pages are advised to consider splitting their contribution into shorter contributions." | **NO -- manuscript is 47 pp** |
-| initial submission format | "Initial submissions to the editor must be in PDF format in a single file that incorporates all figures and tables." | yes -- `manuscript.pdf` embeds every exhibit |
-| first page | "The first page of each paper should start with the title, the name(s) of the author(s), an abstract and a list of keywords. An institutional affiliation can be placed between the name(s) of the author(s) and the abstract." | yes |
-| contact details | "The address and full contact details of at least one of the authors should be typed at the end of the paper following the references." | yes -- `Author's address` section after the bibliography |
-| competing interests | "All authors must include a competing interest declaration in their main manuscript file." | yes -- in `backmatter.tex` |
-| data and code | authors should "provide data and code during the review process"; "for accepted papers data and code should be made available as supplementary material" | yes -- data availability statement offers the repository to editor and referees on request |
-| references | year in parentheses after the authors; journal italic, volume bold, e.g. "Jewell, W.S. (1975) Regularity conditions for exact credibility. *ASTIN Bulletin,* **8**, 336--341." | `apalike` -- matches the year placement and italics; volume is not bold, which CUP restyles at production |
-| mathematics | "All mathematical symbols and equations...must be typeset using recognized mathematical typesetting software such as LaTeX" | yes |
-| supplementary material | "published online alongside your article"; not typeset or copyedited | yes -- `supplement.pdf`, supplied as it appears |
-| open access | "As of 31 July 2026, all articles are published on a Gold Open Access basis"; "All authors are able to publish on this basis in the journal, irrespective of their funding situation or affiliation"; APC waiver requests are handled through the journal's open access options | **APC not yet settled -- request the waiver in writing before submitting** |
-| at acceptance | "the author(s) will be asked to provide all relevant files in electronic format, including separate files for each of the figures" | figures are generated PDFs in `paper/figures/`, ready |
+| length | "Submitted articles should be no more than 35 pages"; excess to supplementary material | **NO -- manuscript is 47 pp** |
+| abstract | 150-200 words | yes -- 199 |
+| references | Harvard system | yes -- natbib + apalike, year in parentheses after the authors |
+| structure | Title; Author name(s); Abstract; Keywords; Correspondence details; Main text; Acknowledgements; Competing Interest Statement; Data Availability Statement; Funding Statement; References; Appendices | yes -- correspondence moved into the front matter, statements before the references |
+| supplement | published online alongside the article, not typeset or copyedited | yes -- `supplement.pdf`, 87 pp, supplied as it appears |
+| template | CUP's LaTeX template on Overleaf is recommended but not required | using article 11pt; swapping is preamble-only |
+| AI use | CUP AI Contributions to Research Content Policy applies | **UNRESOLVED -- no declaration in the manuscript; see below** |
 
 ## Open decisions
 
-1. **47 pages against a 30-page steer.** ASTIN's own advice is to split rather than to lean on
-   the supplement. The natural cut is the audit (H1-H4) as one paper and the actuarial
-   propagation (H5) plus the twin-crises analysis as the other.
-2. **APC.** Gold OA applies to every article since 31 July 2026. Confirm the waiver before
-   submitting, not after acceptance.
+1. **47 pages against a 35-page cap.** Unlike ASTIN's 30-page steer this is a stated limit,
+   so roughly 12 pages have to come out. The exhibits are already abridged and total about
+   5 pages; the reduction has to come from prose, which stands at 23,286 words.
+2. **AI use declaration.** CUP's policy covers AAS as it covered ASTIN. An AI use declaration has to be settled before submission.
 
 ## Decisions taken against these rules
 
